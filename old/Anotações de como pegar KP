@@ -1,0 +1,28 @@
+Para rodar o DoG no database projectRoom
+
+g++ -std=c++11 -ggdb `pkg-config --cflags opencv` -o `basename surf.cpp .cpp` surf.cpp `pkg-config --libs opencv`
+./dog ../dataset/projectRoom/1/1.hdr ../dataset/projectRoom/1/1
+
+Para o dataset do Pribyl ex:
+
+./dog ../dataset/3D/lighting/001/001.HDR.hdr ../dataset/3D/lighting/001/001
+
+Se for rodar uma imagem qualquer, sem considerar o fundo ou as regiões, somente colocar (Irá gerar os 3 arquivos, mas só haverá KP no primeiro arquivo):
+./dog imagemQualquer.jpg
+
+Nas pastas passada como segundo parêmetro nos comandos acima, será salvo três arquivos com os KP.
+
+A função handleKeypoints.KeyPointList pega os pontos dos diferentes arquivos e salva tudo na classe KeyPoint, no formato abaixo e retorna uma lista de KeyPoint: 
+'''class KeyPoint:
+    def __init__(self, x, y, scale, dir):
+        self.x = x
+        self.y = y
+        self.dir = dir
+        self.scale = scale
+'''
+
+keypoints = handleKeypoints.KeyPointList(path, fileName)
+path é a pasta onde estao os arquivos do KP ex: /home/welerson/Área\ de\ Trabalho/Pesquisa\ /dataset/2D/distance/100/
+fileName é o nome base para a busca do arquivo ex: 100.LDR.surf 
+
+
