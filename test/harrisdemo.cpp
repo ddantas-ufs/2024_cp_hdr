@@ -4,8 +4,6 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#include "../src/input.h"
-#include "../src/keypoint.h"
 #include "../src/cp_hdr.h"
 
 int main(int, char** argv)

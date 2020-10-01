@@ -5,6 +5,8 @@
 #include "opencv2/imgproc.hpp"
 
 #include "cp_hdr.h"
+#include "harris.h"
+#include "dog.h"
 
 void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoint> &kp, int mgauss, int maxsup_size, float contrast_th, float curv_th)
 {
