@@ -6,10 +6,8 @@
 
 #include "harris.h"
 
-void responseCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
+void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
 {
-	cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), 0, 0, cv::BORDER_DEFAULT);
-	
 	cv::Mat Ix, Iy, Ixx, Iyy, Ixy;
 
 	cv::Sobel(img, Ix, CV_32F, 1, 0, msobel);
@@ -37,13 +35,13 @@ void responseCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int
 				float detH = (dxx*dyy) - (dxy*dxy);
 				float traceH = (dxx + dyy);
 				
-				resp_map.at<float>(y, x) = detH - K*(traceH*traceH);
+				resp_map.at<float>(y, x) = detH - k*(traceH*traceH);
 			}
 		}
 	}
 }
 
-void threshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_quality)
+void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_quality)
 {
 	std::vector<KeyPoint> kp_aux;
 	double min, max;
@@ -60,7 +58,7 @@ void threshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_quality)
 			
 }
 
-void localMaxSup(cv::Mat &resp_map, std::vector<KeyPoint> &kp, int msize)
+void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoint> &kp, int msize)
 {	 
 	std::vector<KeyPoint> kp_aux;
 	cv::Mat resp_aux = cv::Mat::zeros(resp_map.size(), CV_32F);

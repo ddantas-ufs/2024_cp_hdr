@@ -6,17 +6,17 @@
 
 #include "dog.h"
 
-void initOctaves(cv::Mat img, cv::Mat scales[SCALES_ROWS][SCALES_COLS], int mgauss)
+void dogInitScales(cv::Mat img, cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS], int mgauss)
 {	
 	cv::Mat img_aux;
 	float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 	
 	img.convertTo(img_aux, CV_32FC1);
 	
-	for(int i = 0; i < SCALES_ROWS; i++)
+	for(int i = 0; i < DOG_SCL_ROWS; i++)
 	{
 		float ko = k[i];
-		for(int j = 0; j < SCALES_COLS; j++)
+		for(int j = 0; j < DOG_SCL_COLS; j++)
 		{			
 			GaussianBlur(img_aux, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_DEFAULT);
 			ko = ko*1.414214;
@@ -25,32 +25,32 @@ void initOctaves(cv::Mat img, cv::Mat scales[SCALES_ROWS][SCALES_COLS], int mgau
 	}
 }
 
-void calcDoG(cv::Mat scales[SCALES_ROWS][SCALES_COLS], cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1])
+void dogCalc(cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS], cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1])
 {
-	for(int i = 0; i < SCALES_ROWS; i++)
-		for(int j = 0; j < SCALES_COLS - 1; j++)
+	for(int i = 0; i < DOG_SCL_ROWS; i++)
+		for(int j = 0; j < DOG_SCL_COLS - 1; j++)
 		{
 			dog[i][j] = cv::Mat::zeros(scales[i][j].size(), CV_32FC1);
 			cv::subtract(scales[i][j], scales[i][j + 1], dog[i][j]);
 		}
 }
 
-void localMaxSup(cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], cv::Mat roi[], std::vector<KeyPoint> &kp, int msize)
+void dogMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::vector<KeyPoint> &kp, int maxsup_size)
 {
-	int mradius = msize/2;
+	int maxsup_rad = maxsup_size/2;
 
-	for(int s = 0; s < SCALES_ROWS; s++)
+	for(int s = 0; s < DOG_SCL_ROWS; s++)
 	{
-		for(int l = 1; l < SCALES_COLS - 1; l++)
+		for(int l = 1; l < DOG_SCL_COLS - 1; l++)
 		{
 			cv::Mat middle = dog[s][l];
 			cv::Mat down = dog[s][l - 1];
 			cv::Mat up = dog[s][l + 1];
 			cv::Mat dog_aux = cv::Mat::zeros(middle.size(), CV_32FC1);
 			
-			for(int y = mradius; y < middle.rows - mradius; y++)
+			for(int y = maxsup_rad; y < middle.rows - maxsup_rad; y++)
 			{
-				for(int x = mradius; x < middle.cols - mradius; x++)
+				for(int x = maxsup_rad; x < middle.cols - maxsup_rad; x++)
 				{
 					if(roi[0].at<uchar>(y*pow(2, s), x*pow(2, s)) == 0)
 						continue;
@@ -59,9 +59,9 @@ void localMaxSup(cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], cv::Mat roi[], std::
 					bool is_smaller = true;
 					bool is_bigger = true;
 					
-					for(int i = y - mradius; i <= y + mradius; i++)
+					for(int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
 					{
-						for(int j = x - mradius; j <= x + mradius; j++)
+						for(int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
 						{
 							if(!((curr_px < middle.at<float>(i, j) || (y == i && x == j)) && 
 								 (curr_px < down.at<float>(i, j)) &&
@@ -74,9 +74,9 @@ void localMaxSup(cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], cv::Mat roi[], std::
 						if(!is_smaller)
 							break;
 					}
-					for(int i = y - mradius; i <= y + mradius; i++)
+					for(int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
 					{
-						for(int j = x - mradius; j <= x + mradius; j++)
+						for(int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
 						{
 							if(!((curr_px > middle.at<float>(i, j) || (y == i && x == j)) && 
 								 (curr_px > down.at<float>(i, j)) && 
@@ -98,20 +98,26 @@ void localMaxSup(cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], cv::Mat roi[], std::
 	}
 }
 
-void contrastThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], float threshold)
+void dogThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th, float curv_th)
+{
+	contrastThreshold(kp, dog, contrast_th);
+	edgeThreshold(kp, dog, curv_th);
+}
+
+void contrastThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th)
 {
 	std::vector<KeyPoint> kp_aux;
 	
 	for(int i = 0; i < kp.size(); i++)
 	{
-		if(kp[i].resp >= threshold)
+		if(kp[i].resp >= contrast_th)
 			kp_aux.push_back(kp[i]);	
 	}
 	kp.clear();
 	kp = kp_aux;
 }
 
-void edgeThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[SCALES_ROWS][SCALES_COLS - 1], float curv_th)
+void edgeThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float curv_th)
 {
 	std::vector<KeyPoint> kp_aux;
 	curv_th = (curv_th + 1)*(curv_th + 1)/curv_th;

@@ -26,8 +26,8 @@ std::string getFolderName(std::string path)
 	return name;
 }
 
-void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gray, cv::Mat roi[])
-{
+void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, cv::Mat roi[])
+{	
 	img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 
 	if(img_in.channels() != 1)
@@ -35,7 +35,9 @@ void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gr
 
 	if(img_in.depth() == CV_32F)
 		cv::normalize(img_in, img_gray, 0.0, 256.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
-	
+
+	img_name = getFileName(std::string(img_path));
+
 	if(dtset_path != NULL)
 	{
 		std::string path(dtset_path);
