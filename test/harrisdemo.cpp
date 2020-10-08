@@ -4,7 +4,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#include "../src/cp_hdr.h"
+#include "../include/cp_hdr.h"
 
 int main(int, char** argv)
 {	
@@ -14,7 +14,8 @@ int main(int, char** argv)
 	std::vector<KeyPoint> kp;
 	std::string img_name;
 	
-	readData(argv[1], argv[2], img_in, img_gray, img_name, roi);
+	readImg(argv[1], img_in, img_gray, img_name);
+	readRoi(argv[2], roi, img_gray.size());
 	std::string out_path = "out/" + img_name + ".harris";
 
 	harrisKp(img_gray, roi, kp);

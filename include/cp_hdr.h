@@ -1,5 +1,4 @@
-#include "keypoint.h"
-#include "input.h"
+#include "../src/keypoint.h"
 
 #define CONTRAST_TH 0.03
 #define CURV_TH 5
@@ -16,3 +15,6 @@ void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoint> &kp,
 void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoint> &kp,
               int msobel = SOBEL_SIZE, int mgauss = GAUSS_SIZE, int k = K,
               float min_quality = MIN_QUALITY, int msize = MAXSUP_SIZE);
+
+void readImg(char *img_path,cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name);
+void readRoi(char *dtset_path, cv::Mat roi[], cv::Size img_size);

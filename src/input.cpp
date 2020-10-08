@@ -26,8 +26,8 @@ std::string getFolderName(std::string path)
 	return name;
 }
 
-void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, cv::Mat roi[])
-{	
+void readImgData(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
+{
 	img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 
 	if(img_in.channels() != 1)
@@ -37,7 +37,10 @@ void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gr
 		cv::normalize(img_in, img_gray, 0.0, 256.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
 
 	img_name = getFileName(std::string(img_path));
+}
 
+void readRoiData(char *dtset_path, cv::Mat roi[], cv::Size img_size)
+{
 	if(dtset_path != NULL)
 	{
 		std::string path(dtset_path);
@@ -50,10 +53,10 @@ void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gr
 	}
 	else
 	{
-		roi[0] = cv::Mat::ones(img_gray.size(), CV_8U);
-		roi[1] = cv::Mat::ones(img_gray.size(), CV_8U);
-		roi[2] = cv::Mat::zeros(img_gray.size(), CV_8U);
-		roi[3] = cv::Mat::zeros(img_gray.size(), CV_8U);
+		roi[0] = cv::Mat::ones(img_size, CV_8U);
+		roi[1] = cv::Mat::ones(img_size, CV_8U);
+		roi[2] = cv::Mat::zeros(img_size, CV_8U);
+		roi[3] = cv::Mat::zeros(img_size, CV_8U);
 	}
 }
 

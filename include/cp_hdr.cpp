@@ -5,8 +5,9 @@
 #include "opencv2/imgproc.hpp"
 
 #include "cp_hdr.h"
-#include "harris.h"
-#include "dog.h"
+#include "../src/harris.h"
+#include "../src/dog.h"
+#include "../src/input.h"
 
 void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoint> &kp, int mgauss, int maxsup_size, float contrast_th, float curv_th)
 {
@@ -28,4 +29,14 @@ void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoint> &kp, int msobel,
     harrisCalc(img, resp_map, roi, msobel, mgauss, k);
     harrisThreshold(resp_map, kp, min_quality);
     harrisMaxSup(resp_map, kp, msize);
+}
+
+void readImg(char *img_path,cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
+{
+	readImg(img_path, img_in, img_gray, img_name);
+}
+
+void readRoi(char *dtset_path, cv::Mat roi[], cv::Size img_size)
+{
+	readRoiData(dtset_path, roi, img_size);
 }

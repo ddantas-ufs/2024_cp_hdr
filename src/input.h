@@ -1,5 +1,6 @@
 std::string getFolderName(std::string path);
 
-void readData(char *img_path, char *dtset_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, cv::Mat roi[]);
+void readImgData(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name);
+void readRoiData(char *dtset_path, cv::Mat roi[], cv::Size img_size);
 
 std::string getFileName(std::string file_path);
