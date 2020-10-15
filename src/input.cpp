@@ -1,9 +1,3 @@
-#include <bits/stdc++.h>
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include "input.h"
 
 std::string getFolderName(std::string path)
@@ -26,7 +20,7 @@ std::string getFolderName(std::string path)
 	return name;
 }
 
-void readImgData(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
+void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
 {
 	img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
 
@@ -39,7 +33,7 @@ void readImgData(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string
 	img_name = getFileName(std::string(img_path));
 }
 
-void readRoiData(char *dtset_path, cv::Mat roi[], cv::Size img_size)
+void readRoi(char *dtset_path, cv::Mat roi[], cv::Size img_size)
 {
 	if(dtset_path != NULL)
 	{

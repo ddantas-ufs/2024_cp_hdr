@@ -1,7 +1,10 @@
-#include "keypoint.h"
+#ifndef HARRIS_H
+#define HARRIS_H
 
-void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k);
+#include "core.h"
 
-void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_quality);
+void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp,
+              int msobel = SOBEL_SIZE, int mgauss = GAUSS_SIZE, int k = K,
+              float min_quality = MIN_QUALITY, int msize = MAXSUP_SIZE);
 
-void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoint> &kp, int msize);
+#endif

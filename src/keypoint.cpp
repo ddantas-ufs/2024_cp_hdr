@@ -1,9 +1,3 @@
-#include <bits/stdc++.h>
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include "keypoint.h"
 
 bool outOfBounds(int i, int j, cv::Size size_img)
@@ -11,18 +5,7 @@ bool outOfBounds(int i, int j, cv::Size size_img)
 	return ((i < 0) || (j < 0) || (i >= size_img.height) || (j >= size_img.width));
 }
 
-void plotKeyPoints(cv::Mat &img, std::vector<KeyPoint> kp)
-{
-	for(int i = 0; i < (int)kp.size(); i++)
-		cv::circle(img, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
-}
-
-bool compareResponse(KeyPoint a, KeyPoint b)
-{
-    return (a.resp > b.resp);
-}
-
-void transformCoord(std::vector<KeyPoint> &kp)
+void transformCoord(std::vector<KeyPoints> &kp)
 {
 	for(int i = 0; i < kp.size(); i++)
 	{
@@ -34,12 +17,27 @@ void transformCoord(std::vector<KeyPoint> &kp)
 	}
 }
 
-void saveKeypoints(std::vector<KeyPoint> &kp, cv::Mat roi[], std::string out_path, int max_kp)
+void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> kp)
 {
-	std::vector<KeyPoint> kp_roi1, kp_roi2, kp_roi3;
-	std::vector<KeyPoint> kp_aux;
+	transformCoord(kp);
+
+	for(int i = 0; i < (int)kp.size(); i++)
+		cv::circle(img, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
+}
+
+bool compareResponse(KeyPoints a, KeyPoints b)
+{
+    return (a.resp > b.resp);
+}
+
+void saveKeypoints(std::vector<KeyPoints> &kp, cv::Mat roi[], std::string out_path, int max_kp)
+{
+	std::vector<KeyPoints> kp_roi1, kp_roi2, kp_roi3;
+	std::vector<KeyPoints> kp_aux;
 	FILE *file;
 	
+	transformCoord(kp);
+
     kp_aux = kp;
 	std::sort(kp_aux.begin(), kp_aux.end(), compareResponse);
     

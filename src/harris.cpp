@@ -1,10 +1,5 @@
-#include <bits/stdc++.h>
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include "harris.h"
+#include "keypoint.h"
 
 void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
 {
@@ -41,9 +36,9 @@ void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int m
 	}
 }
 
-void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_quality)
+void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoints> &kp, float min_quality)
 {
-	std::vector<KeyPoint> kp_aux;
+	std::vector<KeyPoints> kp_aux;
 	double min, max;
 	
 	cv::minMaxIdx(resp_map, &min, &max);
@@ -58,9 +53,9 @@ void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoint> &kp, float min_qua
 			
 }
 
-void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoint> &kp, int msize)
+void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
 {	 
-	std::vector<KeyPoint> kp_aux;
+	std::vector<KeyPoints> kp_aux;
 	cv::Mat resp_aux = cv::Mat::zeros(resp_map.size(), CV_32F);
 	
 	for(int k = 0; k < (int)kp.size(); k++)
@@ -93,4 +88,15 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoint> &kp, int msize)
 	resp_map = resp_aux;
 	kp.clear();
 	kp = kp_aux;
+}
+
+void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss, int k, float min_quality, int msize)
+{
+    cv::Mat resp_map;
+
+    cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), 0, 0, cv::BORDER_DEFAULT);
+    
+    harrisCalc(img, resp_map, roi, msobel, mgauss, k);
+    harrisThreshold(resp_map, kp, min_quality);
+    harrisMaxSup(resp_map, kp, msize);
 }

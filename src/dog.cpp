@@ -1,9 +1,3 @@
-#include <bits/stdc++.h>
-
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include "dog.h"
 
 void dogInitScales(cv::Mat img, cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS], int mgauss)
@@ -35,7 +29,7 @@ void dogCalc(cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS], cv::Mat dog[DOG_SCL_ROW
 		}
 }
 
-void dogMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::vector<KeyPoint> &kp, int maxsup_size)
+void dogMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::vector<KeyPoints> &kp, int maxsup_size)
 {
 	int maxsup_rad = maxsup_size/2;
 
@@ -98,15 +92,9 @@ void dogMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::
 	}
 }
 
-void dogThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th, float curv_th)
+void contrastThreshold(std::vector<KeyPoints> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th)
 {
-	contrastThreshold(kp, dog, contrast_th);
-	edgeThreshold(kp, dog, curv_th);
-}
-
-void contrastThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th)
-{
-	std::vector<KeyPoint> kp_aux;
+	std::vector<KeyPoints> kp_aux;
 	
 	for(int i = 0; i < kp.size(); i++)
 	{
@@ -117,9 +105,9 @@ void contrastThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_
 	kp = kp_aux;
 }
 
-void edgeThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float curv_th)
+void edgeThreshold(std::vector<KeyPoints> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float curv_th)
 {
-	std::vector<KeyPoint> kp_aux;
+	std::vector<KeyPoints> kp_aux;
 	curv_th = (curv_th + 1)*(curv_th + 1)/curv_th;
 	
 	for(int i = 0; i < kp.size(); i++)
@@ -143,4 +131,21 @@ void edgeThreshold(std::vector<KeyPoint> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_
 	}
 	kp.clear();
 	kp = kp_aux;
+}
+
+void dogThreshold(std::vector<KeyPoints> &kp, cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], float contrast_th, float curv_th)
+{
+	contrastThreshold(kp, dog, contrast_th);
+	edgeThreshold(kp, dog, curv_th);
+}
+
+void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int mgauss, int maxsup_size, float contrast_th, float curv_th)
+{
+	cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS];
+	cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1];
+
+	dogInitScales(img, scales, mgauss);
+	dogCalc(scales, dog);
+	dogMaxSup(dog, roi, kp, maxsup_size);
+	dogThreshold(kp, dog, contrast_th, curv_th);
 }
