@@ -7,11 +7,11 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#include "../src/input.h"
-#include "../src/keypoint.h"
-#include "../src/harris.h"
-#include "../src/dog.h"
-#include "../src/surf.h"
-#include "../src/core.h"
+#include "detectors/input.h"
+#include "detectors/keypoint.h"
+#include "detectors/harris.h"
+#include "detectors/dog.h"
+#include "detectors/surf.h"
+#include "detectors/core.h"
 
 #endif

@@ -8,17 +8,19 @@ BIN_DIR = bin/
 TEST_DIR = test/
 SRC_DIR = src/
 INC_DIR = include/
+INC_SUBDIR = include/detectors/
 LIB_DIR = lib/
 IMG_DIR = img/
+INSTALL_DIR = ${HOME}/
 
 NAME_LIB = cphdr
 SRC_FILES = $(shell echo $(SRC_DIR)*.cpp)
+HEADERS_FILES = $(shell echo $(SRC_DIR)*.h)
 TARGET_LIB = $(LIB_DIR)$(NAME_LIB).so
 MAKE_LIB = $(CC) $(CPP_FLAGS) $(LD_FLAGS) -o $(TARGET_LIB) $(SRC_FILES)
-COPY_INC = cp $(SRC_DIR)$(NAME_LIB).h $(INC_DIR)
+COPY_INC = cp $(HEADERS_FILES) $(INC_SUBDIR)
 
 GET_URL = wget -r -np -R "index.html*" -e robots=off
-DTSET_URL = http://www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI/
 DTSET_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI/
 
 DEMO_DOG = demodog
@@ -26,6 +28,16 @@ DEMO_HARRIS = demoharris
 DEMO_SURF = demosurf
 DEMO_IMG = $(IMG_DIR)$(DTSET_DIR)2D/distance/100/100.LDR.jpg
 DEMO_ROI = $(IMG_DIR)$(DTSET_DIR)2D/distance/100/
+
+install: libcphdr
+	mkdir -p $(INSTALL_DIR)$(NAME_LIB)
+	cp -ar $(INC_DIR) $(INSTALL_DIR)$(NAME_LIB)/
+	cp -ar $(LIB_DIR) $(INSTALL_DIR)$(NAME_LIB)/
+
+libcphdr:
+	$(MAKE_LIB)
+	mkdir -p $(INC_SUBDIR)
+	$(COPY_INC) && mv $(INC_SUBDIR)$(NAME_LIB).h $(INC_DIR)
 
 demoharris:
 	$(CC) -o $(BIN_DIR)$(DEMO_HARRIS) $(TEST_DIR)$(DEMO_HARRIS).cpp $(SRC_FILES) $(CV_LIB)
@@ -45,9 +57,5 @@ run_demodog:
 run_demosurf:
 	./$(BIN_DIR)$(DEMO_SURF) $(IMG_DEMO) $(DEMO_ROI)
 
-libcphdr:
-	$(MAKE_LIB)
-	$(COPY_INC)
-
 img_dtset:
-	$(GET_URL) $(DTSET_URL) -P $(IMG_DIR)
+	$(GET_URL) http://$(DTSET_DIR) -P $(IMG_DIR)

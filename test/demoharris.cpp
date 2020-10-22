@@ -1,4 +1,4 @@
-#include "../src/cphdr.h"
+#include "../include/cphdr.h"
 
 int main(int, char** argv)
 {	
