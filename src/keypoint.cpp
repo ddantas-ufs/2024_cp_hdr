@@ -17,12 +17,14 @@ void transformCoord(std::vector<KeyPoints> &kp)
 	}
 }
 
-void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> kp)
+void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> kp, std::string out_path)
 {
 	transformCoord(kp);
 
 	for(int i = 0; i < (int)kp.size(); i++)
 		cv::circle(img, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
+
+	cv::imwrite(out_path + ".kp.png", img);
 }
 
 bool compareResponse(KeyPoints a, KeyPoints b)

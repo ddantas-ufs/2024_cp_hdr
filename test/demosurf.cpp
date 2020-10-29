@@ -10,7 +10,7 @@ int main(int, char** argv)
 
 	readImg(argv[1], img_in, img_gray, img_name);
 	readRoi(argv[2], roi, img_gray.size());
-	std::string out_path = "out/" + img_name + ".surf";
+	std::string out_path = std::string(argv[3]) + img_name + ".surf";
 
     return 0;
 }
