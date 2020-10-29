@@ -11,6 +11,7 @@ INC_DIR = include
 INC_SUBDIR = include/detectors
 LIB_DIR = lib
 IMG_DIR = img
+OUT_DIR = out
 INSTALL_DIR = ${HOME}
 
 NAME_LIB = cphdr
@@ -50,13 +51,13 @@ demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
 
 run_demoharris:
-	./$(BIN_DIR)/$(DEMO_HARRIS) $(IMG_DEMO) $(DEMO_ROI)
+	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
 
 run_demodog:
-	./$(BIN_DIR)/$(DEMO_DOG) $(IMG_DEMO) $(DEMO_ROI)
+	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
 
 run_demosurf:
-	./$(BIN_DIR)/$(DEMO_SURF) $(IMG_DEMO) $(DEMO_ROI)
+	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
 
 PRIBYL_DIR:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
