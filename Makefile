@@ -16,10 +16,8 @@ INSTALL_DIR = ${HOME}
 
 NAME_LIB = cphdr
 SRC_FILES = $(shell echo $(SRC_DIR)/*.cpp)
-HEADERS_FILES = $(shell echo $(SRC_DIR)/*.h)
 TARGET_LIB = $(LIB_DIR)/$(NAME_LIB).so
 MAKE_LIB = $(CC) $(CPP_FLAGS) $(LD_FLAGS) -o $(TARGET_LIB) $(SRC_FILES)
-COPY_INC = cp $(HEADERS_FILES) $(INC_SUBDIR)/
 
 GET_URL = wget -r -np -R "index.html*" -e robots=off
 PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
@@ -38,8 +36,6 @@ install:
 
 libcphdr:
 	$(MAKE_LIB)
-	mkdir -p $(INC_SUBDIR)/
-	$(COPY_INC) && mv $(INC_SUBDIR)/$(NAME_LIB).h $(INC_DIR)/
 
 demoharris:
 	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS) $(TEST_DIR)/$(DEMO_HARRIS).cpp $(SRC_FILES) $(CV_LIB)

@@ -1,4 +1,4 @@
-#include "keypoint.h"
+#include "../include/detectors/keypoint.h"
 
 bool outOfBounds(int i, int j, cv::Size size_img)
 {

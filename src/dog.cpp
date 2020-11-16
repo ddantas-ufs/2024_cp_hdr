@@ -1,4 +1,4 @@
-#include "dog.h"
+#include "../include/detectors/dog.h"
 
 void dogInitScales(cv::Mat img, cv::Mat scales[DOG_SCL_ROWS][DOG_SCL_COLS], int mgauss)
 {	

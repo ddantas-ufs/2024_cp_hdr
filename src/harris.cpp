@@ -1,5 +1,5 @@
-#include "harris.h"
-#include "keypoint.h"
+#include "../include/detectors/harris.h"
+#include "../include/detectors/keypoint.h"
 
 void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
 {

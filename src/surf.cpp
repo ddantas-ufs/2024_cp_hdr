@@ -1,4 +1,4 @@
-#include "surf.h"
+#include "../include/detectors/surf.h"
 
 void surfKp(cv::Mat img, std::vector<KeyPoints> &kp, cv::Mat roi[])
 {

@@ -1,4 +1,4 @@
-#include "input.h"
+#include "../include/detectors/input.h"
 
 std::string getFolderName(std::string path)
 {
