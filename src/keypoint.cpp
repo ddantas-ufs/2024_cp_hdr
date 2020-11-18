@@ -17,7 +17,7 @@ void transformCoord(std::vector<KeyPoints> &kp)
 	}
 }
 
-void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> kp, std::string out_path)
+void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path)
 {
 	transformCoord(kp);
 
