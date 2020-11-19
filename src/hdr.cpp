@@ -38,10 +38,14 @@ void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size)
 
 void logTransform(cv::Mat img, cv::Mat &img_log)
 {
+    cv::Mat img_aux, img_ln;
+    float ln10 = 2.302;
+
     if(img_log.depth() != CV_8UC1)
         img_log = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
     
-    cv::Mat img_aux;
     cv::add(img, 1, img_aux);
-    cv::log(img_aux, img_log);
+    cv::log(img_aux, img_ln);
+    
+    img_log = img_ln*(1/ln10);
 }

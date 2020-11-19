@@ -1,5 +1,6 @@
 #include "../include/detectors/harris.h"
 #include "../include/detectors/keypoint.h"
+#include "../include/detectors/hdr.h"
 
 void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
 {
@@ -90,13 +91,29 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
 	kp = kp_aux;
 }
 
-void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss, int k, float min_quality, int msize)
+void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss,
+              float sigma_x, float sigma_y, int k, float min_quality, int msize)
 {
     cv::Mat resp_map;
 
-    cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), 0, 0, cv::BORDER_DEFAULT);
+    cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_DEFAULT);
     
     harrisCalc(img, resp_map, roi, msobel, mgauss, k);
     harrisThreshold(resp_map, kp, min_quality);
     harrisMaxSup(resp_map, kp, msize);
+}
+
+void harrisKpHDR(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss,
+                 float sigma_x, float sigma_y, int k, float min_quality, int msup_size, int cv_size)
+{
+    cv::Mat resp_map, img_blur, img_cv, img_log;
+
+    cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_DEFAULT);
+    
+	coefVar(img_blur, img_cv, cv_size);
+	logTransform(img_cv, img_log);
+	
+    harrisCalc(img_log, resp_map, roi, msobel, mgauss, k);
+    harrisThreshold(resp_map, kp, min_quality);
+    harrisMaxSup(resp_map, kp, msup_size);
 }
