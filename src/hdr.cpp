@@ -2,7 +2,7 @@
 
 void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size)
 {
-    cv::Mat img2 = img.mul(img);
+    cv::Mat img2 = img.mul(img); // result of the operation in CV_32F or CV_64F?
     int mask_mid = mask_size/2;
     int N = mask_size*mask_size;
     

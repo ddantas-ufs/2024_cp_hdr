@@ -26,7 +26,8 @@ RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Sce
 DEMO_DOG = demodog
 DEMO_HARRIS = demoharris
 DEMO_SURF = demosurf
-DEMO_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
+DEMO_HDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
+DEMO_LDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
 DEMO_ROI = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/
 
 install:
@@ -47,15 +48,15 @@ demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
 
 run_demoharris:
-	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
+	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
 
 run_demodog:
-	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
+	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
 
 run_demosurf:
-	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_IMG) $(DEMO_ROI) $(OUT_DIR)
+	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
 
-PRIBYL_DIR:
+pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 
 rana_dtset:
