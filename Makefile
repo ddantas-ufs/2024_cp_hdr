@@ -47,14 +47,14 @@ demodog:
 demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
 
-run_demoharris:
-	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
+run_demoharris: demoharris
+	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
 
-run_demodog:
-	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
+run_demodog: demodog
+	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
 
-run_demosurf:
-	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)
+run_demosurf: demosurf
+	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
 
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

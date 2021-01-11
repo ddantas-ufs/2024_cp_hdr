@@ -5,7 +5,7 @@
 
 bool outOfBounds(int i, int j, cv::Size size_img);
 
-void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> kp, std::string out_path);
+void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path);
 
 void saveKeypoints(std::vector<KeyPoints> &kp, cv::Mat roi[], std::string out_path, int max_kp = MAX_KP);
 
