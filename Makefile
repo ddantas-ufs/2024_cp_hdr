@@ -23,6 +23,7 @@ GET_URL = wget -r -np -R "index.html*" -e robots=off
 PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
 RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Scenes.zip
 
+DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_HARRIS = demoharris
 DEMO_SURF = demosurf
@@ -46,6 +47,9 @@ demodog:
 
 demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
+
+defaultdog:
+	$(CC) -o $(BIN_DIR)/$(DEF_DOG) $(TEST_DIR)/$(DEF_DOG).cpp $(SRC_FILES) $(CV_LIB)
 
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/

@@ -56,20 +56,22 @@ void readRoi(char *dtset_path, cv::Mat roi[], cv::Size img_size)
 
 std::string getFileName(std::string file_path)
 {
-	std::string file_name = "";
-
-	while(file_path.length() > 0)
-	{
-		if(file_path.back() == '/')
-			break;
-		file_name += file_path.back();
-		file_path.pop_back();
-	}
-	std::reverse(file_name.begin(), file_name.end());
-
-	while(file_name[file_name.length() - 1] != '.')
-		file_name.pop_back();
-	file_name.pop_back();
+	// OBTAINING COMPLETE FILENAME
+	size_t size = file_path.rfind("/", file_path.length());
 	
-	return file_name;
+	if (size != std::string::npos) {
+		file_path = file_path.substr(size+1, file_path.length() - size);
+	} else {
+		file_path = "";
+	}
+	
+	// REMOVING EXTENSION
+	size = file_path.rfind(".", file_path.length());
+	
+	if (size != std::string::npos) {
+		return file_path.substr(0, size);
+	} else {
+		return file_path;
+	}
 }
+
