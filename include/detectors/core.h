@@ -9,6 +9,8 @@
 
 #define DOG_SCL_ROWS 4
 #define DOG_SCL_COLS 5
+#define DOG_MAX_INTERP_STEPS 5 // Interpolation max steps before failure. Based on OpenSIFT and OpenCV
+#define SIFT_IMG_BORDER 5 // Interpolation border to ignore keypoints
 #define CONTRAST_TH 0.03 //prybil set to 8
 #define CURV_TH 5
 #define GAUSS_SIZE 9
@@ -23,8 +25,8 @@
 
 struct KeyPoints
 {
-    int y; //change to float soon
-	int x; //change to float soon
+    float y; //change to float soon
+	float x; //change to float soon
 	float resp;
 	int scale;
 	int level;
