@@ -48,7 +48,7 @@ void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoints> &kp, float min_qu
 	for(int y = 0; y < resp_map.rows; y++)
 		for(int x = 0; x < resp_map.cols; x++)
 			if(resp_map.at<float>(y, x) >= threshold)
-				kp.push_back({y, x, resp_map.at<float>(y, x)});
+				kp.push_back({float(y), float(x), resp_map.at<float>(y, x)});
 			else
 				resp_map.at<float>(y, x) = 0;
 			
@@ -83,7 +83,7 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
 		if(is_max)
 		{
 			resp_aux.at<float>(y, x) = kp_ref;
-			kp_aux.push_back({y, x, kp_ref, 0, 0});
+			kp_aux.push_back({float(y), float(x), kp_ref, 0, 0});
 		}
 	}
 	resp_map = resp_aux;

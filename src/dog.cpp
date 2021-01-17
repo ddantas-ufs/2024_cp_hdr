@@ -111,7 +111,84 @@ void dogMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::
 					}
 					
 					if(is_smaller || is_bigger)
-						kp.push_back({y, x, curr_px, s, l});	
+						kp.push_back({float(y), float(x), curr_px, s, l});	
+				}
+			}
+		}
+	}
+}
+
+void dogInterpolatedMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat roi[], std::vector<KeyPoints> &kp, int maxsup_size, float curv_th)
+{
+	int maxsup_rad = maxsup_size/2;
+
+	for(int s = 0; s < DOG_SCL_ROWS; s++)
+	{
+		for(int l = 1; l < DOG_SCL_COLS - 1; l++)
+		{
+			cv::Mat middle = dog[s][l];
+			cv::Mat down = dog[s][l - 1];
+			cv::Mat up = dog[s][l + 1];
+			cv::Mat dog_aux = cv::Mat::zeros(middle.size(), CV_32FC1);
+			
+			for(int y = maxsup_rad; y < middle.rows - maxsup_rad; y++)
+			{
+				for(int x = maxsup_rad; x < middle.cols - maxsup_rad; x++)
+				{
+					if(roi[0].at<uchar>(y*pow(2, s), x*pow(2, s)) == 0)
+						continue;
+					
+					float curr_px = middle.at<float>(y, x);
+					bool is_smaller = true;
+					bool is_bigger = true;
+					
+					for(int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
+					{
+						for(int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
+						{
+							if(!((curr_px < middle.at<float>(i, j) || (y == i && x == j)) && 
+								 (curr_px < down.at<float>(i, j)) &&
+								 (curr_px < up.at<float>(i, j))))
+							{
+								is_smaller = false;
+								break;
+							}
+						}
+						if(!is_smaller)
+							break;
+					}
+					for(int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
+					{
+						for(int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
+						{
+							if(!((curr_px > middle.at<float>(i, j) || (y == i && x == j)) && 
+								 (curr_px > down.at<float>(i, j)) && 
+								 (curr_px > up.at<float>(i, j))))
+							{
+								is_bigger = false;
+								break;
+							}
+						}
+						if(!is_bigger)
+							break;
+					}
+					
+					if(is_smaller || is_bigger) {
+						// MAKE INTERPOLATION
+						KeyPoints keypoint = interp_extremum( dog, s, l, y, x, DOG_SCL_COLS - 1, curv_th);
+						
+						int iMin = std::numeric_limits<int>::min();
+						float fMin = std::numeric_limits<float>::min();
+						// ADD TO KEY POINT VECTOR
+						if( (keypoint.x == fMin  && keypoint.y == fMin) && ( keypoint.scale == iMin && keypoint.level == iMin ) ) {
+							// IF NULL, INSERT ORIGINAL KEYPOINT
+							kp.push_back({float(y), float(x), curr_px, s, l});
+						} else {
+							// IF RETURNING SOMETHING, INSERT THE INTERPOLATED KEYPOINT
+							kp.push_back( keypoint );
+						}
+					}
+					
 				}
 			}
 		}
@@ -215,120 +292,102 @@ void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int mgauss, i
 	dogInitScales(img, scales, mgauss);
 	dogCalc(scales, dog);
 	dogMaxSup(dog, roi, kp, maxsup_size);
-	//dogInterpExtrem(); // ainda vamos ver quais sao os argumentos
+	dogInterpolatedMaxSup(dog, roi, kp, maxsup_size, curv_th);
 	dogThreshold(kp, dog, contrast_th, curv_th);
 }
 
 /**
-  Interpolates a scale-space extremum's location and scale to subpixel
-  accuracy to form an image feature.  Rejects features with low contrast.
-  Based on Section 4 of Lowe's paper.  
-
-  @param dog DoG scale space pyramid
-  @param octv feature's octave of scale space
-  @param intvl feature's within-octave interval
-  @param intvls total intervals per octave
-  @param contr_thr threshold on feature contrast
-
-  @return Returns the feature resulting from interpolation of the given
-		  parameters or NULL if the given location could not be 
-		  interpolated or if contrast at the interpolated loation was 
-		  too low.  If a feature is returned, its scale, orientation,
-		  and descriptor are yet to be determined.
+ * Interpolates a scale-space extremum's location and scale to subpixel
+ * accuracy to form an image feature.  Rejects features with low contrast.
+ * Based on Section 4 of Lowe's paper.  
+ * @param dog_pyr DoG scale space pyramid
+ * @param octv feature's octave of scale space
+ * @param intvl feature's within-octave interval
+ * @param r feature's image row
+ * @param c feature's image column
+ * @param intvls total intervals per octave
+ * @param contr_thr threshold on feature contrast
+ * @return	Returns the feature resulting from interpolation of the given
+ *			parameters or NULL if the given location could not be interpolated or
+ *			if contrast at the interpolated loation was too low.  If a feature is
+ *			returned, its scale, orientation, and descriptor are yet to be determined.
 **/
-static struct feature* interp_extremum( cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], 
-										int octv,
-										int intvl,
-										int intvls,
-										double contr_thr )
+static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1], int octv,
+					int intvl, int r, int c, int intvls,
+					double contr_thr )
 {
+	KeyPoints feat;
+	double xi, xr, xc, contr;
+	int i = 0;
 	
-	for( int r = 0; r < DOG_SCL_ROWS; r++ )
+	// ATRIBUINDO VALORES MINIMOS PARA feat
+	feat.x = std::numeric_limits<float>::min();
+	feat.y = std::numeric_limits<float>::min();
+	feat.scale = std::numeric_limits<int>::min();
+	feat.level = std::numeric_limits<int>::min();
+
+	while( i < DOG_MAX_INTERP_STEPS )
 	{
-		for( int c = 0; c < DOG_SCL_COLS-1; c++ )
+		interp_step( dog_pyr, octv, intvl, r, c, &xi, &xr, &xc );
+		if( ABS( xi ) < 0.5  &&  ABS( xr ) < 0.5  &&  ABS( xc ) < 0.5 )
+			break;
+
+		c += cvRound( xc );
+		r += cvRound( xr );
+		intvl += cvRound( xi );
+
+		if( intvl < 1  ||
+			intvl > intvls  ||
+			c < SIFT_IMG_BORDER  ||
+			r < SIFT_IMG_BORDER  ||
+			c >= dog_pyr[octv][0].rows - SIFT_IMG_BORDER  ||
+			r >= dog_pyr[octv][0].cols - SIFT_IMG_BORDER )
 		{
-			struct feature* feat;
-			struct detection_data* ddata;
-			double xi, xr, xc, contr;
-			int i = 0;
-
-			while( i < SIFT_MAX_INTERP_STEPS )
-			{
-				interp_step( dog, octv, intvl, r, c, &xi, &xr, &xc );
-				if( ABS( xi ) < 0.5  &&  ABS( xr ) < 0.5  &&  ABS( xc ) < 0.5 )
-					break;
-
-				c += cvRound( xc );
-				r += cvRound( xr );
-				intvl += cvRound( xi );
-
-				if( intvl < 1  ||
-					intvl > intvls  ||
-					c < SIFT_IMG_BORDER  ||
-					r < SIFT_IMG_BORDER  ||
-					c >= dog[octv][0]->width - SIFT_IMG_BORDER  ||
-					r >= dog[octv][0]->height - SIFT_IMG_BORDER )
-				{
-					return NULL;
-				}
-
-				i++;
-			}
-
-			// ENSURE CONVERGENCE OF INTERPOLATION
-			if( i >= SIFT_MAX_INTERP_STEPS )
-				return NULL;
-
-			contr = interp_contr( dog, octv, intvl, r, c, xi, xr, xc );
-			if( ABS( contr ) < contr_thr / intvls )
-				return NULL;
-
-			feat = new_feature();
-			ddata = feat_detection_data( feat );
-			feat->img_pt.x = feat->x = ( c + xc ) * pow( 2.0, octv );
-			feat->img_pt.y = feat->y = ( r + xr ) * pow( 2.0, octv );
-			ddata->r = r;
-			ddata->c = c;
-			ddata->octv = octv;
-			ddata->intvl = intvl;
-			ddata->subintvl = xi;
-
 			return feat;
-			
-		} // FOR COLS
-	} // FOR ROWS
+		}
+
+		i++;
+	}
+
+	/* ensure convergence of interpolation */
+	if( i >= DOG_MAX_INTERP_STEPS )
+		return feat;
+
+	contr = interp_contr( dog_pyr, octv, intvl, r, c, xi, xr, xc );
+	if( ABS( contr ) < contr_thr / intvls )
+		return feat;
+
+	//feat = new KeyPoints();
+	feat.x = feat.x = ( c + xc ) * pow( 2.0, octv );
+	feat.y = feat.y = ( r + xr ) * pow( 2.0, octv );
+	feat.scale = octv;
+	feat.level = intvl;
+
+	return feat;
 }
 
-
-
 /**
-  Performs one step of extremum interpolation.  Based on Eqn. (3) in Lowe's
-  paper.
-
-  @param dog difference of Gaussians scale space pyramid
-  @param octv octave of scale space
-  @param intvl interval being interpolated
-  @param r row being interpolated
-  @param c column being interpolated
-  @param xi output as interpolated subpixel increment to interval
-  @param xr output as interpolated subpixel increment to row
-  @param xc output as interpolated subpixel increment to col
+ * Performs one step of extremum interpolation.  Based on Eqn. (3) in Lowe's
+ * paper.
+ * @param dog_pyr difference of Gaussians scale space pyramid
+ * @param octv octave of scale space
+ * @param intvl interval being interpolated
+ * @param r row being interpolated
+ * @param c column being interpolated
+ * @param xi output as interpolated subpixel increment to interval
+ * @param xr output as interpolated subpixel increment to row
+ * @param xc output as interpolated subpixel increment to col
 **/
 
-static void interp_step( cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1],
-						 int octv, 
-						 int intvl,
-						 int r, 
-						 int c, 
-						 double* xi,
-						 double* xr,
-						 double* xc )
+static void interp_step( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1],
+						 int octv, int intvl, int r, int c,
+						 double* xi, double* xr, double* xc )
 {
 	CvMat* dD, * H, * H_inv, X;
 	double x[3] = { 0 };
 
-	dD = deriv_3D( dog, octv, intvl, r, c );
-	H = hessian_3D( dog, octv, intvl, r, c );
+	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
+	H = hessian_3D( dog_pyr, octv, intvl, r, c );
 	H_inv = cvCreateMat( 3, 3, CV_64FC1 );
 	cvInvert( H, H_inv, CV_SVD );
 	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
@@ -341,4 +400,116 @@ static void interp_step( cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1],
 	*xi = x[2];
 	*xr = x[1];
 	*xc = x[0];
+}
+
+/**
+ * Computes the partial derivatives in x, y, and scale of a pixel in the DoG
+ * scale space pyramid.
+ * @param dog_pyr DoG scale space pyramid
+ * @param octv pixel's octave in dog_pyr
+ * @param intvl pixel's interval in octv
+ * @param r pixel's image row
+ * @param c pixel's image col
+ * @return Returns the vector of partial derivatives for pixel I
+ * { dI/dx, dI/dy, dI/ds }^T as a CvMat*
+**/
+static CvMat* deriv_3D( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1], int octv, int intvl, int r, int c )
+{
+  CvMat* dI;
+  double dx, dy, ds;
+
+  dx = ( pixval32f( dog_pyr[octv][intvl], r, c+1 ) -
+		 pixval32f( dog_pyr[octv][intvl], r, c-1 ) ) / 2.0;
+  dy = ( pixval32f( dog_pyr[octv][intvl], r+1, c ) -
+		 pixval32f( dog_pyr[octv][intvl], r-1, c ) ) / 2.0;
+  ds = ( pixval32f( dog_pyr[octv][intvl+1], r, c ) -
+		 pixval32f( dog_pyr[octv][intvl-1], r, c ) ) / 2.0;
+  
+  dI = cvCreateMat( 3, 1, CV_64FC1 );
+  cvmSet( dI, 0, 0, dx );
+  cvmSet( dI, 1, 0, dy );
+  cvmSet( dI, 2, 0, ds );
+
+  return dI;
+}
+
+/**
+ * Computes the 3D Hessian matrix for a pixel in the DoG scale space pyramid.
+ * @param dog_pyr DoG scale space pyramid
+ * @param octv pixel's octave in dog_pyr
+ * @param intvl pixel's interval in octv
+ * @param r pixel's image row
+ * @param c pixel's image col
+ * @return Returns the Hessian matrix (below) for pixel I as a CvMat*
+ * / Ixx  Ixy  Ixs \
+ * | Ixy  Iyy  Iys |
+ * \ Ixs  Iys  Iss /
+**/
+static CvMat* hessian_3D( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1],
+						  int octv, int intvl, int r, int c )
+{
+	CvMat* H;
+	double v, dxx, dyy, dss, dxy, dxs, dys;
+
+	v = pixval32f( dog_pyr[octv][intvl], r, c );
+	dxx = ( pixval32f( dog_pyr[octv][intvl], r, c+1 ) + 
+			pixval32f( dog_pyr[octv][intvl], r, c-1 ) - 2 * v );
+	dyy = ( pixval32f( dog_pyr[octv][intvl], r+1, c ) +
+			pixval32f( dog_pyr[octv][intvl], r-1, c ) - 2 * v );
+	dss = ( pixval32f( dog_pyr[octv][intvl+1], r, c ) +
+			pixval32f( dog_pyr[octv][intvl-1], r, c ) - 2 * v );
+	dxy = ( pixval32f( dog_pyr[octv][intvl], r+1, c+1 ) -
+			pixval32f( dog_pyr[octv][intvl], r+1, c-1 ) -
+			pixval32f( dog_pyr[octv][intvl], r-1, c+1 ) +
+			pixval32f( dog_pyr[octv][intvl], r-1, c-1 ) ) / 4.0;
+	dxs = ( pixval32f( dog_pyr[octv][intvl+1], r, c+1 ) -
+			pixval32f( dog_pyr[octv][intvl+1], r, c-1 ) -
+			pixval32f( dog_pyr[octv][intvl-1], r, c+1 ) +
+			pixval32f( dog_pyr[octv][intvl-1], r, c-1 ) ) / 4.0;
+	dys = ( pixval32f( dog_pyr[octv][intvl+1], r+1, c ) -
+			pixval32f( dog_pyr[octv][intvl+1], r-1, c ) -
+			pixval32f( dog_pyr[octv][intvl-1], r+1, c ) +
+			pixval32f( dog_pyr[octv][intvl-1], r-1, c ) ) / 4.0;
+
+	H = cvCreateMat( 3, 3, CV_64FC1 );
+	cvmSet( H, 0, 0, dxx );
+	cvmSet( H, 0, 1, dxy );
+	cvmSet( H, 0, 2, dxs );
+	cvmSet( H, 1, 0, dxy );
+	cvmSet( H, 1, 1, dyy );
+	cvmSet( H, 1, 2, dys );
+	cvmSet( H, 2, 0, dxs );
+	cvmSet( H, 2, 1, dys );
+	cvmSet( H, 2, 2, dss );
+
+	return H;
+}
+
+/**
+ * Calculates interpolated pixel contrast.  Based on Eqn. (3) in Lowe's
+ * paper.
+ * @param dog_pyr difference of Gaussians scale space pyramid
+ * @param octv octave of scale space
+ * @param intvl within-octave interval
+ * @param r pixel row
+ * @param c pixel column
+ * @param xi interpolated subpixel increment to interval
+ * @param xr interpolated subpixel increment to row
+ * @param xc interpolated subpixel increment to col
+ * @param Returns interpolated contrast.
+**/
+static double interp_contr( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1],
+							int octv, int intvl, int r, int c,
+							double xi, double xr, double xc )
+{
+	CvMat* dD, X, T;
+	double t[1], x[3] = { xc, xr, xi };
+
+	cvInitMatHeader( &X, 3, 1, CV_64FC1, x, CV_AUTOSTEP );
+	cvInitMatHeader( &T, 1, 1, CV_64FC1, t, CV_AUTOSTEP );
+	dD = deriv_3D( dog_pyr, octv, intvl, r, c );
+	cvGEMM( dD, &X, 1, NULL, 0, &T,  CV_GEMM_A_T );
+	cvReleaseMat( &dD );
+
+	return pixval32f( dog_pyr[octv][intvl], r, c ) + t[0] * 0.5;
 }

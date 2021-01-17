@@ -2,6 +2,7 @@
 #define CORE_H
 
 #include <bits/stdc++.h>
+#include <limits>       // std::numeric_limits
 
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
@@ -31,5 +32,7 @@ struct KeyPoints
 	int scale;
 	int level;
 };
+
+#define ABS(x) ( ( (x) < 0 )? -(x) : (x) )
 
 #endif

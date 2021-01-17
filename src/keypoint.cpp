@@ -80,18 +80,18 @@ void saveKeypoints(std::vector<KeyPoints> &kp, cv::Mat roi[], std::string out_pa
 	file = fopen((out_path + ".kp.roi1.txt").c_str(), "w+");
 	fprintf(file, "%d\n", (int)kp_roi1.size());
 	for(int i = 0; i < (int)kp_roi1.size(); i++)
-		fprintf(file, "%d %d %.4f\n", kp_roi1[i].y, kp_roi1[i].x, kp_roi1[i].resp);
+		fprintf(file, "%f %f %.4f\n", kp_roi1[i].y, kp_roi1[i].x, kp_roi1[i].resp);
 	fclose(file);
 
 	file = fopen((out_path + ".kp.roi2.txt").c_str(), "w+");
 	fprintf(file, "%d\n", (int)kp_roi2.size());
 	for(int i = 0; i < (int)kp_roi2.size(); i++)
-		fprintf(file, "%d %d %.4f\n", kp_roi2[i].y, kp_roi2[i].x, kp_roi2[i].resp);
+		fprintf(file, "%f %f %.4f\n", kp_roi2[i].y, kp_roi2[i].x, kp_roi2[i].resp);
 	fclose(file);
 
 	file = fopen((out_path + ".kp.roi3.txt").c_str(), "w+");
 	fprintf(file, "%d\n", (int)kp_roi3.size());
 	for(int i = 0; i < (int)kp_roi3.size(); i++)
-		fprintf(file, "%d %d %.4f\n", kp_roi3[i].y, kp_roi3[i].x, kp_roi3[i].resp);	
+		fprintf(file, "%f %f %.4f\n", kp_roi3[i].y, kp_roi3[i].x, kp_roi3[i].resp);	
 	fclose(file);
 }

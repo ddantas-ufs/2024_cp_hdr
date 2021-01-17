@@ -60,6 +60,9 @@ run_demodog: demodog
 run_demosurf: demosurf
 	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
 
+run_defaultdog: defaultdog
+	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 
