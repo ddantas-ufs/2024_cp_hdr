@@ -173,17 +173,23 @@ void dogInterpolatedMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat 
 							break;
 					}
 					
-					if(is_smaller || is_bigger) {
+					if(is_smaller || is_bigger) 
+					{
 						// MAKE INTERPOLATION
 						KeyPoints keypoint = interp_extremum( dog, s, l, y, x, DOG_SCL_COLS - 1, curv_th);
 						
 						int iMin = std::numeric_limits<int>::min();
 						float fMin = std::numeric_limits<float>::min();
-						// ADD TO KEY POINT VECTOR
-						if( (keypoint.x == fMin  && keypoint.y == fMin) && ( keypoint.scale == iMin && keypoint.level == iMin ) ) {
-							// IF NULL, INSERT ORIGINAL KEYPOINT
+						
+						// ADD TO KEYPOINT VECTOR
+						if( ( keypoint.x == fMin  && keypoint.y == fMin ) && 
+							( keypoint.scale == iMin && keypoint.level == iMin ) ) 
+						{
+							
 							kp.push_back({float(y), float(x), curr_px, s, l});
-						} else {
+						} 
+						else 
+						{
 							// IF RETURNING SOMETHING, INSERT THE INTERPOLATED KEYPOINT
 							kp.push_back( keypoint );
 						}
@@ -291,7 +297,7 @@ void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int mgauss, i
 
 	dogInitScales(img, scales, mgauss);
 	dogCalc(scales, dog);
-	dogMaxSup(dog, roi, kp, maxsup_size);
+	//dogMaxSup(dog, roi, kp, maxsup_size);
 	dogInterpolatedMaxSup(dog, roi, kp, maxsup_size, curv_th);
 	dogThreshold(kp, dog, contrast_th, curv_th);
 }
@@ -320,7 +326,7 @@ static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1
 	double xi, xr, xc, contr;
 	int i = 0;
 	
-	// ATRIBUINDO VALORES MINIMOS PARA feat
+	// MINIMUM TYPE VALUES TO KEYPOINT
 	feat.x = std::numeric_limits<float>::min();
 	feat.y = std::numeric_limits<float>::min();
 	feat.scale = std::numeric_limits<int>::min();
@@ -356,12 +362,13 @@ static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1
 	contr = interp_contr( dog_pyr, octv, intvl, r, c, xi, xr, xc );
 	if( ABS( contr ) < contr_thr / intvls )
 		return feat;
-
-	//feat = new KeyPoints();
-	feat.x = feat.x = ( c + xc ) * pow( 2.0, octv );
-	feat.y = feat.y = ( r + xr ) * pow( 2.0, octv );
+	
+	// SAVING INTERPOLATED VALUES
+	feat.x = ( c + xc ) * pow( 2.0, octv );
+	feat.y = ( r + xr ) * pow( 2.0, octv );
 	feat.scale = octv;
 	feat.level = intvl;
+	feat.resp = float(xi);
 
 	return feat;
 }

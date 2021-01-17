@@ -45,8 +45,8 @@ void saveKeypoints(std::vector<KeyPoints> &kp, cv::Mat roi[], std::string out_pa
     
     for(int i = 0; (i < max_kp) && (i < (int)kp_aux.size()); i++)
 	{
-		int y = kp_aux[i].y;
-		int x = kp_aux[i].x;
+		float y = kp_aux[i].y;
+		float x = kp_aux[i].x;
 
 		if(roi[1].at<uchar>(y, x) != 0)
 			kp_roi1.push_back(kp_aux[i]);
