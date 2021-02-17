@@ -177,6 +177,7 @@ void dogInterpolatedMaxSup(cv::Mat dog[DOG_SCL_ROWS][DOG_SCL_COLS - 1], cv::Mat 
 					{
 						// MAKE INTERPOLATION
 						KeyPoints keypoint = interp_extremum( dog, s, l, y, x, DOG_SCL_COLS - 1, curv_th);
+						keypoint.resp = curr_px;
 						
 						int iMin = std::numeric_limits<int>::min();
 						float fMin = std::numeric_limits<float>::min();
@@ -318,9 +319,13 @@ void dogKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int mgauss, i
  *			if contrast at the interpolated loation was too low.  If a feature is
  *			returned, its scale, orientation, and descriptor are yet to be determined.
 **/
-static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1], int octv,
-					int intvl, int r, int c, int intvls,
-					double contr_thr )
+static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1],  // dog
+								  int octv, // s
+								  int intvl,  // l
+								  int r, // y
+								  int c,  // x
+								  int intvls, // DOG_SCL_COLS - 1
+								  double contr_thr ) // curv_th
 {
 	KeyPoints feat;
 	double xi, xr, xc, contr;
@@ -368,7 +373,7 @@ static KeyPoints interp_extremum( cv::Mat dog_pyr[DOG_SCL_ROWS][DOG_SCL_COLS - 1
 	feat.y = ( r + xr ) * pow( 2.0, octv );
 	feat.scale = octv;
 	feat.level = intvl;
-	feat.resp = float(xi);
+	//feat.resp = float(xi);
 
 	return feat;
 }
