@@ -29,7 +29,7 @@ DEMO_HARRIS = demoharris
 DEMO_SURF = demosurf
 DEMO_HDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
 DEMO_LDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
-DEMO_ROI = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/
+DEMO_ROI = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/ROI.100.png
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)

@@ -2,7 +2,7 @@
 #include "../include/detectors/keypoint.h"
 #include "../include/detectors/hdr.h"
 
-void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int mgauss, int k)
+void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi, int msobel, int mgauss, int k)
 {
 	cv::Mat Ix, Iy, Ixx, Iyy, Ixy;
 
@@ -23,7 +23,7 @@ void harrisCalc(cv::Mat img, cv::Mat &resp_map, cv::Mat roi[], int msobel, int m
 	{
 		for(int x = 0; x < img.cols; x++)
 		{
-			if(roi[0].at<uchar>(y, x) != 0)
+			if(roi.at<uchar>(y, x) != 0)
 			{
 				float dxx = Ixx.at<float>(y, x);
 				float dyy = Iyy.at<float>(y, x);
@@ -91,7 +91,7 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
 	kp = kp_aux;
 }
 
-void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss,
+void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, cv::Mat roi, int msobel, int mgauss,
               float sigma_x, float sigma_y, int k, float min_quality, int msize)
 {
     cv::Mat resp_map;
@@ -103,7 +103,7 @@ void harrisKp(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel
     harrisMaxSup(resp_map, kp, msize);
 }
 
-void harrisKpHDR(cv::Mat img, cv::Mat roi[], std::vector<KeyPoints> &kp, int msobel, int mgauss,
+void harrisKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, cv::Mat roi, int msobel, int mgauss,
                  float sigma_x, float sigma_y, int k, float min_quality, int msup_size, int cv_size)
 {
     cv::Mat resp_map, img_blur, img_cv, img_log;

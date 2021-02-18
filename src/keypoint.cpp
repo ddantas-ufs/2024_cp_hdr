@@ -32,66 +32,17 @@ bool compareResponse(KeyPoints a, KeyPoints b)
     return (a.resp > b.resp);
 }
 
-void saveKeypoints(std::vector<KeyPoints> &kp, cv::Mat roi[], std::string out_path, int max_kp)
+void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
-	std::vector<KeyPoints> kp_roi1, kp_roi2, kp_roi3;
-	std::vector<KeyPoints> kp_aux;
 	FILE *file;
-	
-	transformCoord(kp);
+	std::vector<KeyPoints> kp_aux = kp;
 
-    kp_aux = kp;
+	transformCoord(kp_aux);
+
 	std::sort(kp_aux.begin(), kp_aux.end(), compareResponse);
-    
-    for(int i = 0; (i < max_kp) && (i < (int)kp_aux.size()); i++)
-	{
-		float y = kp_aux[i].y;
-		float x = kp_aux[i].x;
-
-		if(roi[1].at<uchar>(y, x) != 0)
-			kp_roi1.push_back(kp_aux[i]);
-	 	else if(roi[2].at<uchar>(y, x) != 0)
-			kp_roi2.push_back(kp_aux[i]);
-	 	else if(roi[3].at<uchar>(y, x) != 0)
-			kp_roi3.push_back(kp_aux[i]);
-    }
-	kp.clear();
-
-	for(int i = 0; i < (int)kp_roi1.size(); i++)
-		kp.push_back(kp_roi1[i]);
 	
-	for(int i = 0; i < (int)kp_roi2.size(); i++)
-		kp.push_back(kp_roi2[i]);
-	
-	for(int i = 0; i < (int)kp_roi3.size(); i++)
-		kp.push_back(kp_roi3[i]);
-	
-	double total_kp = (int)kp_roi1.size() + (int)kp_roi2.size() + (int)kp_roi3.size();
-	double rate_min = std::min((int)kp_roi1.size()/total_kp,
-				      std::min((int)kp_roi2.size()/total_kp, (int)kp_roi3.size()/total_kp));
-	double rate_max = std::max((int)kp_roi1.size()/total_kp,
-				      std::max((int)kp_roi2.size()/total_kp, (int)kp_roi3.size()/total_kp));
-	double dist_rate = 1 - (rate_max - rate_min);
-
-	file = fopen((out_path + ".distrate.txt").c_str(), "w+");
-	fprintf(file, "%.4f\n", dist_rate);
-	fclose(file);
-	
-	file = fopen((out_path + ".kp.roi1.txt").c_str(), "w+");
-	fprintf(file, "%d\n", (int)kp_roi1.size());
-	for(int i = 0; i < (int)kp_roi1.size(); i++)
-		fprintf(file, "%f %f %.4f\n", kp_roi1[i].y, kp_roi1[i].x, kp_roi1[i].resp);
-	fclose(file);
-
-	file = fopen((out_path + ".kp.roi2.txt").c_str(), "w+");
-	fprintf(file, "%d\n", (int)kp_roi2.size());
-	for(int i = 0; i < (int)kp_roi2.size(); i++)
-		fprintf(file, "%f %f %.4f\n", kp_roi2[i].y, kp_roi2[i].x, kp_roi2[i].resp);
-	fclose(file);
-
-	file = fopen((out_path + ".kp.roi3.txt").c_str(), "w+");
-	fprintf(file, "%d\n", (int)kp_roi3.size());
-	for(int i = 0; i < (int)kp_roi3.size(); i++)
-		fprintf(file, "%f %f %.4f\n", kp_roi3[i].y, kp_roi3[i].x, kp_roi3[i].resp);	
+	file = fopen((out_path + ".kp.txt").c_str(), "w+");
+	for(int i = 0; i < std::min((int)kp_aux.size(), max_kp); i++)
+		fprintf(file, "%f %f %d %d %.4f\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].scale, kp_aux[i].level, kp_aux[i].resp);
 	fclose(file);
 }

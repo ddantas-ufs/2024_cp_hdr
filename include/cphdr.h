@@ -12,6 +12,5 @@
 #include "detectors/hdr.h"
 #include "detectors/harris.h"
 #include "detectors/dog.h"
-#include "detectors/surf.h"
 
 #endif
