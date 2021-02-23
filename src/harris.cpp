@@ -115,8 +115,9 @@ void harrisKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, int msobel, int mgauss
   cv::Mat resp_map, img_blur, img_cv, img_log;
 
   cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_REPLICATE);
-    
+
 	coefVar(img_blur, img_cv, cv_size);
+	img_log = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
 	logTransform(img_cv, img_log);
 	
   harrisCalc(img_log, resp_map, msobel, mgauss, k);
