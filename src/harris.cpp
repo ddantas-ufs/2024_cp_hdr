@@ -101,7 +101,7 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, int msobel, int mgauss,
 {
     cv::Mat resp_map;
 
-    cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_DEFAULT);
+    cv::GaussianBlur(img, img, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_REPLICATE);
     
     harrisCalc(img, resp_map, msobel, mgauss, k);
     harrisThreshold(resp_map, kp, min_quality);
@@ -114,7 +114,7 @@ void harrisKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, int msobel, int mgauss
 {
   cv::Mat resp_map, img_blur, img_cv, img_log;
 
-  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_DEFAULT);
+  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_REPLICATE);
     
 	coefVar(img_blur, img_cv, cv_size);
 	logTransform(img_cv, img_log);
