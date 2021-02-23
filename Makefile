@@ -27,9 +27,8 @@ DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_HARRIS = demoharris
 DEMO_SURF = demosurf
-DEMO_HDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
-DEMO_LDR_IMG = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/100.LDR.jpg
-DEMO_ROI = $(IMG_DIR)/$(PRIBYL_DIR)/2D/distance/100/ROI.100.png
+DEMO_HDR_IMG = $(IMG_DIR)/lena.png
+DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -52,13 +51,13 @@ defaultdog:
 	$(CC) -o $(BIN_DIR)/$(DEF_DOG) $(TEST_DIR)/$(DEF_DOG).cpp $(SRC_FILES) $(CV_LIB)
 
 run_demoharris: demoharris
-	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demodog: demodog
-	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demosurf: demosurf
-	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(DEMO_ROI) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_defaultdog: defaultdog
 	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
