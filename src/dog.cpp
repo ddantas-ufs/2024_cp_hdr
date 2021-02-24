@@ -1,4 +1,5 @@
 #include "../include/detectors/dog.h"
+#include "../include/detectors/hdr.h"
 
 /**
  * Computes the partial derivatives in \a y, \a x, and \a s (scale of a pixel in the DoG scale space pyramid)
@@ -325,23 +326,36 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
  * @param img original image which keypoints must be extracted
  * @param scales matrix containing pointers to each image of scale space
  * @param mgauss gaussian filter convolution window size
+ * @param is_hdr flag to enable hdr functions
 **/
-void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss)
+void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
+                   bool is_hdr = false, int cv_size = CV_SIZE)
 {	
-	cv::Mat img_aux;
+	cv::Mat img_downsamp, img2blur, img_cv, img_log;
 	float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 	
-	img.convertTo(img_aux, CV_32FC1);
-	
+	img.convertTo(img_downsamp, CV_32FC1);
+
 	for (int i = 0; i < NUM_OCTAVES; i++)
 	{
 		float ko = k[i];
 		for (int j = 0; j < NUM_SCALES; j++)
-		{			
-			GaussianBlur(img_aux, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
+		{
+			if (is_hdr) //checar esse passo para hdr com welerson
+			{
+				coefVar(img_downsamp, img_cv, cv_size);
+				img_log = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
+				logTransform(img_cv, img_log);
+				img_log.convertTo(img2blur, CV_32FC1);
+			}
+			else
+			{
+				img2blur = img_downsamp;
+			}
+		  cv::GaussianBlur(img2blur, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
 			ko = ko * 1.414214;
 		}
-		cv::resize(img_aux, img_aux, cv::Size(img_aux.cols / 2, img_aux.rows / 2));
+		cv::resize(img_downsamp, img_downsamp, cv::Size(img_downsamp.cols / 2, img_downsamp.rows / 2));
 	}
 }
 
@@ -365,6 +379,7 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
  * Coordenates the DoG detector execution
  * @param img grayscale image to extract feature points (keypoints)
  * @param kp array of keypoints detected
+ * @param refine_px flag to enable subpixel interpolation
  * @param mgauss gaussian filter size
  * @param maxsup_size maximum number of checks when locating maxima/minima in DoG images
  * @param contrast_th contrast threshold value to threshold proccess
@@ -377,6 +392,30 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
 	cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
 
 	dogInitScales(img, scales, mgauss);
+	dogCalc(scales, dog);
+	dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+	contrastTh(dog, kp, contrast_th);
+	edgeTh(dog, kp, curv_th);
+}
+
+/**
+ * Coordenates the DoG detector execution with HDR functions
+ * @param img grayscale image to extract feature points (keypoints)
+ * @param kp array of keypoints detected
+ * @param refine_px flag to enable subpixel interpolation
+ * @param mgauss gaussian filter size
+ * @param maxsup_size maximum number of checks when locating maxima/minima in DoG images
+ * @param contrast_th contrast threshold value to threshold proccess
+ * @param curv_th rdge threshold value to threshold process
+**/
+void dogKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
+		       int maxsup_size, float contrast_th, float curv_th, int cv_size)
+{
+	cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
+	cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
+	bool is_hdr = true;
+
+	dogInitScales(img, scales, mgauss, is_hdr);
 	dogCalc(scales, dog);
 	dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
 	contrastTh(dog, kp, contrast_th);
