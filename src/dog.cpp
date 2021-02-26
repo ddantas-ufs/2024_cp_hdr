@@ -138,7 +138,7 @@ KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
     interpStep(dog, o, s, y, x, &inc_s, &inc_y, &inc_x);
     if(std::abs(inc_s) < 0.5 && std::abs(inc_y) < 0.5 && std::abs(inc_x) < 0.5)
     {
-	    break;
+      break;
     }
     s += cvRound(inc_s);
     y += cvRound(inc_y);
