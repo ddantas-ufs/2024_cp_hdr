@@ -47,9 +47,9 @@ CvMat* hessian3D(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s, int y,
   cv::Mat middle = dog[o][s];
   cv::Mat down = dog[o][s - 1];
   double v, dxx, dyy, dss, dxy, dxs, dys;
-
+  
   v = middle.at<float>(y, x);
-
+  
   dxx = middle.at<float>(y, x + 1) + middle.at<float>(y, x - 1) - 2 * v;
   dyy = middle.at<float>(y + 1, x) + middle.at<float>(y - 1, x) - 2 * v;
   dss = up.at<float>(y, x) + down.at<float>(y, x) - 2 * v;
@@ -70,7 +70,7 @@ CvMat* hessian3D(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s, int y,
   cvmSet(H, 2, 0, dxs);
   cvmSet(H, 2, 1, dys);
   cvmSet(H, 2, 2, dss);
-
+  
   return H;
 }
 
@@ -121,7 +121,7 @@ void interpStep(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s, int y,
  * the given location could not be interpolated
 **/
 KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
-						 int y, int x, int num_scales)
+                         int y, int x, int num_scales)
 {
   KeyPoints kp;
   double inc_s, inc_y, inc_x;
@@ -132,36 +132,36 @@ KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
   kp.y = std::numeric_limits<float>::min();
   kp.octave = std::numeric_limits<int>::min();
   kp.scale = std::numeric_limits<int>::min();
-
+  
   while (i < MAX_INTERP_STEPS)
   {
     interpStep(dog, o, s, y, x, &inc_s, &inc_y, &inc_x);
-	  if(std::abs(inc_s) < 0.5 && std::abs(inc_y) < 0.5 && std::abs(inc_x) < 0.5)
-	  {
+    if(std::abs(inc_s) < 0.5 && std::abs(inc_y) < 0.5 && std::abs(inc_x) < 0.5)
+    {
 	    break;
-	  }
-	  s += cvRound(inc_s);
-	  y += cvRound(inc_y);
-	  x += cvRound(inc_x);
-
+    }
+    s += cvRound(inc_s);
+    y += cvRound(inc_y);
+    x += cvRound(inc_x);
+    
     if (s < 1  || s > num_scales  || x < DOG_BORDER  || y < DOG_BORDER  ||
-	    x >= dog[o][0].rows - DOG_BORDER  || y >= dog[o][0].cols - DOG_BORDER)
+        x >= dog[o][0].rows - DOG_BORDER  || y >= dog[o][0].cols - DOG_BORDER)
     {
       return kp;
-	  }
-	  i++;
+    }
+    i++;
   }
-
+  
   if (i >= MAX_INTERP_STEPS)
   {
     return kp;
   }
-
+  
   kp.y = y + inc_y;
   kp.x = x + inc_x;
   kp.octave = o;
   kp.scale = s;
-
+  
   return kp;
 }
 
@@ -173,19 +173,19 @@ KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
  * @param maxsup_size maximum number of checks when locating maxima/minima in DoG images
 **/
 void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
-			         int maxsup_size, float curv_th, bool refine_px)
+               int maxsup_size, float curv_th, bool refine_px)
 {
   int maxsup_rad = maxsup_size/2;
-
+  
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
     for (int s = 1; s < NUM_SCALES - 1; s++)
     {
       cv::Mat middle = dog[o][s];
-	    cv::Mat down = dog[o][s - 1];
-	    cv::Mat up = dog[o][s + 1];
-	    cv::Mat dog_aux = cv::Mat::zeros(middle.size(), CV_32FC1);
-			
+      cv::Mat down = dog[o][s - 1];
+      cv::Mat up = dog[o][s + 1];
+      cv::Mat dog_aux = cv::Mat::zeros(middle.size(), CV_32FC1);
+      			
       for (int y = maxsup_rad; y < middle.rows - maxsup_rad; y++)
       {
         for (int x = maxsup_rad; x < middle.cols - maxsup_rad; x++)
@@ -193,70 +193,70 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
           float curr_px = middle.at<float>(y, x);
           bool is_smaller = true;
           bool is_bigger = true;
-					
+          					
           for (int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
           {
             for (int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
             {
               if (!((curr_px < middle.at<float>(i, j) || (y == i && x == j)) &&
-			              (curr_px < down.at<float>(i, j)) &&
-					          (curr_px < up.at<float>(i, j))))
+                    (curr_px < down.at<float>(i, j)) &&
+                    (curr_px < up.at<float>(i, j))))
               {
                 is_smaller = false;
                 break;
               }
             }
             if (!is_smaller)
-			      {
+            {
               break;
-			      }
-		      }
-					for (int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
-					{
-					  for (int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
-						{
-							if (!((curr_px > middle.at<float>(i, j) || (y == i && x == j)) && 
-								    (curr_px > down.at<float>(i, j)) && 
-								    (curr_px > up.at<float>(i, j))))
-							{
-							  is_bigger = false;
-								break;
-							}
-						}
-						if (!is_bigger)
-						{
-						  break;
-						}
-					}
-					if (is_smaller || is_bigger) 
-					{
-						if (refine_px)
-						{
-							KeyPoints kp_aux = interpExtremum(dog, o, s, y, x, NUM_SCALES - 1);
-							kp_aux.resp = curr_px;
-							
-							int int_min = std::numeric_limits<int>::min();
-							float float_min = std::numeric_limits<float>::min();
-							
-							if ((kp_aux.x == float_min && kp_aux.y == float_min) &&
-							    (kp_aux.scale == int_min && kp_aux.octave == int_min))
-							{
-								kp.push_back({float(y), float(x), curr_px, o, s});
-							}
-							else
-							{
-								kp.push_back(kp_aux);
-							}
-						}
-						else
-						{
-							kp.push_back({float(y), float(x), curr_px, o, s});	
-						}
-					}
-				}
-			}
-		}
-	}
+            }
+          }
+          for (int i = y - maxsup_rad; i <= y + maxsup_rad; i++)
+          {
+            for (int j = x - maxsup_rad; j <= x + maxsup_rad; j++)
+            {
+              if (!((curr_px > middle.at<float>(i, j) || (y == i && x == j)) && 
+                    (curr_px > down.at<float>(i, j)) && 
+                    (curr_px > up.at<float>(i, j))))
+              {
+                is_bigger = false;
+                break;
+              }
+            }
+            if (!is_bigger)
+            {
+              break;
+            }
+          }
+          if (is_smaller || is_bigger) 
+          {
+            if (refine_px)
+            {
+              KeyPoints kp_aux = interpExtremum(dog, o, s, y, x, NUM_SCALES - 1);
+              kp_aux.resp = curr_px;
+              							
+              int int_min = std::numeric_limits<int>::min();
+              float float_min = std::numeric_limits<float>::min();
+              							
+              if ((kp_aux.x == float_min && kp_aux.y == float_min) &&
+                  (kp_aux.scale == int_min && kp_aux.octave == int_min))
+              {
+                kp.push_back({float(y), float(x), curr_px, o, s});
+              }
+              else
+              {
+                kp.push_back(kp_aux);
+              }
+            }
+            else
+            {
+              kp.push_back({float(y), float(x), curr_px, o, s});	
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -268,17 +268,17 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
 void contrastTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
                 float contrast_th)
 {
-	std::vector<KeyPoints> kp_aux;
-	
-	for (int i = 0; i < kp.size(); i++)
-	{
-		if (kp[i].resp >= contrast_th)
-		{
-		  kp_aux.push_back(kp[i]);
-		}
-	}
-	kp.clear();
-	kp = kp_aux;
+  std::vector<KeyPoints> kp_aux;
+  	
+  for (int i = 0; i < kp.size(); i++)
+  {
+    if (kp[i].resp >= contrast_th)
+    {
+      kp_aux.push_back(kp[i]);
+    }
+  }
+  kp.clear();
+  kp = kp_aux;
 }
 
 /**
@@ -288,36 +288,36 @@ void contrastTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints>
  * @param curv_th threshold value to curvature threshold
 **/  
 void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
-				     float curv_th)
+            float curv_th)
 {
-	std::vector<KeyPoints> kp_aux;
-	curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
-	
-	for (int i = 0; i < kp.size(); i++)
-	{
-		float dxx, dyy, dxy;
-		float trH, detH, curv_ratio;
-
-		cv::Mat D = dog[kp[i].octave][kp[i].scale];
-
-		int y = kp[i].y;
-		int x = kp[i].x;
-
-		dxx = D.at<float>(y - 1, x) + D.at<float>(y + 1, x) - 2.0 * D.at<float>(y, x);
-		dyy = D.at<float>(y, x - 1) + D.at<float>(y, x + 1) - 2.0 * D.at<float>(y, x);
-		dxy = 0.25 * (D.at<float>(y - 1, x - 1) + D.at<float>(y + 1, x + 1) -
-		      D.at<float>(y + 1, x - 1) - D.at<float>(y - 1, x + 1));
-
-		trH = dxx * dyy;
-		detH = dxx * dyy - dxy*dxy;
-
-		curv_ratio = trH * trH / detH;
-		
-		if ((detH > 0) && (curv_ratio > curv_th))
-			   kp_aux.push_back(kp[i]);
-	}
-	kp.clear();
-	kp = kp_aux;
+  std::vector<KeyPoints> kp_aux;
+  curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
+  	
+  for (int i = 0; i < kp.size(); i++)
+  {
+    float dxx, dyy, dxy;
+    float trH, detH, curv_ratio;
+    
+    cv::Mat D = dog[kp[i].octave][kp[i].scale];
+    
+    int y = kp[i].y;
+    int x = kp[i].x;
+    
+    dxx = D.at<float>(y - 1, x) + D.at<float>(y + 1, x) - 2.0 * D.at<float>(y, x);
+    dyy = D.at<float>(y, x - 1) + D.at<float>(y, x + 1) - 2.0 * D.at<float>(y, x);
+    dxy = 0.25 * (D.at<float>(y - 1, x - 1) + D.at<float>(y + 1, x + 1) -
+          D.at<float>(y + 1, x - 1) - D.at<float>(y - 1, x + 1));
+    
+    trH = dxx * dyy;
+    detH = dxx * dyy - dxy*dxy;
+    
+    curv_ratio = trH * trH / detH;
+    
+    if ((detH > 0) && (curv_ratio > curv_th))
+         kp_aux.push_back(kp[i]);
+  }
+  kp.clear();
+  kp = kp_aux;
 }
 
 /**
@@ -331,32 +331,32 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
 void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
                    bool is_hdr = false, int cv_size = CV_SIZE)
 {	
-	cv::Mat img_downsamp, img2blur, img_cv, img_log;
-	float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
-	
-	img.convertTo(img_downsamp, CV_32FC1);
-
-	for (int i = 0; i < NUM_OCTAVES; i++)
-	{
-		float ko = k[i];
-		for (int j = 0; j < NUM_SCALES; j++)
-		{
-			if (is_hdr) //checar esse passo para hdr com welerson
-			{
-				coefVar(img_downsamp, img_cv, cv_size);
-				img_log = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
-				logTransform(img_cv, img_log);
-				img_log.convertTo(img2blur, CV_32FC1);
-			}
-			else
-			{
-				img2blur = img_downsamp;
-			}
-		  cv::GaussianBlur(img2blur, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
-			ko = ko * 1.414214;
-		}
-		cv::resize(img_downsamp, img_downsamp, cv::Size(img_downsamp.cols / 2, img_downsamp.rows / 2));
-	}
+  cv::Mat img_downsamp, img2blur, img_cv, img_log;
+  float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
+  	
+  img.convertTo(img_downsamp, CV_32FC1);
+  
+  for (int i = 0; i < NUM_OCTAVES; i++)
+  {
+    float ko = k[i];
+    for (int j = 0; j < NUM_SCALES; j++)
+    {
+      if (is_hdr) //checar esse passo para hdr com welerson
+      {
+        coefVar(img_downsamp, img_cv, cv_size);
+        img_log = cv::Mat::zeros(img.rows, img.cols, CV_8UC1);
+        logTransform(img_cv, img_log);
+        img_log.convertTo(img2blur, CV_32FC1);
+      }
+      else
+      {
+        img2blur = img_downsamp;
+      }
+      cv::GaussianBlur(img2blur, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
+      ko = ko * 1.414214;
+    }
+    cv::resize(img_downsamp, img_downsamp, cv::Size(img_downsamp.cols / 2, img_downsamp.rows / 2));
+  }
 }
 
 /**
@@ -367,12 +367,14 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
 void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
              cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1])
 {
-	for(int o = 0; o < NUM_OCTAVES; o++)
+  for(int o = 0; o < NUM_OCTAVES; o++)
+  {
 		for(int s = 0; s < NUM_SCALES - 1; s++)
-		{
-			dog[o][s] = cv::Mat::zeros(scales[o][s].size(), CV_32FC1);
-			cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);
-		}
+    {
+      dog[o][s] = cv::Mat::zeros(scales[o][s].size(), CV_32FC1);
+      cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);
+    }
+  }
 }
 
 /**
@@ -386,16 +388,16 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
  * @param curv_th rdge threshold value to threshold process
 **/
 void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
-		       int maxsup_size, float contrast_th, float curv_th)
+           int maxsup_size, float contrast_th, float curv_th)
 {
-	cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
-	cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
-
-	dogInitScales(img, scales, mgauss);
-	dogCalc(scales, dog);
-	dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
-	contrastTh(dog, kp, contrast_th);
-	edgeTh(dog, kp, curv_th);
+  cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
+  cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
+  
+  dogInitScales(img, scales, mgauss);
+  dogCalc(scales, dog);
+  dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  contrastTh(dog, kp, contrast_th);
+  edgeTh(dog, kp, curv_th);
 }
 
 /**
@@ -409,15 +411,15 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
  * @param curv_th rdge threshold value to threshold process
 **/
 void dogKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
-		       int maxsup_size, float contrast_th, float curv_th, int cv_size)
+              int maxsup_size, float contrast_th, float curv_th, int cv_size)
 {
-	cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
-	cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
-	bool is_hdr = true;
-
-	dogInitScales(img, scales, mgauss, is_hdr);
-	dogCalc(scales, dog);
-	dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
-	contrastTh(dog, kp, contrast_th);
-	edgeTh(dog, kp, curv_th);
+  cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
+  cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
+  bool is_hdr = true;
+  
+  dogInitScales(img, scales, mgauss, is_hdr);
+  dogCalc(scales, dog);
+  dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  contrastTh(dog, kp, contrast_th);
+  edgeTh(dog, kp, curv_th);
 }

@@ -2,10 +2,11 @@
 
 void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size)
 {
+  cv::Mat cv = cv::Mat::zeros(img.rows, img.cols, CV_64FC1);
   cv::Mat img2 = cv::Mat::zeros(img.rows, img.cols, CV_64FC1);
   int mask_mid = mask_size / 2;
   int N = mask_size * mask_size;
-
+  
   for (int y = 0; y < img.rows; y++)
   {
     for (int x = 0; x < img.cols; x++)
@@ -39,19 +40,22 @@ void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size)
       {
         coef_var = std_dev / N;
       }
-      img_cv.at<double>(y, x) = coef_var;
+      cv.at<double>(y, x) = coef_var;
     }
   }
-  cv::normalize(img_cv, img_cv, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
+  cv::normalize(cv, img_cv, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
 }
 
 void logTransform(cv::Mat img, cv::Mat &img_log)
 {
-    cv::Mat img_aux, img_ln;
-    float ln10 = 2.302;
-
-    cv::add(img, 1, img_aux);
-    cv::log(img_aux, img_ln);
-    
-    img_log = img_ln * (1 / ln10);
+  cv::Mat img_aux;
+  float ln10 = 2.302;
+  
+  img.convertTo(img_aux, CV_32FC1);
+  img_aux = img_aux + 1;
+  cv::log(img_aux, img_aux);
+      
+  img_log = img_aux * (1.0 / ln10);
+  
+  cv::normalize(img_log, img_log, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
 }

@@ -3,6 +3,6 @@
 
 #include "core.h"
 
-void surfKp(cv::Mat img, std::vector<KeyPoints> &kp, cv::Mat roi[]);
+void surfKp(cv::Mat img, std::vector<KeyPoints> &kp);
 
 #endif

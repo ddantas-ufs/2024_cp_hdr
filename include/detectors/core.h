@@ -2,7 +2,7 @@
 #define CORE_H
 
 #include <bits/stdc++.h>
-#include <limits>       // std::numeric_limits
+#include <limits> //std::numeric_limits
 
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
@@ -27,10 +27,10 @@
 struct KeyPoints
 {
   float y;
-	float x;
-	float resp;
-	int octave;
-	int scale;
+  float x;
+  float resp;
+  int octave;
+  int scale;
 };
 
 #endif
