@@ -49,7 +49,7 @@ void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
   file = fopen((out_path + ".kp.txt").c_str(), "w+");
   for (int i = 0; i < std::min((int)kp_aux.size(), max_kp); i++)
   {
-    fprintf(file, "%.4e \t %.4e \t %d \t %d \t %.4e\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].octave, kp_aux[i].scale, kp_aux[i].resp);
+    fprintf(file, "%.4f \t %.4f \t %d \t %d \t %.4f\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].octave, kp_aux[i].scale, kp_aux[i].resp);
   }
   fclose(file);
 }
