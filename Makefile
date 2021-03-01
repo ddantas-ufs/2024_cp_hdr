@@ -33,6 +33,8 @@ DEMO_SURF_HDR = demosurf_hdr
 DEMO_HDR_IMG = $(IMG_DIR)/lena.png
 DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
+SIFT_DESCRIPTOR = demosift
+
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
 	cp -ar $(INC_DIR)/ $(INSTALL_DIR)/$(NAME_LIB)/
@@ -58,6 +60,9 @@ demosurf:
 
 defaultdog:
 	$(CC) -o $(BIN_DIR)/$(DEF_DOG) $(TEST_DIR)/$(DEF_DOG).cpp $(SRC_FILES) $(CV_LIB)
+
+descriptor_sift:
+	$(CC) -o $(BIN_DIR)/$(SIFT_DESCRIPTOR) $(TEST_DIR)/$(SIFT_DESCRIPTOR).cpp $(SRC_FILES) $(CV_LIB)
 
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/

@@ -53,3 +53,78 @@ void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
   }
   fclose(file);
 }
+
+/**
+ * Loads previously saved Keypoints
+ * 
+ * @param kp KeyPoints vector to store the loaded keypoints
+ * @param arqPath path to archive containing the saved keypoints
+**/
+std::vector<KeyPoints> loadKeypoints( std::string arqPath )
+{
+  std::fstream arch;
+  std::string line, strY, strX, strOctave, strScale, strResp;
+  std::vector<KeyPoints> kp;
+
+  arch.open( arqPath, std::ios::in ); 
+
+  if( arch.is_open() )
+  {
+    while( getline( arch, line ) )
+    {
+      int i = 0;
+      int sz = line.size();
+      char* buff;
+      char ln[sz+1];
+
+      // strtok WORKS ONLY WITH CHAR ARRAY
+      strcpy( ln, line.c_str() );
+
+      buff = strtok( ln, "\t" );
+      while( buff != NULL )
+      {
+        std::string strBuff = buff;
+        strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
+        if( i == 0 )
+        {
+          strY = strBuff;
+        }
+        if( i == 1 )
+        {
+          strX = strBuff;
+        }
+        if( i == 2 )
+        {
+          strOctave = strBuff;
+        }
+        if( i == 3 )
+        {
+          strScale = strBuff;
+        }
+        if( i == 4 )
+        {
+          strResp = strBuff;
+        }
+        std::cout << strBuff << "\n";
+        buff = strtok( NULL, "\t");
+        i = i + 1;
+      }
+
+      KeyPoints key;
+      key.y = std::stof(strY);
+      key.x = std::stof(strX);
+      key.octave = std::stoi(strOctave);
+      key.scale = std::stoi(strScale);
+      key.resp = std::stof(strResp);
+
+      std::cout << key.y << " " << key.x << " " << key.octave << " " << key.scale << " " << key.resp << "\n";
+
+      kp.push_back( key );
+      i = 0;
+      delete buff;
+    }
+    arch.close();
+  }
+
+  return kp;
+}
