@@ -24,6 +24,10 @@
 #define MAX_KP 0
 #define CV_SIZE 3 //can be 5 to harris
 
+#define DESC_GAUSS_WINDOW 5
+#define DESC_GAUSS_SIGMA 1.5
+#define DESC_HIST_BINS 36
+
 struct KeyPoints
 {
   float y;

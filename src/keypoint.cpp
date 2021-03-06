@@ -117,8 +117,6 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
       key.scale = std::stoi(strScale);
       key.resp = std::stof(strResp);
 
-      std::cout << key.y << " " << key.x << " " << key.octave << " " << key.scale << " " << key.resp << "\n";
-
       kp.push_back( key );
       i = 0;
       delete buff;
