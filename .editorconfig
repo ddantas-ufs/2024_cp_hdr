@@ -1,0 +1,20 @@
+[*]
+# use spaces for indentation
+indent_style = space
+# each indent should contain 2 spaces
+indent_size = 2
+# use Unix line endings
+end_of_line = lf
+# the files are utf-8 encoded
+charset = utf-8
+# no whitespace at the end of line
+trim_trailing_whitespace = true
+# a file must end with an empty line - this is good for version control systems
+insert_final_newline = true
+# a line should not have more than this amount of chars (not supported by all plugins)
+max_line_length = 90
+
+# tabs 2 spaces for makefiles
+[Makefile]
+indent_style = tab
+indent_size = 2
