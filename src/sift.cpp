@@ -1,4 +1,4 @@
-#include "../descriptors/sift.h"
+#include "../include/descriptors/sift.h"
 
 /**
  * Create a Gaussian Kernel based on sigma value
@@ -13,7 +13,6 @@
 **/
 float* gaussianKernel( float sigma, int size )
 {
-  int size = (int) 2 * (std::ceil( 3 * sigma ) + 1);
   int half = size / 2;
 
   double r, s = 2.0 * sigma * sigma;
@@ -58,19 +57,18 @@ bool isOut(cv::Mat img, int x, int y)
   return ( x <= 0 or x >= cols-1 or y <= 0 or y >= rows-1 );
 }
 
-double* cartToPolarGradient( int dx, int dy )
+void cartToPolarGradient( int dx, int dy, double mt[2] )
 {
   double mag, theta;
 
   mag = std::sqrt( (dx+dx)+(dy*dy) );
   theta = (std::atan2( dy, dx ) * 180 / M_PI) - 90;
 
-  double ret[] = {mag, theta};
-
-  return ret;
+  mt[0] = mag;
+  mt[1] = theta;
 }
 
-double* getGradient( cv::Mat img, int x, int y )
+void getGradient( cv::Mat img, int x, int y, double mt[2] )
 {
   int dy, dx;
   double hip;
@@ -80,7 +78,7 @@ double* getGradient( cv::Mat img, int x, int y )
   dx = ( ( int ) img.at<float>( y, std::min( img.cols-1, x+1 ) ) ) 
      - ( ( int ) img.at<float>( y, std::max( 0, x-1 ) ) );
 
-  return cartToPolarGradient( dx, dy );
+  cartToPolarGradient( dx, dy, mt );
 }
 
 int quantizeOrientation( double theta, int bins )
@@ -100,7 +98,7 @@ int quantizeOrientation( double theta, int bins )
 std::vector<KeyPoints> calcOrientation( cv::Mat img, KeyPoints kp )
 {
   std::vector<KeyPoints> auxList;
-  float sigma, hist[DESC_HIST_BINS], *kernel;
+  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS], *kernel;
   int radius, sizeKernel;
 
   sigma = DESC_GAUSS_SIGMA * kp.resp;
@@ -112,25 +110,21 @@ std::vector<KeyPoints> calcOrientation( cv::Mat img, KeyPoints kp )
   for( int i = -radius; i < radius; i++ )
   {
     int y, binn;
-    double *mt, weight;
+    double mt[2], weight;
 
     y = kp.y + i;
 
     if( isOut(img, 1, y) )
-    {
       continue;
-    }
 
     for( int j = -radius; j < radius; j++ )
     {
       int x = kp.x + j;
       if( isOut(img, x, 1) )
-      {
         continue;
-      }
 
       // mt[0] = mag and mt[1] = theta
-      mt = getGradient( img, x, y );
+      getGradient( img, x, y, mt );
       
       // array[i][j] -> array[i*size+j]. See gaussianKernel() comment.
       weight = kernel[( (i+radius)*sizeKernel )+(j+radius)] * mt[0];
@@ -138,8 +132,42 @@ std::vector<KeyPoints> calcOrientation( cv::Mat img, KeyPoints kp )
       hist[binn] += weight;
     }
   }
-}
 
+  // Getting max value and respective index 
+  maxValue = std::numeric_limits<float>::min();
+  maxIndex = std::numeric_limits<float>::min();
+  for( int i = 0; i < DESC_HIST_BINS; i++ )
+  {
+    if( hist[i] > maxValue )
+    {
+      maxValue = hist[i];
+      maxIndex = i;
+    }
+  }
+  
+  kp.direction = maxIndex * 10;
+
+  // If there's values above 85% of max value, return them.
+  for( int i = 0; i < DESC_HIST_BINS; i++ )
+  {
+    if( i == maxIndex )
+      continue;
+    
+    if( hist[i] > ( 0.85 * maxValue ) )
+    {
+      KeyPoints aux;
+      aux.x = kp.x;
+      aux.y = kp.y;
+      aux.resp = kp.resp;
+      aux.scale = kp.scale;
+      aux.octave = kp.octave;
+      aux.direction = i * 10;
+      auxList.push_back( aux );
+    }
+  }
+
+  return auxList;
+}
 
 /**
  * @param kp KeyPoints list
@@ -161,8 +189,8 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat img, int mGauss, floa
     auxList = calcOrientation(img, key);
 
     // ROUNDING 30 * cos( radians( octave ) ) AND sin( radians( octave ) )
-    px = (int) 0.5 + ( 30 * ( std::cos( key.octave * ( M_PI / 180) ) ) );
-    py = (int) 0.5 + ( 30 * ( std::sin( key.octave * ( M_PI / 180) ) ) );
+    px = (int) 0.5 + ( 30 * ( std::cos( key.direction * ( M_PI / 180) ) ) );
+    py = (int) 0.5 + ( 30 * ( std::sin( key.direction * ( M_PI / 180) ) ) );
 
     cv::arrowedLine( img2gray, cv::Point( key.x, key.y ),
                      cv::Point( key.x + px, key.y + py ), 
@@ -172,8 +200,8 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat img, int mGauss, floa
       int ppx, ppy;
       KeyPoints point = auxList.at(j);
 
-      ppx = (int) 0.5 + ( 30 * ( std::cos( point.octave * ( M_PI / 180) ) ) );
-      ppy = (int) 0.5 + ( 30 * ( std::sin( point.octave * ( M_PI / 180) ) ) );
+      ppx = (int) 0.5 + ( 30 * ( std::cos( point.direction * ( M_PI / 180) ) ) );
+      ppy = (int) 0.5 + ( 30 * ( std::sin( point.direction * ( M_PI / 180) ) ) );
       cv::arrowedLine( img2gray, cv::Point( point.x, point.y ), 
                        cv::Point( point.x+px, point.y+py ), 
                        cv::Scalar( 0, 0, 255 ), 1 );

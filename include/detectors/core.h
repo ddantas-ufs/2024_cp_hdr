@@ -35,6 +35,7 @@ struct KeyPoints
   float resp;
   int octave;
   int scale;
+  float direction;
 };
 
 #endif

@@ -123,6 +123,7 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
       key.octave = std::stoi(strOctave);
       key.scale = std::stoi(strScale);
       key.resp = std::stof(strResp);
+      key.direction = 0.0;
 
       kp.push_back( key );
       i = 0;
