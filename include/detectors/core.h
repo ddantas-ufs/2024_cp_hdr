@@ -27,6 +27,8 @@
 #define DESC_GAUSS_WINDOW 5
 #define DESC_GAUSS_SIGMA 1.5
 #define DESC_HIST_BINS 36
+#define DESC_BINS 8
+#define DESC_RADIUS 3 * DESC_GAUSS_SIGMA
 
 struct KeyPoints
 {
