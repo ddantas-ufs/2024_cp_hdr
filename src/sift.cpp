@@ -1,5 +1,93 @@
 #include "../include/descriptors/sift.h"
 
+cv::Mat repeatLastRow( cv::Mat& mat )
+{
+  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=1; i<rows; i++ )
+  {
+    for( int j=0; j<cols; j++ )
+    {
+      ret.at<float>(i-1, j) = mat.at<float>(i, j);
+    }
+  }
+
+  for( int j=0; j<cols; j++ )
+  {
+    ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
+  }
+
+  return ret;
+}
+
+cv::Mat repeatFirstRow( cv::Mat& mat )
+{
+  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int j=0; j<cols; j++ )
+  {
+    ret.at<float>(0, j) = mat.at<float>(0, j);
+  }
+
+  for( int i=0; i<rows-1; i++ )
+  {
+    for( int j=0; j<cols; j++ )
+    {
+      ret.at<float>(i+1, j) = mat.at<float>(i, j);
+    }
+  }
+
+  return ret;
+}
+
+cv::Mat repeatFirstColumn( cv::Mat& mat )
+{
+  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=0; i<rows; i++ )
+  {
+    ret.at<float>(i, 0) = mat.at<float>(i, 0);
+  }
+
+  for( int i=0; i<rows; i++ )
+  {
+    for( int j=0; j<cols-1; j++ )
+    {
+      ret.at<float>(i, j+1) = mat.at<float>(i, j);
+    }
+  }
+
+  return ret;
+}
+
+cv::Mat repeatLastColumn( cv::Mat& mat )
+{
+  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=0; i<rows-1; i++ )
+  {
+    for( int j=1; j<cols; j++ )
+    {
+      ret.at<float>(i, j-1) = mat.at<float>(i, j);
+    }
+  }
+
+  for( int i=0; i<rows; i++ )
+  {
+    ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
+  }
+
+  return ret;
+}
+
 /**
  * Create a Gaussian Kernel based on sigma value
  * 
@@ -11,22 +99,23 @@
  *         In this way. to access the item arr[i][j], we just : arr[i*size+j].
  *         Where size is the 'j' size. 
 **/
-float* gaussianKernel( float sigma, int size )
+void gaussianKernel( float sigma, cv::Mat& kernel )
 {
+  int size = (int) 2 * (std::ceil( 3 * sigma ) + 1);
   int half = size / 2;
 
   double r, s = 2.0 * sigma * sigma;
   double sum = 0.0; // to normalize
 
-  float *kernel = new float[size*size];
+  kernel = cv::Mat( cv::Size(size, size), CV_32F, cv::Scalar(0.0) );
 
   for( int x = -half; x <= half; x++ )
   {
     for( int y = -half; y <= half; y++ )
     {
         r = std::sqrt(x * x + y * y);
-        kernel[(( x + half ) * size)+(y + half)] = (std::exp(-(r * r) / s)) / (M_PI * s);
-        sum += kernel[( ( x + half ) * size )+( y + half )];
+        kernel.at<float>(x + half, y+half) = (std::exp(-(r * r) / s)) / (M_PI * s);
+        sum += kernel.at<float>(x + half, y+half);
     }
 }
 
@@ -35,35 +124,11 @@ float* gaussianKernel( float sigma, int size )
   {
     for (int j = 0; j < size; ++j)
     {
-      kernel[i*size+j] /= sum;
-    }
-  }
-  return kernel;
-}
-
-void dotMatrices( cv::Mat& mt1, float mt2[], float**res, int y, int x )
-{
-  // Initializing elements of matrix mult to 0.
-  for(int i = 0; i < mt1.rows; ++i)
-  {
-    for(int j = 0; j < x; ++j)
-    {
-      res[i][j] = 0;
-    }
-  }
-
-  // Multiplying matrix firstMatrix and secondMatrix and storing in array mult.
-  for(int i = 0; i < mt1.rows; ++i)
-  {
-    for(int j = 0; j < x; ++j)
-    {
-      for(int k=0; k<mt1.cols; ++k)
-      {
-        res[i][j] += mt1.at<float>(i, k) * mt2[k*y+j];
-      }
+      sum += kernel.at<float>(i, j);
     }
   }
 }
+
 
 /**
  * Verify if the coorduinates (x, y) outside from img limits
@@ -92,15 +157,16 @@ void cartToPolarGradient( int dx, int dy, double mt[2] )
   mt[1] = theta;
 }
 
-void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, double** mt[2] )
+void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, cv::Mat& m, cv::Mat& theta )
 {
-  cv::Mat mag, theta;
-
   for( int i=0; i<dx.rows; i++ )
   {
     for( int j=0; j<dx.cols; j++ )
     {
-      cartToPolarGradient( dx.at<int>(i, j), dy.at<int>(i, j), mt[i][j] );
+      double ret[2];
+      cartToPolarGradient( dx.at<int>(i, j), dy.at<int>(i, j), ret );
+      m.at<double>(i, j) = ret[0];
+      theta.at<double>(i, j) = ret[1];
     }
   }
 }
@@ -134,15 +200,15 @@ int quantizeOrientation( double theta, int bins )
 **/
 std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
 {
+  cv::Mat kernel;
   std::vector<KeyPoints> auxList;
-  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS], *kernel;
+  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS];//, *kernel;
   int radius, sizeKernel;
 
   sigma = DESC_GAUSS_SIGMA * kp.resp;
   radius = (int) 2 * (std::ceil( sigma ) + 1);
-  sizeKernel = (int) 2 * (std::ceil( 3 * sigma ) + 1);
   
-  kernel = gaussianKernel( sigma, sizeKernel );
+  gaussianKernel( sigma, kernel );
 
   for( int i = -radius; i < radius; i++ )
   {
@@ -163,8 +229,7 @@ std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
       // mt[0] = mag and mt[1] = theta
       getGradient( img, x, y, mt );
       
-      // array[i][j] -> array[i*size+j]. See gaussianKernel() comment.
-      weight = kernel[( (i+radius)*sizeKernel )+(j+radius)] * mt[0];
+      weight = kernel.at<float>(i+radius, j+radius) * mt[0];
       binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
       hist[binn] += weight;
     }
@@ -254,94 +319,6 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, flo
   kp.insert( kp.end(), newKp.begin(), newKp.end() ); 
 }
 
-cv::Mat repeatLastRow( cv::Mat& mat )
-{
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=1; i<rows; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i-1, j) = mat.at<float>(i, j);
-    }
-  }
-
-  for( int j=0; j<cols; j++ )
-  {
-    ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
-  }
-
-  return ret;
-}
-
-cv::Mat repeatFirstRow( cv::Mat& mat )
-{
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int j=0; j<cols; j++ )
-  {
-    ret.at<float>(0, j) = mat.at<float>(0, j);
-  }
-
-  for( int i=0; i<rows-1; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i+1, j) = mat.at<float>(i, j);
-    }
-  }
-
-  return ret;
-}
-
-cv::Mat repeatFirstColumn( cv::Mat& mat )
-{
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows; i++ )
-  {
-    ret.at<float>(i, 0) = mat.at<float>(i, 0);
-  }
-
-  for( int i=0; i<rows; i++ )
-  {
-    for( int j=0; j<cols-1; j++ )
-    {
-      ret.at<float>(i, j+1) = mat.at<float>(i, j);
-    }
-  }
-
-  return ret;
-}
-
-cv::Mat repeatLastColumn( cv::Mat& mat )
-{
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows-1; i++ )
-  {
-    for( int j=1; j<cols; j++ )
-    {
-      ret.at<float>(i, j-1) = mat.at<float>(i, j);
-    }
-  }
-
-  for( int i=0; i<rows; i++ )
-  {
-    ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
-  }
-
-  return ret;
-}
-
 void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
 {
   cv::Mat r1 = repeatLastRow( subImage );
@@ -389,11 +366,10 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
 
   for( int index=0; index < kpList.size(); index++ )
   {
-    cv::Mat patch, dx, dy;
+    cv::Mat patch, dx, dy, mag, the, kernel, featVec;
     KeyPoints kp = kpList.at(index);
-    int sizeKernel, i, x, y, s, t, l, b, r, xIni, xFim, yIni, yFim;
-    float *kernel, *auxKernel, d, theta;
-    double*** mt;
+    float d, theta;// *auxKernel;
+    int i, x, y, s, t, l, b, r, xIni, xFim, yIni, yFim, subW;
 
     i = 0;
     x = kp.x;
@@ -402,8 +378,7 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     d = kp.direction;
     
     theta = M_PI * 180.0;
-    sizeKernel = (int) 2 * (std::ceil( 3 * sigma ) + 1);
-    kernel = gaussianKernel( sigma, sizeKernel );
+    gaussianKernel( sigma, kernel );
 
     t = std::max( 0, y-( (int) windowSize/2) );
     l = std::max( 0, x-( (int) windowSize/2) );
@@ -419,8 +394,8 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     {
       if( t == 0 )
       {
-        xIni = sizeKernel-dx.rows;
-        xFim = sizeKernel;
+        xIni = kernel.rows-dx.rows;
+        xFim = kernel.rows;
       } else
       {
         xIni = 0;
@@ -431,35 +406,23 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     {
       if( l == 0 )
       {
-        yIni = sizeKernel-dx.cols;
-        yFim = sizeKernel;
+        yIni = kernel.cols-dx.cols;
+        yFim = kernel.cols;
       } else
       {
         yIni = 0;
         yFim = dx.cols;
       }
     }
-    
-    // array[i*size+j]
-    sizeKernel = xFim-xIni;
-    auxKernel = new float[(xFim-xIni) * (yFim-yIni)];
-    for( int i = xIni; i < xFim; i++ )
-    {
-      for( int j = yIni; j < yFim; j++ )
-      {
-        auxKernel[i*sizeKernel+j] = kernel[i*sizeKernel+j];
-      }
-    }
 
-    kernel = auxKernel;
-
+    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
     
     if( dy.rows < windowSize+1 )
     {
       if( t == 0 )
       {
-        xIni = sizeKernel-dy.rows;
-        xFim = sizeKernel;
+        xIni = kernel.rows-dy.rows;
+        xFim = kernel.rows;
       } else
       {
         xIni = 0;
@@ -470,8 +433,8 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     {
       if( l == 0 )
       {
-        yIni = sizeKernel-dy.cols;
-        yFim = sizeKernel;
+        yIni = kernel.cols-dy.cols;
+        yFim = kernel.cols;
       } else
       {
         yIni = 0;
@@ -479,45 +442,34 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
       }
     }
 
-    // array[i*size+j]
-    sizeKernel = xFim-xIni;
-    auxKernel = new float[(xFim-xIni) * (yFim-yIni)];
-    for( int i = xIni; i < xFim; i++ )
-    {
-      for( int j = yIni; j < yFim; j++ )
-      {
-        auxKernel[i*sizeKernel+j] = kernel[i*sizeKernel+j];
-      }
-    }
+    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
 
-    kernel = auxKernel;
-
-    // mt[0] = mag and mt[1] = theta
-    mt = new double**[dx.rows];
-    for(int i = 0; i < dx.rows; ++i)
-    {
-      mt[i] = new double*[dx.cols];
-      for( int j=0; j<dx.cols; j++ )
-        mt[i][j] = new double[2];
-    }
+    mag = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // magnitude
+    the = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // theta
     
-    cartToPolarGradientMat( dx, dy, mt );
+    cartToPolarGradientMat( dx, dy, mag, the );
 
     if( ( sizeof(kernel) / sizeof(float) ) == 17 )
     {
-      auxKernel = new float[ sizeKernel*sizeKernel];
-      dotMatrices(dx, kernel, auxKernel, sizeKernel, sizeKernel);
+      dx = dx.dot( kernel );
+      dy = dy.dot( kernel );
     }
 
-    for(int i = 0; i < dx.rows; ++i)
+    subW = (int) windowSize / 4;
+    featVec = cv::Mat( cv::Size(1, bins*windowSize), CV_32F, cv::Scalar(0.0) );
+
+    for(int i=0; i<subW; i++)
     {
-      for( int j=0; j<dx.cols; j++ )
-        delete[] mt[i][j];
-      
-      delete[] mt[i];
-    }
-    delete[] mt;
+      for( int j=0; j<subW; j++ )
+      {
+        t = i*subW;
+        l = j*subW;
+        b = std::min( img.rows, (i+1) * subW );
+        b = std::min( img.cols, (j+1) * subW );
 
+        hist = getHistogramForSubregion();
+      }
+    }
   }
 
 }
