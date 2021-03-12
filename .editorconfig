@@ -17,4 +17,4 @@ max_line_length = 90
 # tabs 2 spaces for makefiles
 [Makefile]
 indent_style = tab
-indent_size = 2
+indent_size = 8
