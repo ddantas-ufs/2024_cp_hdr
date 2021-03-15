@@ -14,10 +14,10 @@
 #define DOG_BORDER 5 //interpolation border to ignore keypoints
 #define CONTRAST_TH 0.03 //prybil set to 8
 #define CURV_TH 5
-#define GAUSS_SIZE 9
+#define GAUSS_SIZE 5
 #define SIGMA_X 0 //fix value (ex. 1.0) to keep a standard
 #define SIGMA_Y 0 //fix value (ex. 1.0) to keep a standard
-#define MAXSUP_SIZE 21 //can be 3 (based on Lowe's paper)
+#define MAXSUP_SIZE 3 //can be 3 (based on Lowe's paper)
 #define SOBEL_SIZE 7
 #define K 0.04
 #define MIN_QUALITY 0.05
