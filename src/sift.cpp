@@ -1,5 +1,40 @@
 #include "../include/descriptors/sift.h"
 
+/**
+ * Return a flattened array of a cv::Mat object
+ * 
+ * @param mat cv::Mat matrix to be flatenned
+ * @return the flatenned Matrix in a vector object
+**/
+std::vector<double> returnRavel( cv::Mat& mat, std::vector<double> arr )
+{
+  for (int i = 0; i < mat.rows; i++)
+  {
+    for( int j = 0; j < mat.cols; j++)
+    {
+      arr.push_back( mat.at<double>(i, j) );
+    }
+  }
+
+  return arr;
+}
+
+/**
+ * Verify if the coorduinates (x, y) outside from img limits
+ * 
+ * @param img image
+ * @param x coordinate x (column, width)
+ * @param y coordinate y (row, height)
+ * 
+ * @return true if is outside from img or false
+**/
+bool isOut(cv::Mat img, int x, int y)
+{
+  int rows = img.rows;
+  int cols = img.cols;
+  return ( x <= 0 or x >= cols-1 or y <= 0 or y >= rows-1 );
+}
+
 cv::Mat repeatLastRow( cv::Mat& mat )
 {
   cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
@@ -117,9 +152,8 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
         kernel.at<float>(x + half, y+half) = (std::exp(-(r * r) / s)) / (M_PI * s);
         sum += kernel.at<float>(x + half, y+half);
     }
-}
+  }
 
-  // performing normalization
   for (int i = 0; i < size; ++i)
   {
     for (int j = 0; j < size; ++j)
@@ -127,25 +161,24 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
       sum += kernel.at<float>(i, j);
     }
   }
-}
 
+  // performing normalization
+  for (int i = 0; i < size; ++i)
+  {
+    for (int j = 0; j < size; ++j)
+    {
+      kernel.at<float>(i, j) = kernel.at<float>(i, j) / sum;
+    }
+  }
+}
 
 /**
- * Verify if the coorduinates (x, y) outside from img limits
+ * Cartesian to polar coordinate
  * 
- * @param img image
- * @param x coordinate x (column, width)
- * @param y coordinate y (row, height)
- * 
- * @return true if is outside from img or false
+ * @param dx x coordinate
+ * @param dy y coordinate
+ * @param dm return array with magnitude and theta
 **/
-bool isOut(cv::Mat img, int x, int y)
-{
-  int rows = img.rows;
-  int cols = img.cols;
-  return ( x <= 0 or x >= cols-1 or y <= 0 or y >= rows-1 );
-}
-
 void cartToPolarGradient( int dx, int dy, double mt[2] )
 {
   double mag, theta;
@@ -157,6 +190,14 @@ void cartToPolarGradient( int dx, int dy, double mt[2] )
   mt[1] = theta;
 }
 
+/**
+ * Cartesian to polar angle
+ * 
+ * @param dx x coordinate
+ * @param dy y coordinate
+ * @param m return array with magnitudes
+ * @param theta return array with thetas
+**/
 void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, cv::Mat& m, cv::Mat& theta )
 {
   for( int i=0; i<dx.rows; i++ )
@@ -332,10 +373,90 @@ void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
   cv::subtract( r1, r2, retY );
 }
 
-void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bins,
-                             float rad )
+
+/**
+ * convert an 1d array coordinate into a 2d array coordinates.
+ * 
+ * @param index the index of 1d array coordinated
+ * @param rows the amount of rows in the 2d array
+ * @param cols the amount of columns in the 2d array
+ * @param ret array containing the index coordinate mapped into 2d array coordinates
+ *            where ret[0]=rows and ret[1]=cols
+ * 
+ * Similar to numpy.unravel_index() function
+ * https://numpy.org/doc/stable/reference/generated/numpy.unravel_index.html
+ * 
+**/
+void unravelIndex( int index, int rows, int cols, int ret[2] )
 {
-  std::vector<std::vector<std::vector<float>>> hist;
+  for( int i=0; i<rows; i++ )
+    for( int j=0; j<cols; j++ )
+      if( i+j == index )
+      {
+        ret[0] = i;
+        ret[1] = j;
+        break;
+      }
+}
+
+/**
+ * Return the histogram of a given subregion
+ * 
+ * @param mag the subregion's magnitudes
+ * @param theta subregion's angles
+ * @param numBin amount of values to be returned
+ * @param refAngle angle of reference to calculate the histogram
+ * @param binWidth width of the bin
+ * @param subW width of the subregion
+ * @param hist Matrix where the histogram is being returned
+**/
+void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int refAngle,
+                               int binWidth, int subW, cv::Mat& hist )
+{
+  double minimum = 0.000001;
+  float center = (subW/2) - 0.5;
+  std::vector<double> arrMag, arrThe;
+  hist = cv::Mat( cv::Size(1, numBin), CV_32F, cv::Scalar(0.0) );
+
+  returnRavel( mag, arrMag );
+  returnRavel( theta, arrThe );
+
+  for( int i=0; i<arrMag.size(); i++ )
+  {
+    double mg = arrMag[i];
+    int angle = (int) (arrThe[i]-refAngle) % 360;
+    int b = quantizeOrientation(angle, numBin);
+    double vote = mg;
+
+    // b*binWidth is the start angle of the histogram bin
+    // b*binWidth+binWidth/2 is the center of the histogram bin
+    // angle -[...] is the distance from the angle to the center of the bin 
+    int histInterpWeight = 1 - std::abs(angle-(b*binWidth+binWidth/2))/(binWidth/2);
+    vote *= std::max( (double) histInterpWeight, minimum );
+
+    int idx[2], xInterpWeight, yInterpWeight;
+    unravelIndex( i, subW, subW, idx );
+
+    xInterpWeight = std::max( (double) 1 - ( std::abs(idx[0]-center)/center ), minimum );
+    yInterpWeight = std::max( (double) 1 - ( std::abs(idx[1]-center)/center ), minimum );
+
+    vote *= xInterpWeight * yInterpWeight;
+    hist.at<float>(0, b) += vote;
+  }
+}
+
+/**
+ * Calculates de description of the Keypoints
+ * 
+ * @param kpList list of Keypoints to calculate the description
+ * @param img image from wich the keypoints description are being calculated
+ * @param bins amount of bins
+ * @param rad radius used to calculate the bubble around the kpList KeyPoints
+ * @param ret vector where the calculated descriptor will be returned
+**/
+void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bins,
+                             float rad, std::vector<cv::Mat> ret )
+{
   int binWidth, windowSize, radius;
   float sigma, radVal;
   cv::Mat img2gray;
@@ -347,22 +468,6 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
   radius = std::floor(windowSize/2);
   binWidth = std::floor(360/bins);
   radVal = 180.0 / M_PI;
-
-  // Creating float[4][4][bins] zeroed vector
-  for( int i=0; i<4; i++ )
-  {
-    std::vector<std::vector<float>> histVec;
-    for(int j=0; j<4; j++)
-    {
-      std::vector<float> histBin;
-      for(int k=0; k<bins; k++)
-      {
-        histBin.push_back(0.0);
-      }
-      histVec.push_back(histBin);
-    }
-    hist.push_back(histVec);
-  }
 
   for( int index=0; index < kpList.size(); index++ )
   {
@@ -465,11 +570,31 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
         t = i*subW;
         l = j*subW;
         b = std::min( img.rows, (i+1) * subW );
-        b = std::min( img.cols, (j+1) * subW );
+        r = std::min( img.cols, (j+1) * subW );
 
-        hist = getHistogramForSubregion();
+        cv::Mat subMag = mag( cv::Range(t, b), cv::Range(l, r) );
+        cv::Mat subThe = the( cv::Range(t, b), cv::Range(l, r) );
+
+        cv::Mat hist;
+        getHistogramForSubregion( subMag, subThe, bins, s, binWidth, subW, hist );
+
+        int indexIni = (i*subW*bins) + (j*bins);
+        int indexEnd = (i*subW*bins) + ((j+1)*bins);
+        
+        for(int idx = indexIni; idx<indexEnd; idx++)
+          featVec.at<float>(0, idx) = hist.at<float>(0, idx-indexIni);
+
+        subMag.release();
+        subMag.release();
       }
     }
+
+    for(int idx=0; idx<featVec.cols; idx++)
+    {
+      float norm = cv::norm( featVec, cv::NORM_L2, cv::noArray() );
+      featVec.at<float>(0, idx) /= std::max((float)0.001, norm);
+    }
+    ret.push_back(featVec);
   }
 
 }
@@ -484,6 +609,8 @@ int siftDescriptor( std::vector<KeyPoints> kp, cv::Mat img, cv::Mat imgGray, int
                     float sigma )
 {
   siftKPOrientation( kp, img, mGauss, sigma );
-  siftExecuteDescription( kp, img, DESC_BINS, DESC_RADIUS );
+
+  std::vector<cv::Mat> descriptorList;
+  siftExecuteDescription( kp, img, DESC_BINS, DESC_RADIUS, descriptorList );
   return 0;
 }
