@@ -97,30 +97,30 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
   kp = kp_aux;
 }
 
-void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, int msobel, int mgauss,
-              float sigma_x, float sigma_y, int k, float min_quality, int msize)
+void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
+              int mgauss, float sigma_x, float sigma_y, int k, float min_quality,
+              int msup_size, int cv_size)
 {
-  cv::Mat resp_map, img_blur;
+  cv::Mat resp_map, img_blur, img_aux;
 
-  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_REPLICATE);
+  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
+                   cv::BORDER_REPLICATE);
 
-  harrisCalc(img_blur, resp_map, msobel, mgauss, sigma_x, sigma_y, k);
-  harrisThreshold(resp_map, kp, min_quality);
-  harrisMaxSup(resp_map, kp, msize);
-}
+  if (is_hdr)
+  {
+    cv::Mat img_cv, img_log;
 
-void harrisKpHDR(cv::Mat img, std::vector<KeyPoints> &kp, int msobel, int mgauss,
-                 float sigma_x, float sigma_y, int k, float min_quality, int msup_size,
-                 int cv_size)
-{
-  cv::Mat resp_map, img_blur, img_cv, img_log;
+    coefVar(img_blur, img_cv, cv_size);
+    logTransform(img_cv, img_log);
 
-  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y, cv::BORDER_REPLICATE);
+    img_aux = img_log;
+  }
+  else
+  {
+    img_aux = img_blur;
+  }
 
-  coefVar(img_blur, img_cv, cv_size);
-  logTransform(img_cv, img_log);
-
-  harrisCalc(img_log, resp_map, msobel, mgauss, sigma_x, sigma_y, k);
+  harrisCalc(img_aux, resp_map, msobel, mgauss, sigma_x, sigma_y, k);
   harrisThreshold(resp_map, kp, min_quality);
   harrisMaxSup(resp_map, kp, msup_size);
 }

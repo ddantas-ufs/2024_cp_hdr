@@ -29,8 +29,8 @@ DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
-DEMO_HDR_IMG = $(IMG_DIR)/test_artur.jpg
-DEMO_LDR_IMG = $(IMG_DIR)/test_artur.jpg
+DEMO_HDR_IMG = $(IMG_DIR)/lena.png
+DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
