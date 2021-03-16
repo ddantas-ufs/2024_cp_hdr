@@ -2,12 +2,19 @@
 
 int main(int argv, char** args)
 {	
-  std::string kpFile;
+  cv::Mat img_in, img_gray;
   std::vector<KeyPoints> kp;
+  std::string img_name, out_path;
   
-  kpFile = args[1];
+  readImg(args[1], img_in, img_gray, img_name);
+  out_path = std::string(args[2]) + img_name + ".dog";
   
-  kp = loadKeypoints(kpFile);
+  dogKp(img_gray, kp);
+  std::cout << "Quantidade de KeyPoints lidos:" << kp.size() << std::endl;
+
+  siftDescriptor(kp, img_in, img_gray);
+  //saveKeypoints(kp, out_path);
+  //plotKeyPoints(img_in, kp, out_path);
   
-  std::cout << "Quantidade de KeyPoints lidos:" << kp.size() << "\n";  
+  return 0;
 }

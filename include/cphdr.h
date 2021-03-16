@@ -13,4 +13,6 @@
 #include "detectors/harris.h"
 #include "detectors/dog.h"
 
+#include "descriptors/sift.h"
+
 #endif

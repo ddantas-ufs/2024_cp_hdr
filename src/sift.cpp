@@ -136,6 +136,7 @@ cv::Mat repeatLastColumn( cv::Mat& mat )
 **/
 void gaussianKernel( float sigma, cv::Mat& kernel )
 {
+  std::cout << "gaussianKernel" << std::endl;
   int size = (int) 2 * (std::ceil( 3 * sigma ) + 1);
   int half = size / 2;
 
@@ -183,8 +184,8 @@ void cartToPolarGradient( int dx, int dy, double mt[2] )
 {
   double mag, theta;
 
-  mag = std::sqrt( (dx+dx)+(dy*dy) );
-  theta = (std::atan2( dy, dx ) * 180 / M_PI) - 90;
+  mag = std::sqrt( (dx*dx)+(dy*dy) );
+  theta = ( (std::atan2( dy, dx )+M_PI) * 180/M_PI) - 90;
 
   mt[0] = mag;
   mt[1] = theta;
@@ -215,7 +216,6 @@ void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, cv::Mat& m, cv::Mat& thet
 void getGradient( cv::Mat& img, int x, int y, double mt[2] )
 {
   int dy, dx;
-  double hip;
 
   dy = ( ( int ) img.at<float>( std::min( img.rows-1, y+1 ), x ) ) 
      - ( ( int ) img.at<float>( std::max( 0, y-1 ) ), x );
@@ -239,19 +239,23 @@ int quantizeOrientation( double theta, int bins )
  * 
  * @return the orientation of the keypoint
 **/
-std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
+void calcOrientation( cv::Mat& img, KeyPoints kp,
+                      std::vector<KeyPoints> auxList )
 {
-  cv::Mat kernel;
-  std::vector<KeyPoints> auxList;
-  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS];//, *kernel;
+  cv::Mat kernel;//, hist;
+  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS];
   int radius, sizeKernel;
 
-  sigma = DESC_GAUSS_SIGMA * kp.resp;
+  //hist = cv::Mat( cv::Size(1, DESC_HIST_BINS), CV_32F, cv::Scalar(0.0) );
+
+  sigma = DESC_GAUSS_SIGMA * kp.scale;
   radius = (int) 2 * (std::ceil( sigma ) + 1);
+
+  std::cout << "calcOrientation" << std::endl;
   
   gaussianKernel( sigma, kernel );
 
-  for( int i = -radius; i < radius; i++ )
+  for( int i = -radius; i < radius+1; i++ )
   {
     int y, binn;
     double mt[2], weight;
@@ -261,24 +265,23 @@ std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
     if( isOut(img, 1, y) )
       continue;
 
-    for( int j = -radius; j < radius; j++ )
+    for( int j = -radius; j < radius+1; j++ )
     {
       int x = kp.x + j;
       if( isOut(img, x, 1) )
         continue;
 
-      // mt[0] = mag and mt[1] = theta
       getGradient( img, x, y, mt );
       
       weight = kernel.at<float>(i+radius, j+radius) * mt[0];
       binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
+      //hist.at<float>(0, binn) += weight;
       hist[binn] += weight;
     }
   }
-
-  // Getting max value and respective index 
-  maxValue = std::numeric_limits<float>::min();
+  
   maxIndex = std::numeric_limits<float>::min();
+  maxValue = std::numeric_limits<float>::min();
   for( int i = 0; i < DESC_HIST_BINS; i++ )
   {
     if( hist[i] > maxValue )
@@ -298,6 +301,7 @@ std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
     
     if( hist[i] > ( 0.85 * maxValue ) )
     {
+      std::cout << "i: " << i << " aux.direction: " << i*10 << std::endl;
       KeyPoints aux;
       aux.x = kp.x;
       aux.y = kp.y;
@@ -306,10 +310,19 @@ std::vector<KeyPoints> calcOrientation( cv::Mat& img, KeyPoints kp )
       aux.octave = kp.octave;
       aux.direction = i * 10;
       auxList.push_back( aux );
+    } 
+    else 
+    {
+      std::cout << "i: " << i << " so kp: " << std::endl;
     }
   }
-
-  return auxList;
+  //std::cout << "Release hist" << std::endl;
+  //hist = cv::Mat( cv::Size(1, 1), CV_32F, cv::Scalar(0.0) );
+  //hist.release();
+  std::cout << "Release kernel" << std::endl;
+  kernel = cv::Mat( cv::Size(1, 1), CV_32F, cv::Scalar(0.0) );
+  //kernel.release();
+  std::cout << "Acabou o calc" << std::endl;
 }
 
 /**
@@ -333,20 +346,23 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, flo
   {
     int px, py;
 
-    KeyPoints key = kp.at(i);
-    auxList = calcOrientation(img, key);
+    KeyPoints key = kp[i];
+    calcOrientation(img, key, auxList);
+    std::cout << "saiu calcOrientation" << std::endl;
 
     // ROUNDING 30 * cos( radians( octave ) ) AND sin( radians( octave ) )
     px = (int) 0.5 + ( 30 * ( std::cos( key.direction * ( M_PI / 180) ) ) );
     py = (int) 0.5 + ( 30 * ( std::sin( key.direction * ( M_PI / 180) ) ) );
+      std::cout << "px: " << px << std::endl;
+      std::cout << "py: " << py << std::endl;
 
     cv::arrowedLine( img2gray, cv::Point( key.x, key.y ),
-                     cv::Point( key.x + px, key.y + py ), 
+                     cv::Point( key.x + px, key.y + py ),
                      cv::Scalar( 0, 0, 255 ), 1 );
     for( int j = 0; j < auxList.size(); j++ )
     {
       int ppx, ppy;
-      KeyPoints point = auxList.at(j);
+      KeyPoints point = auxList[j];
 
       ppx = (int) 0.5 + ( 30 * ( std::cos( point.direction * ( M_PI / 180) ) ) );
       ppy = (int) 0.5 + ( 30 * ( std::sin( point.direction * ( M_PI / 180) ) ) );
@@ -356,7 +372,6 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, flo
     }
     newKp.insert( newKp.end(), auxList.begin(), auxList.end() );
   }
-  
   kp.insert( kp.end(), newKp.begin(), newKp.end() ); 
 }
 
@@ -372,7 +387,6 @@ void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
   
   cv::subtract( r1, r2, retY );
 }
-
 
 /**
  * convert an 1d array coordinate into a 2d array coordinates.
@@ -605,12 +619,21 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
  * @param kp KeyPoints detected
  * @param name string with image's name
 **/
-int siftDescriptor( std::vector<KeyPoints> kp, cv::Mat img, cv::Mat imgGray, int mGauss,
-                    float sigma )
+void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img, cv::Mat& imgGray,
+                     int mGauss, float sigma )
 {
+  std::cout << "Calculando orientações" << std::endl;
   siftKPOrientation( kp, img, mGauss, sigma );
+  
+  std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
+
+  std::cout << "########## KEYPOINTS INICIO ##########" << std::endl;
+  for( int i=0; i<kp.size(); i++ )
+    std::cout << kp[i].y << "\t" << kp[i].x << "\t" << kp[i].scale << "\t" 
+              << kp[i].octave << "\t" << kp[i].resp << "\t" 
+              << kp[i].direction << std::endl;
+  std::cout << "########## KEYPOINTS FINAL ##########" << std::endl;
 
   std::vector<cv::Mat> descriptorList;
   siftExecuteDescription( kp, img, DESC_BINS, DESC_RADIUS, descriptorList );
-  return 0;
 }
