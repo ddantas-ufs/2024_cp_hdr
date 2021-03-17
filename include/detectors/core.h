@@ -14,7 +14,7 @@
 #define DOG_BORDER 5 // interpolation border to ignore keypoints
 #define CONTRAST_TH 0.03 // prybil set to 8
 #define CURV_TH 5 // curvature threshold
-#define GAUSS_SIZE 5 // mask size of gauss bluring
+#define GAUSS_SIZE 9 // mask size of gauss bluring
 #define SIGMA_X 1.0 // fix value (ex. 1.0) to keep a standard
 #define SIGMA_Y 1.0 // fix value (ex. 1.0) to keep a standard
 #define MAXSUP_SIZE 3 // can be 3 (based on Lowe's paper)

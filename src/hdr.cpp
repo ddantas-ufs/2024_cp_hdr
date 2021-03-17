@@ -71,6 +71,4 @@ void logTransform(cv::Mat img, cv::Mat &img_log)
   img_log = img_aux * (1.0 / ln10);
 
   cv::normalize(img_log, img_log, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
-
-  img_aux.release();
 }
