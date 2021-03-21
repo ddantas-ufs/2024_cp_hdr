@@ -13,8 +13,8 @@ int main(int argv, char** args)
   std::cout << "Quantidade de KeyPoints lidos:" << kp.size() << std::endl;
 
   siftDescriptor(kp, img_in, img_gray);
-  //saveKeypoints(kp, out_path);
-  //plotKeyPoints(img_in, kp, out_path);
+  saveKeypoints(kp, out_path);
+  plotKeyPoints(img_in, kp, out_path);
   
   return 0;
 }

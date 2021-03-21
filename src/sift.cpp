@@ -35,92 +35,28 @@ bool isOut(cv::Mat img, int x, int y)
   return ( x <= 0 or x >= cols-1 or y <= 0 or y >= rows-1 );
 }
 
-cv::Mat repeatLastRow( cv::Mat& mat )
+void repeatLastRow(cv::Mat mat, cv::Mat &ret)
 {
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=1; i<rows; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i-1, j) = mat.at<float>(i, j);
-    }
-  }
-
-  for( int j=0; j<cols; j++ )
-  {
-    ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
-  }
-
-  return ret;
+  mat.row(mat.rows - 1).copyTo(ret.row(ret.rows - 1));
+  mat.rowRange(1, mat.rows).copyTo(ret.rowRange(0, ret.rows - 1));
 }
 
-cv::Mat repeatFirstRow( cv::Mat& mat )
+void repeatFirstRow(cv::Mat mat, cv::Mat &ret)
 {
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int j=0; j<cols; j++ )
-  {
-    ret.at<float>(0, j) = mat.at<float>(0, j);
-  }
-
-  for( int i=0; i<rows-1; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i+1, j) = mat.at<float>(i, j);
-    }
-  }
-
-  return ret;
+  mat.row(0).copyTo(ret.row(0));
+  mat.rowRange(0, mat.rows - 1).copyTo(ret.rowRange(1, ret.rows));
 }
 
-cv::Mat repeatFirstColumn( cv::Mat& mat )
+void repeatLastColumn(cv::Mat mat, cv::Mat &ret)
 {
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows; i++ )
-  {
-    ret.at<float>(i, 0) = mat.at<float>(i, 0);
-  }
-
-  for( int i=0; i<rows; i++ )
-  {
-    for( int j=0; j<cols-1; j++ )
-    {
-      ret.at<float>(i, j+1) = mat.at<float>(i, j);
-    }
-  }
-
-  return ret;
+  mat.col(mat.cols - 1).copyTo(ret.col(ret.cols - 1));
+  mat.colRange(1, mat.cols).copyTo(ret.colRange(0, ret.cols - 1));
 }
 
-cv::Mat repeatLastColumn( cv::Mat& mat )
+void repeatFirstColumn(cv::Mat mat, cv::Mat &ret)
 {
-  cv::Mat ret = cv::Mat( mat.rows, mat.cols, mat.type(), cv::Scalar(0) );
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows-1; i++ )
-  {
-    for( int j=1; j<cols; j++ )
-    {
-      ret.at<float>(i, j-1) = mat.at<float>(i, j);
-    }
-  }
-
-  for( int i=0; i<rows; i++ )
-  {
-    ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
-  }
-
-  return ret;
+  mat.col(0).copyTo(ret.col(0));
+  mat.colRange(0, mat.cols - 1).copyTo(ret.colRange(1, ret.cols));
 }
 
 /**
@@ -142,12 +78,7 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
   double r, s = 2.0 * sigma * sigma;
   double sum = 0.0; // to normalize
 
-  std::cout << "kernel" << std::endl;
-  std::cout << "       size: " << size << std::endl;
-  std::cout << "       half: " << half << std::endl;
-  //kernel = cv::Mat( cv::Size(size, size), CV_32F, cv::Scalar(0.0) );
-  kernel.create( cv::Size(size, size), CV_32F );
-  std::cout << "kernel ok" << std::endl;
+  kernel = cv::Mat( cv::Size(size, size), CV_32F, cv::Scalar(0.0) );
 
   for( int x = -half; x <= half; x++ )
   {
@@ -258,12 +189,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   sigma = DESC_GAUSS_SIGMA * kp.scale;
   radius = (int) 2 * (std::ceil( sigma ) + 1);
 
-  std::cout << "sigma : " << sigma << std::endl;
-  std::cout << "radius: " << radius << std::endl;
-  
-  std::cout << "gaussianKernel" << std::endl;
   gaussianKernel( sigma, kernel );
-  std::cout << "gaussianKernel ok" << std::endl;
 
   for( int i = -radius; i < radius+1; i++ )
   {
@@ -301,7 +227,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   }
   
   kp.direction = maxIndex * 10;
-  std::cout << "direction kp = " << maxIndex << "*" << "10 = " << kp.direction << std::endl;
+  //std::cout << "direction kp = " << maxIndex << "*" << "10 = " << kp.direction << std::endl;
 
   // If there's values above 85% of max value, return them.
   for( int i = 0; i < DESC_HIST_BINS; i++ )
@@ -327,7 +253,6 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   }
   //std::cout << "Releasing kernel" << std::endl;
   //kernel = cv::Mat( cv::Size(1, 1), CV_32F, cv::Scalar(0.0) );
-  std::cout << "saindo calcOrientation" << std::endl;
 }
 
 /**
@@ -338,33 +263,28 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
  * @param mGauss Gaussian blur window size
  * @param sigma  Gaussian blur sigma value
 **/
-void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, float sigma )
+void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss,
+                        float sigma )
 {
   std::vector<KeyPoints> auxList, newKp;
-  cv::Mat img2blur, img2gray;
+  cv::Mat imgCopy;
+  img.copyTo( imgCopy );
 
-  cv::GaussianBlur( img, img2blur, cv::Size(mGauss, mGauss), sigma, sigma, 
+  cv::GaussianBlur( img, img, cv::Size(mGauss, mGauss), sigma, sigma, 
                    cv::BORDER_REPLICATE );
-  cv::cvtColor( img, img2gray, CV_BGR2GRAY );
 
   for( int i = 0; i < kp.size(); i++ ) 
   {
     int px, py;
 
     KeyPoints key = kp[i];
-    std::cout << " entrando calcOrientation " << std::endl;
-    std::cout << key.direction << std::endl;
     calcOrientation(img, key, auxList);
-    std::cout << " saindo calcOrientation " << std::endl;
-    std::cout << key.direction << std::endl;
     
     //  30 * cos( radians( degrees ) ) AND sin( radians( degrees ) )
     px = (int) ( 30 * ( std::cos( key.direction * ( M_PI / 180) ) ) );
     py = (int) ( 30 * ( std::sin( key.direction * ( M_PI / 180) ) ) );
-    std::cout << "px: " << px << std::endl;
-    std::cout << "py: " << py << std::endl;
 
-    cv::arrowedLine( img2gray, cv::Point( key.x, key.y ),
+    cv::arrowedLine( imgCopy, cv::Point( key.x, key.y ),
                      cv::Point( key.x + px, key.y + py ),
                      cv::Scalar( 0, 0, 255 ), 1 );
 
@@ -374,28 +294,19 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, flo
 
       px = (int) ( 30 * ( std::cos( point.direction * ( M_PI / 180) ) ) );
       py = (int) ( 30 * ( std::sin( point.direction * ( M_PI / 180) ) ) );
-      std::cout << "px2: " << px << std::endl;
-      std::cout << "py2: " << py << std::endl;
-      cv::arrowedLine( img2gray, cv::Point( point.x, point.y ), 
+      cv::arrowedLine( imgCopy, cv::Point( point.x, point.y ), 
                        cv::Point( point.x+px, point.y+py ), 
                        cv::Scalar( 0, 0, 255 ), 1 );
     }
     // APPEND newKp
-    std::cout << " append newKp " << std::endl;
     for( int k=0; k<auxList.size(); k++ )
     {
-      std::cout << kp[k].y << "\t" << kp[k].x << "\t" << kp[k].scale << "\t" 
-                << kp[k].octave << "\t" << kp[k].resp << "\t" 
-                << kp[k].direction << std::endl;
       newKp.push_back( auxList[k] );
     }
   }
-  std::cout << " append kp " << std::endl;
+  //std::cout << " append kp " << std::endl;
   for( int k=0; k<newKp.size(); k++ )
   {
-    std::cout << kp[k].y << "\t" << kp[k].x << "\t" << kp[k].scale << "\t" 
-              << kp[k].octave << "\t" << kp[k].resp << "\t" 
-              << kp[k].direction << std::endl;
     kp.push_back( newKp[k] );
   }
   
@@ -404,15 +315,34 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss, flo
 
 void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
 {
-  cv::Mat r1 = repeatLastRow( subImage );
-  cv::Mat r2 = repeatFirstRow( subImage );
+  cv::Mat r1, r2;
 
+  std::cout << "---> Allocating r1" << std::endl;
+  r1 = cv::Mat::zeros( subImage.size(), CV_32F );
+  std::cout << "---> Allocating r2" << std::endl;
+  r2 = cv::Mat::zeros( subImage.size(), CV_32F );
+
+  std::cout << "---> repeatLastRow" << std::endl;
+  repeatLastRow( subImage, r1 );
+  std::cout << "---> repeatFirstRow" << std::endl;
+  repeatFirstRow( subImage, r2 );
+
+  std::cout << "---> subtract row" << std::endl;
   cv::subtract( r1, r2, retX );
 
-  r1 = repeatLastColumn( subImage );
-  r2 = repeatFirstColumn( subImage );
+  std::cout << "---> repeatLastColumn" << std::endl;
+  repeatLastColumn( subImage, r1 );
+  std::cout << "---> repeatFirstColumn" << std::endl;
+  repeatFirstColumn( subImage, r2 );
   
+  std::cout << "---> subtract Column" << std::endl;
   cv::subtract( r1, r2, retY );
+  
+//  std::cout << "---> r1.release" << std::endl;
+//  r1.release();
+//  std::cout << "---> r2.release" << std::endl;
+//  r2.release();
+//  std::cout << "---> end getPatchGrads" << std::endl;
 }
 
 /**
@@ -500,9 +430,6 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
 {
   int binWidth, windowSize, radius;
   float sigma, radVal;
-  cv::Mat img2gray;
-
-  cv::cvtColor( img, img2gray, CV_BGR2GRAY );
 
   windowSize = 16;
   sigma = windowSize/6;
@@ -510,12 +437,13 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
   binWidth = std::floor(360/bins);
   radVal = 180.0 / M_PI;
 
+  std::cout << "for kpList.size()" << std::endl;
   for( int index=0; index < kpList.size(); index++ )
   {
-    cv::Mat patch, dx, dy, mag, the, kernel, featVec;
+    cv::Mat patch, dx, dy, mag, the, /*kernel,*/ featVec;
     KeyPoints kp = kpList.at(index);
-    float d, theta;// *auxKernel;
-    int i, x, y, s, t, l, b, r, xIni, xFim, yIni, yFim, subW;
+    float d, theta;
+    int i, x, y, s, t, l, b, r,/* xIni, xFim, yIni, yFim,*/ subW;
 
     i = 0;
     x = kp.x;
@@ -523,8 +451,9 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     s = kp.scale;
     d = kp.direction;
     
+    std::cout << "gaussianKernel" << std::endl;
     theta = M_PI * 180.0;
-    gaussianKernel( sigma, kernel );
+//    gaussianKernel( sigma, kernel );
 
     t = std::max( 0, y-( (int) windowSize/2) );
     l = std::max( 0, x-( (int) windowSize/2) );
@@ -533,9 +462,12 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     r = std::max( img.cols, x-( (int) (windowSize/2)+1) );
 
     patch = img(cv::Range(t, b), cv::Range(l, r));
+    patch.convertTo(patch, CV_32F);
 
+    std::cout << "getPatchGrads" << std::endl;
     getPatchGrads( patch, dx, dy );
-
+    std::cout << "getPatchGrads ok" << std::endl;
+/*
     if( dx.rows < windowSize+1 )
     {
       if( t == 0 )
@@ -561,6 +493,11 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
       }
     }
 
+    std::cout << "subspace kernel 1" << std::endl;
+    std::cout << "xIni: " << xIni << std::endl;
+    std::cout << "xFim: " << xFim << std::endl;
+    std::cout << "yIni: " << yIni << std::endl;
+    std::cout << "yFim: " << yFim << std::endl;
     kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
     
     if( dy.rows < windowSize+1 )
@@ -587,20 +524,27 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
         yFim = dy.cols;
       }
     }
-
-    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
+*/
+//    std::cout << "subspace kernel 2" << std::endl;
+//    std::cout << "xIni: " << xIni << std::endl;
+//    std::cout << "xFim: " << xFim << std::endl;
+//    std::cout << "yIni: " << yIni << std::endl;
+//    std::cout << "yFim: " << yFim << std::endl;
+//    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
 
     mag = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // magnitude
     the = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // theta
     
+    std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
 
-    if( ( sizeof(kernel) / sizeof(float) ) == 17 )
-    {
-      dx = dx.dot( kernel );
-      dy = dy.dot( kernel );
-    }
+//    if( ( sizeof(kernel) / sizeof(float) ) == 17 )
+//    {
+//      dx = dx.dot( kernel );
+//      dy = dy.dot( kernel );
+//    }
 
+    std::cout << "create featVec" << std::endl;
     subW = (int) windowSize / 4;
     featVec = cv::Mat( cv::Size(1, bins*windowSize), CV_32F, cv::Scalar(0.0) );
 
@@ -616,25 +560,31 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
         cv::Mat subMag = mag( cv::Range(t, b), cv::Range(l, r) );
         cv::Mat subThe = the( cv::Range(t, b), cv::Range(l, r) );
 
+        std::cout << "getHistogramForSubregion" << std::endl;
         cv::Mat hist;
         getHistogramForSubregion( subMag, subThe, bins, s, binWidth, subW, hist );
 
         int indexIni = (i*subW*bins) + (j*bins);
         int indexEnd = (i*subW*bins) + ((j+1)*bins);
         
+        std::cout << "populate featVec" << std::endl;
         for(int idx = indexIni; idx<indexEnd; idx++)
           featVec.at<float>(0, idx) = hist.at<float>(0, idx-indexIni);
 
-        subMag.release();
-        subMag.release();
+        std::cout << "release subMag e subThe" << std::endl;
+        //subMag.release();
+        //subThe.release();
       }
     }
 
+    std::cout << "normalizando featVec" << std::endl;
     for(int idx=0; idx<featVec.cols; idx++)
     {
       float norm = cv::norm( featVec, cv::NORM_L2, cv::noArray() );
       featVec.at<float>(0, idx) /= std::max((float)0.001, norm);
     }
+
+    std::cout << "push_back no vector de retorno" << std::endl;
     ret.push_back(featVec);
   }
 
@@ -650,17 +600,15 @@ void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img, cv::Mat& imgGray,
                      int mGauss, float sigma )
 {
   std::cout << "Calculando orientações" << std::endl;
-  siftKPOrientation( kp, img, mGauss, sigma );
+  siftKPOrientation( kp, imgGray, mGauss, sigma );
   
   std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
 
-  std::cout << "########## KEYPOINTS INICIO ##########" << std::endl;
-  for( int i=0; i<kp.size(); i++ )
-    std::cout << kp[i].y << "\t" << kp[i].x << "\t" << kp[i].scale << "\t" 
-              << kp[i].octave << "\t" << kp[i].resp << "\t" 
-              << kp[i].direction << std::endl;
-  std::cout << "########## KEYPOINTS FINAL ##########" << std::endl;
+  //removing blur applied in siftKPOrientation
+  cv::cvtColor( img, imgGray, CV_BGR2GRAY ); 
 
   std::vector<cv::Mat> descriptorList;
-  siftExecuteDescription( kp, img, DESC_BINS, DESC_RADIUS, descriptorList );
+  siftExecuteDescription( kp, imgGray, DESC_BINS, DESC_RADIUS, descriptorList );
+  std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
+  std::cout << "Size da lista de descritores:" << descriptorList.size() << std::endl;
 }
