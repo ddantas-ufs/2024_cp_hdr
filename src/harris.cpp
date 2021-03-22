@@ -98,7 +98,7 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
 }
 
 void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
-              int mgauss, float sigma_x, float sigma_y, int k, float min_quality,
+              int mgauss, float sigma_x, float sigma_y, float k, float min_quality,
               int msup_size, int cv_size)
 {
   cv::Mat resp_map, img_blur, img_aux;
