@@ -6,17 +6,18 @@
  * @param mat cv::Mat matrix to be flatenned
  * @return the flatenned Matrix in a vector object
 **/
-std::vector<double> returnRavel( cv::Mat& mat, std::vector<double> arr )
+void returnRavel( cv::Mat& mat, cv::Mat& flat )
 {
   for (int i = 0; i < mat.rows; i++)
   {
     for( int j = 0; j < mat.cols; j++)
     {
-      arr.push_back( mat.at<double>(i, j) );
+      double item = mat.at<double>(i, j);
+      //std::cout << "----> i: " << i << " j: " << j << " = " << item << std::endl;
+      flat.at<double>(i*mat.cols+j, 0) = item;
     }
   }
-
-  return arr;
+  //std::cout << "----> i: " << flat << std::endl;
 }
 
 /**
@@ -118,9 +119,8 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
 void cartToPolarGradient( int dx, int dy, double mt[2] )
 {
   double mag, theta;
-
-  mag = std::sqrt( (dx*dx)+(dy*dy) );
-  theta = ( (std::atan2( dy, dx )+M_PI) * 180/M_PI) - 90;
+  mag = cv::sqrt( (dx*dx)+(dy*dy) );
+  theta = ( (cv::fastAtan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
 
   mt[0] = mag;
   mt[1] = theta;
@@ -136,12 +136,17 @@ void cartToPolarGradient( int dx, int dy, double mt[2] )
 **/
 void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, cv::Mat& m, cv::Mat& theta )
 {
+  std::cout << "---> cartToPolarGradientMat" << std::endl;
   for( int i=0; i<dx.rows; i++ )
   {
     for( int j=0; j<dx.cols; j++ )
     {
       double ret[2];
-      cartToPolarGradient( dx.at<int>(i, j), dy.at<int>(i, j), ret );
+      int x = (int) dx.at<double>(i, j);
+      int y = (int) dy.at<double>(i, j);
+
+      cartToPolarGradient( x, y, ret );
+      
       m.at<double>(i, j) = ret[0];
       theta.at<double>(i, j) = ret[1];
     }
@@ -317,32 +322,18 @@ void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
 {
   cv::Mat r1, r2;
 
-  std::cout << "---> Allocating r1" << std::endl;
   r1 = cv::Mat::zeros( subImage.size(), CV_32F );
-  std::cout << "---> Allocating r2" << std::endl;
   r2 = cv::Mat::zeros( subImage.size(), CV_32F );
 
-  std::cout << "---> repeatLastRow" << std::endl;
   repeatLastRow( subImage, r1 );
-  std::cout << "---> repeatFirstRow" << std::endl;
   repeatFirstRow( subImage, r2 );
 
-  std::cout << "---> subtract row" << std::endl;
   cv::subtract( r1, r2, retX );
 
-  std::cout << "---> repeatLastColumn" << std::endl;
   repeatLastColumn( subImage, r1 );
-  std::cout << "---> repeatFirstColumn" << std::endl;
   repeatFirstColumn( subImage, r2 );
   
-  std::cout << "---> subtract Column" << std::endl;
   cv::subtract( r1, r2, retY );
-  
-//  std::cout << "---> r1.release" << std::endl;
-//  r1.release();
-//  std::cout << "---> r2.release" << std::endl;
-//  r2.release();
-//  std::cout << "---> end getPatchGrads" << std::endl;
 }
 
 /**
@@ -386,34 +377,44 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 {
   double minimum = 0.000001;
   float center = (subW/2) - 0.5;
-  std::vector<double> arrMag, arrThe;
-  hist = cv::Mat( cv::Size(1, numBin), CV_32F, cv::Scalar(0.0) );
+  hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32F );
 
+  cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32F );
+  cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32F );
+
+  //std::cout << "-> mag size: " << mag.size() << std::endl;
   returnRavel( mag, arrMag );
+  //std::cout << "-> arrMag: " << arrMag << std::endl;
+  
+  //std::cout << "-> theta size: " << theta.size() << std::endl;
   returnRavel( theta, arrThe );
+  //std::cout << "-> arrTheta: " << arrThe << std::endl;
 
-  for( int i=0; i<arrMag.size(); i++ )
+  for( int i=0; i<arrMag.cols; i++ )
   {
-    double mg = arrMag[i];
-    int angle = (int) (arrThe[i]-refAngle) % 360;
+    double mg = arrMag.at<double>(i, 0);
+    int angle = (int) (arrThe.at<double>(i, 0)-refAngle) % 360;
     int b = quantizeOrientation(angle, numBin);
     double vote = mg;
 
     // b*binWidth is the start angle of the histogram bin
     // b*binWidth+binWidth/2 is the center of the histogram bin
     // angle -[...] is the distance from the angle to the center of the bin 
-    int histInterpWeight = 1 - std::abs(angle-(b*binWidth+binWidth/2))/(binWidth/2);
-    vote *= std::max( (double) histInterpWeight, minimum );
+    double histInterpWeight = 1 - std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
+    vote *= std::max( histInterpWeight, minimum );
 
-    int idx[2], xInterpWeight, yInterpWeight;
+    int idx[2];
+    double xInterpWeight, yInterpWeight;
     unravelIndex( i, subW, subW, idx );
 
-    xInterpWeight = std::max( (double) 1 - ( std::abs(idx[0]-center)/center ), minimum );
-    yInterpWeight = std::max( (double) 1 - ( std::abs(idx[1]-center)/center ), minimum );
+    xInterpWeight = std::max( (double) 1-(std::abs(idx[0]-center)/center), minimum );
+    yInterpWeight = std::max( (double) 1-(std::abs(idx[1]-center)/center), minimum );
 
-    vote *= xInterpWeight * yInterpWeight;
-    hist.at<float>(0, b) += vote;
+    vote *= (xInterpWeight * yInterpWeight);
+    hist.at<float>(b, 0) += vote;
+    //std::cout << "--> vote: " << vote << std::endl;
   }
+  std::cout << "--> histSubregion: " << hist << std::endl;
 }
 
 /**
@@ -426,26 +427,25 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
  * @param ret vector where the calculated descriptor will be returned
 **/
 void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bins,
-                             float rad, std::vector<cv::Mat> ret )
+                             float rad, std::vector<cv::Mat> descriptorList )
 {
   int binWidth, windowSize, radius;
-  float sigma, radVal;
+  float sigma;
 
   windowSize = 16;
   sigma = windowSize/6;
-  radius = std::floor(windowSize/2);
-  binWidth = std::floor(360/bins);
-  radVal = 180.0 / M_PI;
+  radius = (int) windowSize/2;
+  binWidth = (int) 360/bins;
 
   std::cout << "for kpList.size()" << std::endl;
   for( int index=0; index < kpList.size(); index++ )
   {
-    cv::Mat patch, dx, dy, mag, the, /*kernel,*/ featVec;
+    cv::Mat patch, dx, dy, mag, the, kernel, featVec;
     KeyPoints kp = kpList.at(index);
     float d, theta;
-    int i, x, y, s, t, l, b, r,/* xIni, xFim, yIni, yFim,*/ subW;
+    int /*i,*/ x, y, s, t, l, b, r,/* xIni, xFim, yIni, yFim,*/ subW;
 
-    i = 0;
+    //i = 0;
     x = kp.x;
     y = kp.y;
     s = kp.scale;
@@ -453,100 +453,74 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     
     std::cout << "gaussianKernel" << std::endl;
     theta = M_PI * 180.0;
-//    gaussianKernel( sigma, kernel );
+    gaussianKernel( sigma, kernel );
 
     t = std::max( 0, y-( (int) windowSize/2) );
     l = std::max( 0, x-( (int) windowSize/2) );
 
-    b = std::max( img.rows, y-( (int) (windowSize/2)+1) );
-    r = std::max( img.cols, x-( (int) (windowSize/2)+1) );
+    b = std::min( img.rows, y+((int) std::floor(windowSize/2)+1) );
+    r = std::min( img.cols, x+((int) std::floor(windowSize/2)+1) );
 
     patch = img(cv::Range(t, b), cv::Range(l, r));
     patch.convertTo(patch, CV_32F);
+    std::cout << "patch size: " << patch.size() << std::endl;
 
     std::cout << "getPatchGrads" << std::endl;
     getPatchGrads( patch, dx, dy );
     std::cout << "getPatchGrads ok" << std::endl;
-/*
+
     if( dx.rows < windowSize+1 )
     {
-      if( t == 0 )
-      {
-        xIni = kernel.rows-dx.rows;
-        xFim = kernel.rows;
-      } else
-      {
-        xIni = 0;
-        xFim = dx.rows;
-      }
+      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dx.rows, kernel.rows), cv::Range(0, dx.cols) );
+      else kernel = kernel( cv::Range(0, dx.rows), cv::Range(0, dx.cols) );
     }
     if( dx.cols < windowSize+1 )
     {
-      if( l == 0 )
-      {
-        yIni = kernel.cols-dx.cols;
-        yFim = kernel.cols;
-      } else
-      {
-        yIni = 0;
-        yFim = dx.cols;
-      }
+      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dx.cols, kernel.rows), cv::Range(0, dx.cols) );
+      else kernel = kernel( cv::Range(0, dx.cols), cv::Range(0, dx.cols) );
     }
 
     std::cout << "subspace kernel 1" << std::endl;
-    std::cout << "xIni: " << xIni << std::endl;
-    std::cout << "xFim: " << xFim << std::endl;
-    std::cout << "yIni: " << yIni << std::endl;
-    std::cout << "yFim: " << yFim << std::endl;
-    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
+    std::cout << "kernel.size(): " << kernel.size() << std::endl;
     
     if( dy.rows < windowSize+1 )
     {
-      if( t == 0 )
-      {
-        xIni = kernel.rows-dy.rows;
-        xFim = kernel.rows;
-      } else
-      {
-        xIni = 0;
-        xFim = dy.rows;
-      }
+      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dy.rows, kernel.rows), cv::Range(0, dy.cols) );
+      else kernel = kernel( cv::Range(0, dy.rows), cv::Range(0, dy.cols) );
     }
     if( dy.cols < windowSize+1 )
     {
-      if( l == 0 )
-      {
-        yIni = kernel.cols-dy.cols;
-        yFim = kernel.cols;
-      } else
-      {
-        yIni = 0;
-        yFim = dy.cols;
-      }
+      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dy.cols, kernel.rows), cv::Range(0, dy.cols) );
+      else kernel = kernel( cv::Range(0, dy.cols), cv::Range(0, dy.cols) );
     }
-*/
-//    std::cout << "subspace kernel 2" << std::endl;
-//    std::cout << "xIni: " << xIni << std::endl;
-//    std::cout << "xFim: " << xFim << std::endl;
-//    std::cout << "yIni: " << yIni << std::endl;
-//    std::cout << "yFim: " << yFim << std::endl;
-//    kernel = kernel( cv::Range(xIni, xFim), cv::Range(yIni, yFim) );
 
-    mag = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // magnitude
-    the = cv::Mat( cv::Size(dx.cols, dx.cols), CV_64F, cv::Scalar(0.0) ); // theta
+    std::cout << "subspace kernel 2" << std::endl;
+    //std::cout << "kernel: " << kernel << std::endl;
+    std::cout << "kernel.size(): " << kernel.size() << std::endl;
+
+    mag = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64F ); // magnitude
+    the = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64F ); // theta
     
     std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
 
-//    if( ( sizeof(kernel) / sizeof(float) ) == 17 )
-//    {
-//      dx = dx.dot( kernel );
-//      dy = dy.dot( kernel );
-//    }
+    //std::cout << "-> dx1: " << dx << std::endl;
+    //std::cout << "-> dy1: " << dy << std::endl;
+
+    if( /*( sizeof(kernel) / sizeof(float) )*/ kernel.cols == 17 )
+    {
+      dx = dx.dot( kernel );
+      dy = dy.dot( kernel );
+    }
+
+    //std::cout << "-> dx2: " << dx << std::endl;
+    //std::cout << "-> dy2: " << dy << std::endl;
+    //std::cout << "-> mag: " << mag << std::endl;
+    //std::cout << "-> the: " << the << std::endl;
 
     std::cout << "create featVec" << std::endl;
-    subW = (int) windowSize / 4;
-    featVec = cv::Mat( cv::Size(1, bins*windowSize), CV_32F, cv::Scalar(0.0) );
+    subW = std::floor(windowSize/4);
+    featVec = cv::Mat::zeros( cv::Size(bins*windowSize, 1), CV_32F );
 
     for(int i=0; i<subW; i++)
     {
@@ -554,11 +528,14 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
       {
         t = i*subW;
         l = j*subW;
-        b = std::min( img.rows, (i+1) * subW );
-        r = std::min( img.cols, (j+1) * subW );
+        b = std::min( img.rows, (i+1)*subW );
+        r = std::min( img.cols, (j+1)*subW );
 
         cv::Mat subMag = mag( cv::Range(t, b), cv::Range(l, r) );
         cv::Mat subThe = the( cv::Range(t, b), cv::Range(l, r) );
+
+        //std::cout << "-> subMag: " << std::endl << mag << std::endl;
+        //std::cout << "-> subThe: "<< std::endl << the << std::endl;
 
         std::cout << "getHistogramForSubregion" << std::endl;
         cv::Mat hist;
@@ -569,11 +546,12 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
         
         std::cout << "populate featVec" << std::endl;
         for(int idx = indexIni; idx<indexEnd; idx++)
-          featVec.at<float>(0, idx) = hist.at<float>(0, idx-indexIni);
-
+        {
+          float hst = hist.at<float>(0, idx-indexIni);
+          featVec.at<float>(idx, 0) = hst;
+          std::cout << "--> hist: " << hst << std::endl;
+        }
         std::cout << "release subMag e subThe" << std::endl;
-        //subMag.release();
-        //subThe.release();
       }
     }
 
@@ -581,13 +559,19 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     for(int idx=0; idx<featVec.cols; idx++)
     {
       float norm = cv::norm( featVec, cv::NORM_L2, cv::noArray() );
-      featVec.at<float>(0, idx) /= std::max((float)0.001, norm);
+      //std::cout << "## norm " << norm << std::endl;
+      featVec.at<float>(idx, 0) /= std::max((float)0.001, norm);
     }
 
-    std::cout << "push_back no vector de retorno" << std::endl;
-    ret.push_back(featVec);
+    for(int idx=0; idx<featVec.cols; idx++)
+      featVec.at<float>(idx, 0) *= 255;
+    
+    std::cout << "push_back no vector de retorno, index = " << index << std::endl;
+    //descriptorList.push_back(featVec);
+    std::cout << "featVec: " << featVec << std::endl;
+    descriptorList[index] = featVec;
   }
-
+  std::cout << "saindo siftExecuteDescription. Size ret: " << descriptorList.size() << std::endl;  
 }
 
 /**
@@ -607,8 +591,9 @@ void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img, cv::Mat& imgGray,
   //removing blur applied in siftKPOrientation
   cv::cvtColor( img, imgGray, CV_BGR2GRAY ); 
 
-  std::vector<cv::Mat> descriptorList;
+  std::vector<cv::Mat> descriptorList( kp.size() );
   siftExecuteDescription( kp, imgGray, DESC_BINS, DESC_RADIUS, descriptorList );
   std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
   std::cout << "Size da lista de descritores:" << descriptorList.size() << std::endl;
+  std::cout << "Elemento 0: " << descriptorList[0] << std::endl;
 }
