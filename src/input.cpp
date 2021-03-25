@@ -12,14 +12,6 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
   {
     img_gray = img_in;
   }
-  if (img_gray.depth() == CV_32F)
-  {
-    cv::normalize(img_gray, img_gray, 0.0, 256.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
-  }
-  else
-  {
-    cv::normalize(img_gray, img_gray, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
-  }
   img_name = getFileName(std::string(img_path));
 }
 

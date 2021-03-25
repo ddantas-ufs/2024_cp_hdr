@@ -101,9 +101,18 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
               int mgauss, float sigma_x, float sigma_y, float k, float min_quality,
               int msup_size, int cv_size)
 {
-  cv::Mat resp_map, img_blur, img_aux;
+  cv::Mat resp_map, img_norm, img_blur, img_aux;
 
-  cv::GaussianBlur(img, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
+  if (img.depth() == 0)
+  {
+    img.convertTo(img_norm, CV_32FC1);
+    img_norm = img_norm / 255.0;
+  }
+  else
+  {
+    img = img_norm / 256.0;
+  }
+  cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
                    cv::BORDER_REPLICATE);
 
   if (is_hdr)
@@ -119,7 +128,6 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   {
     img_aux = img_blur;
   }
-
   harrisCalc(img_aux, resp_map, msobel, mgauss, sigma_x, sigma_y, k);
   harrisThreshold(resp_map, kp, min_quality);
   harrisMaxSup(resp_map, kp, msup_size);

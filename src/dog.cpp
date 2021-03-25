@@ -304,11 +304,11 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
           D.at<float>(y + 1, x - 1) - D.at<float>(y - 1, x + 1));
 
     trH = dxx * dyy;
-    detH = dxx * dyy - dxy*dxy;
+    detH = (dxx * dyy) - (dxy * dxy);
 
     curv_ratio = trH * trH / detH;
 
-    if ((detH > 0) && (curv_ratio > curv_th))
+    if ((detH > 0) && (curv_ratio < curv_th))
          kp_aux.push_back(kp[i]);
   }
   kp.clear();
@@ -326,19 +326,21 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
 void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
                    bool is_hdr = false, int cv_size = CV_SIZE)
 {
-  cv::Mat img_aux, img_cv, img_log;
+  cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
   if (is_hdr)
   {
+    cv::Mat img_cv, img_log;
+
     coefVar(img, img_cv, cv_size);
     logTransform(img_cv, img_log);
 
-    img_log.convertTo(img_aux, CV_32FC1);
+    img_aux = img_log;
   }
   else
   {
-    img.convertTo(img_aux, CV_32FC1);
+    img_aux = img;
   }
 
   for (int i = 0; i < NUM_OCTAVES; i++)
@@ -382,13 +384,24 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
  * @param curv_th edge threshold value to threshold process
  * @param cv_size mask size to compute coefficient of variation
 **/
-void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px, int mgauss,
-              int maxsup_size, float contrast_th, float curv_th, int cv_size)
+void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
+           int mgauss, int maxsup_size, float contrast_th, float curv_th, int cv_size)
 {
   cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
+  cv::Mat img_norm;
 
-  dogInitScales(img, scales, mgauss, is_hdr);
+  if (img.depth() == 0)
+  {
+    img.convertTo(img_norm, CV_32FC1);
+    img_norm = img_norm / 255.0;
+  }
+  else
+  {
+    img = img_norm / 256.0;
+  }
+
+  dogInitScales(img_norm, scales, mgauss, is_hdr);
   dogCalc(scales, dog);
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
   contrastTh(dog, kp, contrast_th);
