@@ -33,7 +33,7 @@ bool isOut(cv::Mat img, int x, int y)
 {
   int rows = img.rows;
   int cols = img.cols;
-  return ( x <= 0 or x >= cols-1 or y <= 0 or y >= rows-1 );
+  return ( x <= 0 || x >= cols-1 || y <= 0 || y >= rows-1 );
 }
 
 void repeatLastRow(cv::Mat mat, cv::Mat &ret)
@@ -118,12 +118,8 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
 **/
 void cartToPolarGradient( int dx, int dy, double mt[2] )
 {
-  double mag, theta;
-  mag = cv::sqrt( (dx*dx)+(dy*dy) );
-  theta = ( (cv::fastAtan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
-
-  mt[0] = mag;
-  mt[1] = theta;
+  mt[0] = std::sqrt( (dx*dx)+(dy*dy) );
+  mt[1] = ( (std::atan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
 }
 
 /**
@@ -168,7 +164,7 @@ void getGradient( cv::Mat& img, int x, int y, double mt[2] )
 int quantizeOrientation( double theta, int bins )
 {
   float width = std::floor( 360 / bins );
-  return ( int ) std::floor( std::floor( theta ) / width );
+  return ( int ) std::floor( theta ) / width;
 }
 
 /**
@@ -182,17 +178,18 @@ int quantizeOrientation( double theta, int bins )
 void calcOrientation( cv::Mat& img, KeyPoints kp,
                       std::vector<KeyPoints> auxList )
 {
-  cv::Mat kernel;
-  float sigma, maxIndex, maxValue, hist[DESC_HIST_BINS];
+  cv::Mat kernel, hist;
+  float sigma, maxIndex, maxValue;//, hist[DESC_HIST_BINS];
   int radius, sizeKernel;
 
   auxList.clear();
 
-  for( int i=0; i<DESC_HIST_BINS; i++ )
-    hist[i] = ( float ) 0.0;
+  hist = cv::Mat::zeros( cv::Size( DESC_HIST_BINS, 1 ), CV_32F );
+  //for(int i = 0; i < DESC_HIST_BINS; i++)
+  //  hist[i] = (float) 0.0;
 
   sigma = DESC_GAUSS_SIGMA * kp.scale;
-  radius = (int) 2 * (std::ceil( sigma ) + 1);
+  radius = (int) (2 * std::ceil( sigma )) + 1;
 
   gaussianKernel( sigma, kernel );
 
@@ -203,20 +200,33 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
 
     y = kp.y + i;
 
-    if( isOut(img, 1, y) )
-      continue;
-
-    for( int j = -radius; j < radius+1; j++ )
+    if( !isOut(img, 1, y) )
     {
-      int x = kp.x + j;
-      if( isOut(img, x, 1) )
-        continue;
+      for( int j = -radius; j < radius+1; j++ )
+      {
+        int x = kp.x + j;
+        if( !isOut(img, x, 1) )
+        {
+          getGradient( img, x, y, mt );
+          
+          weight = kernel.at<float>(i+radius, j+radius) * mt[0];
+          binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
 
-      getGradient( img, x, y, mt );
-      
-      weight = kernel.at<float>(i+radius, j+radius) * mt[0];
-      binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
-      hist[binn] += weight;
+          std::cout << "---> x=" << x << ", y=" << y << std::endl;
+          std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] <<std::endl;
+          std::cout << "---> binn=" << binn << ", weight=" << weight << std::endl;
+          std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl;
+          //std::cout << "---> hist[binn]=" << hist[binn] << std::endl;
+
+          if( !std::isnan(weight) )
+            hist.at<float>(binn, 0) = hist.at<float>(binn, 0) + weight;
+
+          //hist[binn] = hist[binn] + weight;
+          for(int z = 0; z<DESC_HIST_BINS; z++ ) std::cout << hist.at<float>(z, 0) << ", ";
+          //for(int z = 0; z<DESC_HIST_BINS; z++ ) std::cout << hist[z] << " ";;
+          std::cout << std::endl;
+        }
+      }
     }
   }
   
@@ -224,9 +234,11 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   maxValue = std::numeric_limits<float>::min();
   for( int i = 0; i < DESC_HIST_BINS; i++ )
   {
-    if( hist[i] > maxValue )
+    if( hist.at<float>(i, 0) > maxValue )
+    //if( hist[i] > maxValue )
     {
-      maxValue = hist[i];
+      maxValue = hist.at<float>(i, 0);
+      //maxValue = hist[i];
       maxIndex = i;
     }
   }
@@ -237,24 +249,25 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   // If there's values above 85% of max value, return them.
   for( int i = 0; i < DESC_HIST_BINS; i++ )
   {
-    if( i == maxIndex )
-      continue;
-    
-    if( hist[i] > ( 0.85 * maxValue ) )
+    if( i != maxIndex )
     {
-      KeyPoints aux;
-      aux.x = kp.x;
-      aux.y = kp.y;
-      aux.resp = kp.resp;
-      aux.scale = kp.scale;
-      aux.octave = kp.octave;
-      aux.direction = i * 10;
-      auxList.push_back( aux );
-    } 
-    //else 
-    //{
-    //  std::cout << "i: " << i << " so kp: " << std::endl;
-    //}
+      if( hist.at<double>(i, 0) > ( 0.85 * maxValue ) )
+      //if( hist[i] > ( 0.85 * maxValue ) )
+      {
+        KeyPoints aux;
+        aux.x = kp.x;
+        aux.y = kp.y;
+        aux.resp = kp.resp;
+        aux.scale = kp.scale;
+        aux.octave = kp.octave;
+        aux.direction = i * 10;
+        auxList.push_back( aux );
+      } 
+      //else 
+      //{
+      //  std::cout << "i: " << i << " so kp: " << std::endl;
+      //}
+    }
   }
   //std::cout << "Releasing kernel" << std::endl;
   //kernel = cv::Mat( cv::Size(1, 1), CV_32F, cv::Scalar(0.0) );
@@ -272,8 +285,8 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss,
                         float sigma )
 {
   std::vector<KeyPoints> auxList, newKp;
-  cv::Mat imgCopy;
-  img.copyTo( imgCopy );
+  //cv::Mat imgCopy;
+  //img.copyTo( imgCopy );
 
   cv::GaussianBlur( img, img, cv::Size(mGauss, mGauss), sigma, sigma, 
                    cv::BORDER_REPLICATE );
@@ -289,9 +302,9 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss,
     px = (int) ( 30 * ( std::cos( key.direction * ( M_PI / 180) ) ) );
     py = (int) ( 30 * ( std::sin( key.direction * ( M_PI / 180) ) ) );
 
-    cv::arrowedLine( imgCopy, cv::Point( key.x, key.y ),
-                     cv::Point( key.x + px, key.y + py ),
-                     cv::Scalar( 0, 0, 255 ), 1 );
+    //cv::arrowedLine( imgCopy, cv::Point( key.x, key.y ),
+    //                 cv::Point( key.x + px, key.y + py ),
+    //                 cv::Scalar( 0, 0, 255 ), 1 );
 
     for( int j = 0; j < auxList.size(); j++ )
     {
@@ -299,9 +312,9 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss,
 
       px = (int) ( 30 * ( std::cos( point.direction * ( M_PI / 180) ) ) );
       py = (int) ( 30 * ( std::sin( point.direction * ( M_PI / 180) ) ) );
-      cv::arrowedLine( imgCopy, cv::Point( point.x, point.y ), 
-                       cv::Point( point.x+px, point.y+py ), 
-                       cv::Scalar( 0, 0, 255 ), 1 );
+      //cv::arrowedLine( imgCopy, cv::Point( point.x, point.y ), 
+      //                 cv::Point( point.x+px, point.y+py ), 
+      //                 cv::Scalar( 0, 0, 255 ), 1 );
     }
     // APPEND newKp
     for( int k=0; k<auxList.size(); k++ )
@@ -414,7 +427,8 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
     hist.at<float>(b, 0) += vote;
     //std::cout << "--> vote: " << vote << std::endl;
   }
-  std::cout << "--> histSubregion: " << hist << std::endl;
+  //std::cout << "--> histSubregion: " << hist << std::endl;
+  for(int k = 0; k<numBin; k++) std::cout << "--> histSubregion: " << hist.at<float>(k, 0) << ", ";//std::endl;
 }
 
 /**
