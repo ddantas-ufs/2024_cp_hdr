@@ -30,8 +30,8 @@ DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
-DEMO_HDR_IMG = $(IMG_DIR)/test_artur.jpg
-DEMO_LDR_IMG = $(IMG_DIR)/test_artur.jpg
+DEMO_HDR_IMG = $(IMG_DIR)/lena.png
+DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
 SIFT_DESCRIPTOR = demosift
 
@@ -68,13 +68,13 @@ run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demoharris_hdr: demoharris_hdr
-	./$(BIN_DIR)/$(DEMO_HARRIS_HDR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEMO_HARRIS_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
 run_demodog: demodog
 	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demodog_hdr: demodog_hdr
-	./$(BIN_DIR)/$(DEMO_DOG_HDR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEMO_DOG_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
 run_demosurf: demosurf
 	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(OUT_DIR)/

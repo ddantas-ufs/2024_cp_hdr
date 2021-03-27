@@ -7,9 +7,9 @@ int main(int, char** argv)
   std::string img_name, out_path;
 
   readImg(argv[1], img_in, img_gray, img_name);
-  out_path = std::string(argv[2]) + img_name + ".dog";
+  out_path = std::string(argv[2]) + img_name + ".harris_hdr";
 
-  dogKp(img_gray, kp);
+  harrisKp(img_gray, kp, true);
 
   saveKeypoints(kp, out_path);
   plotKeyPoints(img_in, kp, out_path);
