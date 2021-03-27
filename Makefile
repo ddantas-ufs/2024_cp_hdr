@@ -81,6 +81,9 @@ run_demosurf: demosurf
 
 run_defaultdog: defaultdog
 	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
+
+run_descriptor_sift: descriptor_sift
+	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
 	
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

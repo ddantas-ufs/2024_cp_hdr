@@ -286,7 +286,9 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
             float curv_th)
 {
   std::vector<KeyPoints> kp_aux;
-  curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
+  // curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
+  // (r + 1)² = (r+1) * (r+1) = r² + 2*r*1 + 1²
+  curv_th = (curv_th * curv_th) + (2*curv_th) + 1; 
 
   for (int i = 0; i < kp.size(); i++)
   {

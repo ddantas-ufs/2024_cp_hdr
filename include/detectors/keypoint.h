@@ -3,6 +3,8 @@
 
 #include "core.h"
 
+std::string keypointToString( KeyPoints kp );
+
 bool outOfBounds(int i, int j, cv::Size size_img);
 
 void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path);

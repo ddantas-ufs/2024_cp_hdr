@@ -17,6 +17,7 @@ int main(int argv, char** args)
 
   dogKp(img_gray, kp);
   saveKeypoints(kp, out_path);
+  std::cout << "Tam vector kps: " << kp.size() << std::endl;
   plotKeyPoints(img_in, kp, out_path);
 
   return 0;

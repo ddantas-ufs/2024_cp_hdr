@@ -79,7 +79,7 @@ void gaussianKernel( float sigma, cv::Mat& kernel )
   double r, s = 2.0 * sigma * sigma;
   double sum = 0.0; // to normalize
 
-  kernel = cv::Mat( cv::Size(size, size), CV_32F, cv::Scalar(0.0) );
+  kernel = cv::Mat( cv::Size(size, size), CV_32FC1, cv::Scalar(0.0) );
 
   for( int x = -half; x <= half; x++ )
   {
@@ -184,7 +184,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
 
   auxList.clear();
 
-  hist = cv::Mat::zeros( cv::Size( DESC_HIST_BINS, 1 ), CV_32F );
+  hist = cv::Mat::zeros( cv::Size( DESC_HIST_BINS, 1 ), CV_32FC1 );
   //for(int i = 0; i < DESC_HIST_BINS; i++)
   //  hist[i] = (float) 0.0;
 
@@ -212,19 +212,19 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
           weight = kernel.at<float>(i+radius, j+radius) * mt[0];
           binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
 
-          std::cout << "---> x=" << x << ", y=" << y << std::endl;
-          std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] <<std::endl;
-          std::cout << "---> binn=" << binn << ", weight=" << weight << std::endl;
-          std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl;
+          //std::cout << "---> x=" << x << ", y=" << y << std::endl;
+          //std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] <<std::endl;
+          //std::cout << "---> binn=" << binn << ", weight=" << weight << std::endl;
+          //std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl;
           //std::cout << "---> hist[binn]=" << hist[binn] << std::endl;
 
           if( !std::isnan(weight) )
             hist.at<float>(binn, 0) = hist.at<float>(binn, 0) + weight;
 
           //hist[binn] = hist[binn] + weight;
-          for(int z = 0; z<DESC_HIST_BINS; z++ ) std::cout << hist.at<float>(z, 0) << ", ";
+          //for(int z = 0; z<DESC_HIST_BINS; z++ ) std::cout << hist.at<float>(z, 0) << ", ";
           //for(int z = 0; z<DESC_HIST_BINS; z++ ) std::cout << hist[z] << " ";;
-          std::cout << std::endl;
+          //std::cout << std::endl;
         }
       }
     }
@@ -244,7 +244,10 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   }
   
   kp.direction = maxIndex * 10;
-  //std::cout << "direction kp = " << maxIndex << "*" << "10 = " << kp.direction << std::endl;
+  std::cout << "kpIndex = " << maxIndex << std::endl;
+  std::cout << "kpValue = " << maxValue << std::endl;
+  std::cout << "keypoint:" << std::endl;
+  std::cout << keypointToString(kp) << std::endl;
 
   // If there's values above 85% of max value, return them.
   for( int i = 0; i < DESC_HIST_BINS; i++ )
@@ -269,8 +272,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
       //}
     }
   }
-  //std::cout << "Releasing kernel" << std::endl;
-  //kernel = cv::Mat( cv::Size(1, 1), CV_32F, cv::Scalar(0.0) );
+  std::cout << "Returned auxList size:" << auxList.size() << std::endl;
 }
 
 /**
@@ -335,8 +337,8 @@ void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
 {
   cv::Mat r1, r2;
 
-  r1 = cv::Mat::zeros( subImage.size(), CV_32F );
-  r2 = cv::Mat::zeros( subImage.size(), CV_32F );
+  r1 = cv::Mat::zeros( subImage.size(), CV_32FC1 );
+  r2 = cv::Mat::zeros( subImage.size(), CV_32FC1 );
 
   repeatLastRow( subImage, r1 );
   repeatFirstRow( subImage, r2 );
@@ -390,10 +392,10 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 {
   double minimum = 0.000001;
   float center = (subW/2) - 0.5;
-  hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32F );
+  hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32FC1 );
 
-  cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32F );
-  cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32F );
+  cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32FC1 );
+  cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
 
   //std::cout << "-> mag size: " << mag.size() << std::endl;
   returnRavel( mag, arrMag );
@@ -428,7 +430,8 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
     //std::cout << "--> vote: " << vote << std::endl;
   }
   //std::cout << "--> histSubregion: " << hist << std::endl;
-  for(int k = 0; k<numBin; k++) std::cout << "--> histSubregion: " << hist.at<float>(k, 0) << ", ";//std::endl;
+  for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k, 0) << ", ";
+  std::cout << std::endl;
 }
 
 /**
@@ -476,7 +479,7 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     r = std::min( img.cols, x+((int) std::floor(windowSize/2)+1) );
 
     patch = img(cv::Range(t, b), cv::Range(l, r));
-    patch.convertTo(patch, CV_32F);
+    patch.convertTo(patch, CV_32FC1);
     std::cout << "patch size: " << patch.size() << std::endl;
 
     std::cout << "getPatchGrads" << std::endl;
@@ -534,7 +537,7 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
 
     std::cout << "create featVec" << std::endl;
     subW = std::floor(windowSize/4);
-    featVec = cv::Mat::zeros( cv::Size(bins*windowSize, 1), CV_32F );
+    featVec = cv::Mat::zeros( cv::Size(bins*windowSize, 1), CV_32FC1 );
 
     for(int i=0; i<subW; i++)
     {
@@ -594,19 +597,33 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
  * @param kp KeyPoints detected
  * @param name string with image's name
 **/
-void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img, cv::Mat& imgGray,
+void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img_in, cv::Mat& img_gray,
                      int mGauss, float sigma )
 {
+  cv::Mat img_norm;
+  if (img_in.depth() == 0)
+  {
+    img_in.convertTo(img_norm, CV_32FC1);
+    img_norm = img_norm / 255.0;
+  }
+  else
+  {
+    img_in = img_norm / 256.0;
+  }
+
+  //removing blur applied in siftKPOrientation
+  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+
   std::cout << "Calculando orientações" << std::endl;
-  siftKPOrientation( kp, imgGray, mGauss, sigma );
+  siftKPOrientation( kp, img_gray, mGauss, sigma );
   
   std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
 
   //removing blur applied in siftKPOrientation
-  cv::cvtColor( img, imgGray, CV_BGR2GRAY ); 
+  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   std::vector<cv::Mat> descriptorList( kp.size() );
-  siftExecuteDescription( kp, imgGray, DESC_BINS, DESC_RADIUS, descriptorList );
+  //siftExecuteDescription( kp, img_gray, DESC_BINS, DESC_RADIUS, descriptorList );
   std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
   std::cout << "Size da lista de descritores:" << descriptorList.size() << std::endl;
   std::cout << "Elemento 0: " << descriptorList[0] << std::endl;

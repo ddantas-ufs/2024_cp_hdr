@@ -1,5 +1,15 @@
 #include "../include/detectors/keypoint.h"
 
+std::string keypointToString( KeyPoints kp )
+{
+  return "x: " +std::to_string(kp.x) 
+         + ", y:" +std::to_string(kp.y) +"\n"
+         + "scale: " +std::to_string(kp.scale) 
+         +", octave:" +std::to_string(kp.octave) +"\n"
+         + "response: " +std::to_string(kp.resp) 
+         +", direction:" +std::to_string(kp.direction);
+}
+
 bool outOfBounds(int i, int j, cv::Size size_img)
 {
   return ((i < 0) || (j < 0) || (i >= size_img.height) || (j >= size_img.width));
