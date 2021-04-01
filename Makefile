@@ -80,7 +80,7 @@ run_demosurf: demosurf
 	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_defaultdog: defaultdog
-	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(DEF_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/

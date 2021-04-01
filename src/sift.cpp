@@ -36,6 +36,79 @@ bool isOut(cv::Mat img, int x, int y)
   return ( x <= 0 || x >= cols-1 || y <= 0 || y >= rows-1 );
 }
 
+void repeatLastRow( cv::Mat& mat, cv::Mat& ret )
+{
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=1; i<rows; i++ )
+  {
+    for( int j=0; j<cols; j++ )
+    {
+      ret.at<float>(i-1, j) = mat.at<float>(i, j);
+    }
+  }
+  
+  for( int j=0; j<cols; j++ )
+    ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
+}
+
+void repeatFirstRow( cv::Mat& mat, cv::Mat& ret )
+{
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int j=0; j<cols; j++ )
+  {
+    ret.at<float>(0, j) = mat.at<float>(0, j);
+  }
+
+  for( int i=0; i<rows-1; i++ )
+  {
+    for( int j=0; j<cols; j++ )
+    {
+      ret.at<float>(i+1, j) = mat.at<float>(i, j);
+    }
+  }
+}
+
+void repeatLastColumn( cv::Mat& mat, cv::Mat& ret )
+{
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=0; i<rows; i++ )
+  {
+    for( int j=1; j<cols; j++ )
+    {
+      ret.at<float>(i, j-1) = mat.at<float>(i, j);
+    }
+  }
+
+  for( int i=0; i<rows; i++ )
+    ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
+}
+
+void repeatFirstColumn( cv::Mat& mat, cv::Mat& ret )
+{
+  int rows = mat.rows;
+  int cols = mat.cols;
+
+  for( int i=0; i<rows; i++ )
+  {
+    ret.at<float>(i, 0) = mat.at<float>(i, 0);
+  }
+
+  for( int i=0; i<rows; i++ )
+  {
+    for( int j=0; j<cols-1; j++ )
+    {
+      ret.at<float>(i, j+1) = mat.at<float>(i, j);
+    }
+  }
+}
+
+/*
 void repeatLastRow(cv::Mat mat, cv::Mat &ret)
 {
   mat.row(mat.rows - 1).copyTo(ret.row(ret.rows - 1));
@@ -59,7 +132,7 @@ void repeatFirstColumn(cv::Mat mat, cv::Mat &ret)
   mat.col(0).copyTo(ret.col(0));
   mat.colRange(0, mat.cols - 1).copyTo(ret.colRange(1, ret.cols));
 }
-
+*/
 /**
  * Create a Gaussian Kernel based on sigma value
  * 
@@ -335,10 +408,8 @@ void siftKPOrientation( std::vector<KeyPoints> kp, cv::Mat& img, int mGauss,
 
 void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
 {
-  cv::Mat r1, r2;
-
-  r1 = cv::Mat::zeros( subImage.size(), CV_32FC1 );
-  r2 = cv::Mat::zeros( subImage.size(), CV_32FC1 );
+  cv::Mat r1 = cv::Mat::zeros( cv::Size( subImage.rows, subImage.cols), CV_32FC1 );
+  cv::Mat r2 = cv::Mat::zeros( cv::Size( subImage.rows, subImage.cols), CV_32FC1 );
 
   repeatLastRow( subImage, r1 );
   repeatFirstRow( subImage, r2 );
@@ -416,7 +487,7 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
     // b*binWidth+binWidth/2 is the center of the histogram bin
     // angle -[...] is the distance from the angle to the center of the bin 
     double histInterpWeight = 1 - std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
-    vote *= std::max( histInterpWeight, minimum );
+    vote = vote * std::max( histInterpWeight, minimum );
 
     int idx[2];
     double xInterpWeight, yInterpWeight;
@@ -425,11 +496,11 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
     xInterpWeight = std::max( (double) 1-(std::abs(idx[0]-center)/center), minimum );
     yInterpWeight = std::max( (double) 1-(std::abs(idx[1]-center)/center), minimum );
 
-    vote *= (xInterpWeight * yInterpWeight);
-    hist.at<float>(b, 0) += vote;
+    vote = vote * (xInterpWeight * yInterpWeight);
+    hist.at<float>(b, 0) += (float) vote;
     //std::cout << "--> vote: " << vote << std::endl;
   }
-  //std::cout << "--> histSubregion: " << hist << std::endl;
+  std::cout << "--> histSubregion: ";
   for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k, 0) << ", ";
   std::cout << std::endl;
 }
@@ -446,8 +517,11 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bins,
                              float rad, std::vector<cv::Mat> descriptorList )
 {
-  int binWidth, windowSize, radius;
-  float sigma;
+  int binWidth, windowSize, radius;//, x, y, s, t, l, b, r, subW;
+  //cv::Mat patch, dx, dy, mag, the, kernel, featVec;
+  cv::Mat featVec;
+  float sigma;//, d, theta;
+  //KeyPoints kp;
 
   windowSize = 16;
   sigma = windowSize/6;
@@ -457,12 +531,12 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
   std::cout << "for kpList.size()" << std::endl;
   for( int index=0; index < kpList.size(); index++ )
   {
-    cv::Mat patch, dx, dy, mag, the, kernel, featVec;
-    KeyPoints kp = kpList.at(index);
+    cv::Mat patch, dx, dy, mag, the, kernel;//, featVec;
     float d, theta;
-    int /*i,*/ x, y, s, t, l, b, r,/* xIni, xFim, yIni, yFim,*/ subW;
+    int x, y, s, t, l, b, r, subW;
 
-    //i = 0;
+    KeyPoints kp = kpList.at(index);
+    
     x = kp.x;
     y = kp.y;
     s = kp.scale;
@@ -472,51 +546,61 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
     theta = M_PI * 180.0;
     gaussianKernel( sigma, kernel );
 
-    t = std::max( 0, y-( (int) windowSize/2) );
-    l = std::max( 0, x-( (int) windowSize/2) );
+    t = std::max( 0, y-( (int) std::floor(windowSize/2) ) );
+    l = std::max( 0, x-( (int) std::floor(windowSize/2) ) );
 
-    b = std::min( img.rows, y+((int) std::floor(windowSize/2)+1) );
-    r = std::min( img.cols, x+((int) std::floor(windowSize/2)+1) );
+    b = std::min( img.cols, (y+ (int) std::floor(windowSize/2))+1 );
+    r = std::min( img.rows, (x+ (int) std::floor(windowSize/2))+1 );
+
+    std::cout << "t: " << t << " l: " << l << std::endl;
+    std::cout << "b: " << b << " r: " << r << std::endl;
 
     patch = img(cv::Range(t, b), cv::Range(l, r));
-    patch.convertTo(patch, CV_32FC1);
+    //patch.convertTo(patch, CV_32FC1);
+    //std::cout << "patch: " << patch << std::endl;
     std::cout << "patch size: " << patch.size() << std::endl;
 
     std::cout << "getPatchGrads" << std::endl;
     getPatchGrads( patch, dx, dy );
     std::cout << "getPatchGrads ok" << std::endl;
 
+    std::cout << "Kernel size: " << kernel.size() << std::endl;
+    std::cout << "dx size: " << dx.size() << std::endl;
+    std::cout << "dy size: " << dy.size() << std::endl;
+
     if( dx.rows < windowSize+1 )
     {
-      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dx.rows, kernel.rows), cv::Range(0, dx.cols) );
-      else kernel = kernel( cv::Range(0, dx.rows), cv::Range(0, dx.cols) );
+      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dx.rows, kernel.rows), cv::Range(0, kernel.cols) );
+      else kernel = kernel( cv::Range(0, dx.rows), cv::Range(0, kernel.cols) );
     }
     if( dx.cols < windowSize+1 )
     {
-      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dx.cols, kernel.rows), cv::Range(0, dx.cols) );
-      else kernel = kernel( cv::Range(0, dx.cols), cv::Range(0, dx.cols) );
+      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dx.cols, kernel.rows), cv::Range(0, kernel.cols) );
+      else kernel = kernel( cv::Range(0, dx.cols), cv::Range(0, kernel.cols) );
     }
 
     std::cout << "subspace kernel 1" << std::endl;
     std::cout << "kernel.size(): " << kernel.size() << std::endl;
-    
+
+    /*// NÃO PRECISA CHECAR PRA dy, POIS dx e dy TEM O MESMO TAMANHO
     if( dy.rows < windowSize+1 )
     {
-      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dy.rows, kernel.rows), cv::Range(0, dy.cols) );
-      else kernel = kernel( cv::Range(0, dy.rows), cv::Range(0, dy.cols) );
+      if( t == 0 ) kernel = kernel( cv::Range(kernel.rows-dy.rows, kernel.rows), cv::Range(0, kernel.cols) );
+      else kernel = kernel( cv::Range(0, dy.rows), cv::Range(0, kernel.cols) );
     }
     if( dy.cols < windowSize+1 )
     {
-      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dy.cols, kernel.rows), cv::Range(0, dy.cols) );
-      else kernel = kernel( cv::Range(0, dy.cols), cv::Range(0, dy.cols) );
+      if( l == 0 ) kernel = kernel( cv::Range(kernel.cols-dy.cols, kernel.rows), cv::Range(0, kernel.cols) );
+      else kernel = kernel( cv::Range(0, dy.cols), cv::Range(0, kernel.cols) );
     }
 
     std::cout << "subspace kernel 2" << std::endl;
     //std::cout << "kernel: " << kernel << std::endl;
     std::cout << "kernel.size(): " << kernel.size() << std::endl;
+    */
 
-    mag = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64F ); // magnitude
-    the = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64F ); // theta
+    mag = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64FC1 ); // magnitude
+    the = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64FC1 ); // theta
     
     std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
@@ -561,32 +645,43 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img, int bi
         int indexIni = (i*subW*bins) + (j*bins);
         int indexEnd = (i*subW*bins) + ((j+1)*bins);
         
-        std::cout << "populate featVec" << std::endl;
+        std::cout << "populate featVec:" << std::endl;
+        std::cout << "---> ini: " << indexIni << " fim: " << indexEnd << std::endl;
         for(int idx = indexIni; idx<indexEnd; idx++)
         {
-          float hst = hist.at<float>(0, idx-indexIni);
+          float hst = hist.at<float>(idx-indexIni, 0);
           featVec.at<float>(idx, 0) = hst;
-          std::cout << "--> hist: " << hst << std::endl;
+          std::cout << hst << ", ";
         }
-        std::cout << "release subMag e subThe" << std::endl;
+        std::cout << std::endl << "release subMag e subThe" << std::endl;
       }
+        //std::cout << std::endl;
     }
 
     std::cout << "normalizando featVec" << std::endl;
+    float norm = cv::norm( featVec, cv::NORM_L2, cv::noArray() );
+    featVec = featVec / cv::max( norm, (float)0.001 );
+    /*
     for(int idx=0; idx<featVec.cols; idx++)
     {
       float norm = cv::norm( featVec, cv::NORM_L2, cv::noArray() );
       //std::cout << "## norm " << norm << std::endl;
       featVec.at<float>(idx, 0) /= std::max((float)0.001, norm);
     }
-
+    */
     for(int idx=0; idx<featVec.cols; idx++)
       featVec.at<float>(idx, 0) *= 255;
     
     std::cout << "push_back no vector de retorno, index = " << index << std::endl;
-    //descriptorList.push_back(featVec);
-    std::cout << "featVec: " << featVec << std::endl;
-    descriptorList[index] = featVec;
+    descriptorList.push_back(featVec.clone());
+
+    std::cout << "featVec size: " << featVec.cols << std::endl;
+    for(int k=0; k<featVec.cols; k++) std::cout << featVec.at<float>(k, 0) << ", ";
+    std::cout << std::endl;
+
+    // copiando informacoes
+    //descriptorList[index] = cv::Mat(featVec.size(), featVec.type());
+    //featVec.copyTo( descriptorList[index] );
   }
   std::cout << "saindo siftExecuteDescription. Size ret: " << descriptorList.size() << std::endl;  
 }
@@ -623,7 +718,7 @@ void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img_in, cv::Mat& img_gr
   cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   std::vector<cv::Mat> descriptorList( kp.size() );
-  //siftExecuteDescription( kp, img_gray, DESC_BINS, DESC_RADIUS, descriptorList );
+  siftExecuteDescription( kp, img_gray, DESC_BINS, DESC_RADIUS, descriptorList );
   std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
   std::cout << "Size da lista de descritores:" << descriptorList.size() << std::endl;
   std::cout << "Elemento 0: " << descriptorList[0] << std::endl;

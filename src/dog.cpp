@@ -286,9 +286,7 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
             float curv_th)
 {
   std::vector<KeyPoints> kp_aux;
-  // curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
-  // (r + 1)² = (r+1) * (r+1) = r² + 2*r*1 + 1²
-  curv_th = (curv_th * curv_th) + (2*curv_th) + 1; 
+  curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
 
   for (int i = 0; i < kp.size(); i++)
   {
@@ -400,12 +398,23 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   }
   else
   {
-    img = img_norm / 256.0;
+    img_norm = img_norm / 256.0;
   }
 
+  printf("%d \n", img.at<uint8_t>(50, 50) );
+  std::cout << img_norm.at<float>(50, 50) << std::endl;
+  printf("%d \n", img.at<uint8_t>(100, 100) );
+  std::cout << img_norm.at<float>(100, 100) << std::endl;
+
+  std::cout << "dogInitScales " << kp.size() << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);
+  std::cout << "dogCalc " << kp.size() << std::endl;
   dogCalc(scales, dog);
+  std::cout << "dogMaxSup " << kp.size() << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  std::cout << "contrastTh " << kp.size() << std::endl;
   contrastTh(dog, kp, contrast_th);
+  std::cout << "edgeTh " << kp.size() << std::endl;
   edgeTh(dog, kp, curv_th);
+  std::cout << "fim " << kp.size() << std::endl;
 }

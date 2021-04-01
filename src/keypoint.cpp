@@ -79,7 +79,7 @@ void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 **/
 std::vector<KeyPoints> loadKeypoints( std::string arqPath )
 {
-  std::fstream arch;
+  std::fstream arch; 
   std::string line, strY, strX, strOctave, strScale, strResp;
   std::vector<KeyPoints> kp;
 
