@@ -24,11 +24,16 @@
 #define MAX_KP 500 // if zero, it is not used
 #define CV_SIZE 5 // mask size to compute coefficient of variation
 
-#define DESC_GAUSS_WINDOW 5
 #define DESC_GAUSS_SIGMA 1.5
 #define DESC_HIST_BINS 36
 #define DESC_BINS 8
-#define DESC_RADIUS 3 * DESC_GAUSS_SIGMA
+
+// SIFT CONSTANTS
+#define SIFT_DESC_SIZE 128 // descriptor size
+#define SIFT_DESC_WINDOW 16 // window around keypoint size
+#define SIFT_DESC_SW_QTD 4 // SubWindow quantity
+#define SIFT_DESC_SW_SIZE 4 // SubWindow size
+#define SIFT_DESC_BINS_PER_SW 8 // bins for subwindow histogram 
 
 struct KeyPoints
 {
@@ -38,6 +43,8 @@ struct KeyPoints
   int octave;
   int scale;
   float direction;
+
+  std::vector<float> descriptor;
 };
 
 #endif
