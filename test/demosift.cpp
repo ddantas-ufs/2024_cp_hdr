@@ -16,5 +16,7 @@ int main(int argv, char** args)
   saveKeypoints(kp, out_path);
   plotKeyPoints(img_in, kp, out_path);
   
+  img_gray.release();
+  img_in.release();
   return 0;
 }

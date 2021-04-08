@@ -1,6 +1,6 @@
 #include "../include/detectors/keypoint.h"
 
-std::string keypointToString( KeyPoints kp )
+std::string keypointToString( KeyPoints &kp )
 {
   return "x: " +std::to_string(kp.x) 
          + ", y:" +std::to_string(kp.y) +"\n"
@@ -27,7 +27,7 @@ void transformCoord(std::vector<KeyPoints> &kp)
   }
 }
 
-void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path)
+void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> &kp, std::string out_path)
 {
   transformCoord(kp);
 
@@ -43,7 +43,7 @@ bool compareResponse(KeyPoints a, KeyPoints b)
   return (a.resp > b.resp);
 }
 
-void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
+void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp)
 {
   FILE *file;
   std::vector<KeyPoints> kp_aux = kp;
@@ -143,4 +143,27 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
   }
 
   return kp;
+}
+
+void printKeypoint( KeyPoints &kp )
+{
+  std::cout << "X: " << kp.x << ", Y: " << kp.y << std::endl;
+  std::cout << "Scale: " << kp.scale << ", Octave: " << kp.octave << std::endl;
+  std::cout << "Response: " << kp.resp << ", Direction: " << kp.direction << std::endl;
+  
+  if( kp.descriptor.size() == 0 )
+  {
+    std::cout << "Descriptor not calculated" << std::endl;
+  }
+  else
+  {
+    std::cout << "Descriptor size: " << kp.descriptor.size() << std::endl;
+    for( int i=0; i<kp.descriptor.size(); i++ )
+    {
+      if( i > 0 && ( i % 10 ) == 0 )
+        std::cout << std::endl;
+
+      std::cout << kp.descriptor[i] << ", ";
+    }
+  }
 }

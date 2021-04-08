@@ -14,7 +14,7 @@ void returnRavel( cv::Mat& mat, cv::Mat& flat )
     {
       double item = mat.at<double>(i, j);
       //std::cout << "----> i: " << i << " j: " << j << " = " << item << std::endl;
-      flat.at<double>(i*mat.cols+j, 0) = item;
+      flat.at<float>(i*mat.cols+j, 0) = (float) item;
     }
   }
   //std::cout << "----> i: " << flat << std::endl;
@@ -29,14 +29,14 @@ void returnRavel( cv::Mat& mat, cv::Mat& flat )
  * 
  * @return true if is outside from img or false
 **/
-bool isOut(cv::Mat img, int x, int y)
+bool isOut(cv::Mat &img, int x, int y)
 {
   int rows = img.rows;
   int cols = img.cols;
   return ( x <= 0 || x >= cols-1 || y <= 0 || y >= rows-1 );
 }
 
-void repeatLastRow( cv::Mat& mat, cv::Mat& ret )
+void repeatLastRow( cv::Mat &mat, cv::Mat &ret )
 {
   int rows = mat.rows;
   int cols = mat.cols;
@@ -53,7 +53,7 @@ void repeatLastRow( cv::Mat& mat, cv::Mat& ret )
     ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
 }
 
-void repeatFirstRow( cv::Mat& mat, cv::Mat& ret )
+void repeatFirstRow( cv::Mat &mat, cv::Mat &ret )
 {
   int rows = mat.rows;
   int cols = mat.cols;
@@ -72,7 +72,7 @@ void repeatFirstRow( cv::Mat& mat, cv::Mat& ret )
   }
 }
 
-void repeatLastColumn( cv::Mat& mat, cv::Mat& ret )
+void repeatLastColumn( cv::Mat &mat, cv::Mat &ret )
 {
   int rows = mat.rows;
   int cols = mat.cols;
@@ -89,7 +89,7 @@ void repeatLastColumn( cv::Mat& mat, cv::Mat& ret )
     ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
 }
 
-void repeatFirstColumn( cv::Mat& mat, cv::Mat& ret )
+void repeatFirstColumn( cv::Mat &mat, cv::Mat &ret )
 {
   int rows = mat.rows;
   int cols = mat.cols;
@@ -263,8 +263,7 @@ int quantizeOrientation( double theta, int bins )
  * 
  * @return the orientation of the keypoint
 **/
-void calcOrientation( cv::Mat& img, KeyPoints kp,
-                      std::vector<KeyPoints> auxList )
+void calcOrientation( cv::Mat& img, KeyPoints kp, std::vector<KeyPoints> auxList )
 {
   cv::Mat kernel, hist;
   float sigma, maxIndex, maxValue;
@@ -272,9 +271,9 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
 
   auxList.clear();
 
-  hist = cv::Mat::zeros( cv::Size( DESC_HIST_BINS, 1 ), CV_32FC1 );
+  hist = cv::Mat::zeros( cv::Size( SIFT_DESC_BINS_PER_SW, 1 ), CV_32FC1 );
 
-  sigma = DESC_GAUSS_SIGMA * kp.scale;
+  sigma = SIFT_DESC_ORIENT_SIGMA * kp.scale;
   radius = (int) (2 * std::ceil( sigma )) + 1;
 
   gaussianKernel( sigma, kernel );
@@ -296,7 +295,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
           getGradient( img, x, y, mt );
           
           weight = kernel.at<float>(i+radius, j+radius) * mt[0];
-          binn = quantizeOrientation(mt[1], DESC_HIST_BINS) - 1;
+          binn = quantizeOrientation(mt[1], SIFT_DESC_BINS_PER_SW) - 1;
 
           //std::cout << "---> x=" << x << ", y=" << y << std::endl;
           //std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] <<std::endl;
@@ -318,7 +317,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   
   maxIndex = std::numeric_limits<float>::min();
   maxValue = std::numeric_limits<float>::min();
-  for( int i = 0; i < DESC_HIST_BINS; i++ )
+  for( int i = 0; i < SIFT_DESC_ORIENT_SIGMA; i++ )
   {
     if( hist.at<float>(i, 0) > maxValue )
     //if( hist[i] > maxValue )
@@ -336,7 +335,7 @@ void calcOrientation( cv::Mat& img, KeyPoints kp,
   std::cout << keypointToString(kp) << std::endl;
 
   // If there's values above 85% of max value, return them.
-  for( int i = 0; i < DESC_HIST_BINS; i++ )
+  for( int i = 0; i < SIFT_DESC_ORIENT_SIGMA; i++ )
   {
     if( i != maxIndex )
     {
@@ -480,6 +479,8 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 
   cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32FC1 );
   cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
+  std::cout << "-> arrMag size: " << mag.size() << std::endl;
+  std::cout << "-> mag cols: " << mag.cols << "mag rows: " << mag.rows << std::endl;
 
   //std::cout << "-> mag size: " << mag.size() << std::endl;
   returnRavel( mag, arrMag );
@@ -491,8 +492,8 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 
   for( int i=0; i<arrMag.cols; i++ )
   {
-    double mg = arrMag.at<double>(i, 0);
-    int angle = (int) (arrThe.at<double>(i, 0)-refAngle) % 360;
+    double mg = arrMag.at<float>(i, 0);
+    int angle = (int) (arrThe.at<float>(i, 0)-refAngle) % 360;
     int b = quantizeOrientation(angle, numBin);
     double vote = mg;
 
@@ -518,24 +519,24 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
   std::cout << std::endl;
 }
 
-void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img )
+void siftExecuteDescription( std::vector<KeyPoints>& kpList, cv::Mat& img )
 {
-  cv::Mat siftWindow, siftSubWindow, kernel, mag, the, subMag, subThe, dx, dy;
+  cv::Mat siftWindow, kernel;
 
   // Calculates a 17x17 Gaussian kernel
   gaussianKernel( SIFT_DESC_WINDOW+1, kernel );
 
   for( int i = 0; i < kpList.size(); i++ )
   {
+    cv::Mat mag, the, dx, dy;
     int swHalf = (int) SIFT_DESC_WINDOW / 2;
-    KeyPoints kp = kpList[i];
-    kp.descriptor = std::vector<float>(SIFT_DESC_SIZE);
+    //kpList[i].descriptor.resize(SIFT_DESC_SIZE);// = std::vector<float>(SIFT_DESC_SIZE);
 
     // Generating 17x17 window (16x16 window) + keypoint's row and column
     siftWindow = cv::Mat::zeros( SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1, CV_32FC1 );
-    for( int rows = kp.y-swHalf; rows < kp.y+swHalf; rows++ )
+    for( int rows = kpList[i].y-swHalf; rows < kpList[i].y+swHalf; rows++ )
     {
-      for( int cols = kp.x-swHalf; cols < kp.x+swHalf; cols++ )
+      for( int cols = kpList[i].x-swHalf; cols < kpList[i].x+swHalf; cols++ )
       {
         int x = cols, y = rows;
 
@@ -554,8 +555,8 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img )
     getPatchGrads( siftWindow, dx, dy );
     std::cout << "getPatchGrads ok" << std::endl;
 
-    mag = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64FC1 ); // magnitude
-    the = cv::Mat::zeros( cv::Size(dx.cols, dx.cols), CV_64FC1 ); // theta
+    mag = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_64FC1 ); // magnitude
+    the = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_64FC1 ); // theta
     
     std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
@@ -568,6 +569,7 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img )
     {
       for( int cols = 0; cols < SIFT_DESC_SW_QTD; cols++ )
       {
+        cv::Mat hist, subMag, subThe;
         // LEMBRAR DE AJUSTAR PARA NAO PEGAR LINHA/COLUNA DO KP
         subMag = mag( cv::Range(rows, rows+SIFT_DESC_SW_SIZE), 
                       cv::Range(cols, cols+SIFT_DESC_SW_SIZE) );
@@ -575,35 +577,43 @@ void siftExecuteDescription( std::vector<KeyPoints> kpList, cv::Mat& img )
                       cv::Range(cols, cols+SIFT_DESC_SW_SIZE) );
         
         // calculate histogram for subwindow
-        cv::Mat hist;
-        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kp.scale, 
-                                  360/DESC_BINS, SIFT_DESC_SW_QTD, hist );
-
+        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i].scale,
+                                  360/SIFT_DESC_BINS_PER_SW, SIFT_DESC_SW_QTD, hist );
 
         //getHistogramForSubregion( subMag, subThe, bins, s, binWidth, subW, hist );
 
-        int indexIni = (rows*SIFT_DESC_SW_QTD*SIFT_DESC_BINS_PER_SW) 
-                     + (cols*SIFT_DESC_BINS_PER_SW);
-        int indexEnd = (rows*SIFT_DESC_SW_QTD*SIFT_DESC_BINS_PER_SW) 
-                     + ((cols+1)*SIFT_DESC_BINS_PER_SW);
+        //int indexIni = (rows*SIFT_DESC_SW_QTD*SIFT_DESC_BINS_PER_SW) 
+        //             + (cols*SIFT_DESC_BINS_PER_SW);
+        //int indexEnd = (rows*SIFT_DESC_SW_QTD*SIFT_DESC_BINS_PER_SW) 
+        //             + ((cols+1)*SIFT_DESC_BINS_PER_SW);
         
-        for(int idx = indexIni; idx<indexEnd; idx++)
+        for(int idx = 0; idx<SIFT_DESC_BINS_PER_SW; idx++)
         {
-          float hst = hist.at<float>(idx-indexIni, 0);
-          //featVec.at<float>(idx, 0) = hst;
-          kp.descriptor[idx] = hst;
-          std::cout << hst << ", ";
+          //float hst = hist.at<float>(idx-indexIni, 0);
+          float hst = hist.at<float>(idx, 0);
+          kpList[i].descriptor.push_back( hst );
+          //kpList[i].descriptor[idx] = hst;
+          //std::cout << hst << ", ";
         }
-        std::cout << std::endl << "release subMag e subThe" << std::endl;
       }
     }
+    std::cout << std::endl << "descritor calculado " << i << std::endl;
+    for( int k=0; k<kpList[i].descriptor.size(); k++ ) std::cout << kpList[i].descriptor[k] << ", ";
+    std::cout << std::endl;
 
     // para cada janela, calcular histograma de 8 amostras
 
     // adicionar essas 8 amostras como valores no descritor do keypoint
 
   }
-
+  //dx.release();
+  //dy.release();
+  siftWindow.release();
+  kernel.release();
+  //mag.release();
+  //the.release();
+  //subMag.release();
+  //subThe.release();
 }
 
 /**
@@ -838,6 +848,29 @@ void siftDescriptor( std::vector<KeyPoints> kp, cv::Mat& img_in, cv::Mat& img_gr
   //siftExecuteDescription( kp, img_gray, DESC_BINS, DESC_RADIUS );
   siftExecuteDescription( kp, img_gray );
   std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
+  for( int i = 0; i < kp.size(); i++ )
+  {
+    printKeypoint( kp[i] );
+    /*
+    std::cout << "X: " << kp[i].x << ", Y: " << kp[i].y << std::endl;
+    std::cout << "Scale: " << kp[i].scale << ", Octave: " << kp[i].octave << std::endl;
+    std::cout << "Response: " << kp[i].resp << ", Direction: " << kp[i].direction << std::endl;
+    
+    if( kp[i].descriptor.size() == 0 )
+    {
+      std::cout << "Descriptor not calculated" << std::endl;
+    } else
+    {
+      for( int j=0; j<kp[i].descriptor.size(); j++ )
+      {
+        if( j > 0 && ( j % 10 ) == 0 )
+          std::cout << std::endl;
+
+        std::cout << kp[i].descriptor[j];
+      }
+    }
+    */
+  }
   //std::cout << "Size da lista de descritores:" << descriptorList.size() << std::endl;
   //std::cout << "Elemento 0: " << descriptorList[0] << std::endl;
 }
