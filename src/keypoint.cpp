@@ -43,7 +43,8 @@ bool compareResponse(KeyPoints a, KeyPoints b)
   return (a.resp > b.resp);
 }
 
-void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp)
+void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
+                   bool descriptorToBundler)
 {
   FILE *file;
   std::vector<KeyPoints> kp_aux = kp;
@@ -67,6 +68,24 @@ void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp)
   for (int i = 0; i < num_kp; i++)
   {
     fprintf(file, "%.4f \t %.4f \t %d \t %d \t %.4f\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].octave, kp_aux[i].scale, kp_aux[i].resp);
+
+    int descSize = kp_aux[i].descriptor.size();
+    if( descSize == 0 )
+    {
+        fprintf(file, "0\n" ); // print 0 as descriptor
+    }
+    else
+    {
+      for( int j=0; j<descSize; j++ )
+      {
+        //std::cout << kp_aux[i].descriptor[j] << ", ";
+        fprintf(file, "%d ", (int) kp_aux[i].descriptor[j] );
+
+        if( descriptorToBundler && (i % 10) == 0 && (i != 0) && j != descSize-1 )
+          fprintf(file, "\n" );
+      }
+      fprintf(file, "\n" );
+    }
   }
   fclose(file);
 }
@@ -165,5 +184,6 @@ void printKeypoint( KeyPoints &kp )
 
       std::cout << kp.descriptor[i] << ", ";
     }
+    std::cout << std::endl;
   }
 }
