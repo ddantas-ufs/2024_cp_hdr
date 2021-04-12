@@ -78,8 +78,8 @@ void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
     {
       for( int j=0; j<descSize; j++ )
       {
-        //std::cout << kp_aux[i].descriptor[j] << ", ";
-        fprintf(file, "%d ", (int) kp_aux[i].descriptor[j] );
+        int desc = (int) kp_aux[i].descriptor[j];
+        fprintf(file, "%d ", desc );
 
         if( descriptorToBundler && (i % 10) == 0 && (i != 0) && j != descSize-1 )
           fprintf(file, "\n" );
