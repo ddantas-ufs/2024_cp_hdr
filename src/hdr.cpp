@@ -35,7 +35,7 @@ void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size)
       var = (mask_sum2 / (N * 1.0)) - (mean * mean);
       std_dev = sqrt(var);
 
-      if (mean < 1e-10)
+      if (mean < 1e-5)
       {
         coef_var = 0.0;
       }
@@ -54,10 +54,10 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
 {
   cv::Mat img_aux, img_ln;
   float ln10 = 2.302585;
+  int rmax = 255;
 
-  img_aux = img + 1;
+  img_aux = (img * rmax) + 1;
   cv::log(img_aux, img_ln);
   img_log10 = img_ln / ln10;
-
-  cv::normalize(img_log10, img_log10, 0.0, 1.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+  img_log10 = img_log10 / std::log10(rmax + 1);
 }

@@ -398,7 +398,7 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   }
   else
   {
-    img = img_norm / 256.0;
+    img_norm = img / 256.0;
   }
 
   dogInitScales(img_norm, scales, mgauss, is_hdr);

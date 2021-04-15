@@ -3,7 +3,7 @@
 #include "../include/detectors/hdr.h"
 
 void harrisCalc(cv::Mat img, cv::Mat &resp_map, int msobel, int mgauss, float sigma_x,
-                float sigma_y, int k)
+                float sigma_y, float k)
 {
   cv::Mat Ix, Iy, Ixx, Iyy, Ixy, resp_aux;
 
@@ -110,7 +110,7 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   }
   else
   {
-    img = img_norm / 256.0;
+    img_norm = img / 256.0;
   }
   cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
                    cv::BORDER_REPLICATE);
