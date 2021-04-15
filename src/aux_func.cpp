@@ -1,4 +1,4 @@
-#include "../include/detectors/input.h"
+#include "../include/detectors/aux_func.h"
 
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
 {
@@ -36,5 +36,20 @@ std::string getFileName(std::string file_path)
   else
   {
     return file_path;
+  }
+}
+
+void imgNormalize(cv::Mat img, cv::Mat img_norm)
+{
+  cv::Mat img_norm;
+
+  if (img.depth() == 0)
+  {
+    img.convertTo(img_norm, CV_32FC1);
+    img_norm = img_norm / LDR_MAX_RANGE;
+  }
+  else
+  {
+    img_norm = img / HDR_MAX_RANGE;
   }
 }
