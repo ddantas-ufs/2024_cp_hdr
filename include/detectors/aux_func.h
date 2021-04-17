@@ -7,6 +7,6 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
 
 std::string getFileName(std::string file_path);
 
-void imgNormalize(cv::Mat img, cv::Mat img_norm);
+void imgNormalize(cv::Mat img, cv::Mat &img_norm);
 
 #endif

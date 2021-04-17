@@ -39,10 +39,8 @@ std::string getFileName(std::string file_path)
   }
 }
 
-void imgNormalize(cv::Mat img, cv::Mat img_norm)
+void imgNormalize(cv::Mat img, cv::Mat &img_norm)
 {
-  cv::Mat img_norm;
-
   if (img.depth() == 0)
   {
     img.convertTo(img_norm, CV_32FC1);
