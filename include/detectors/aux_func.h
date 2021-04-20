@@ -15,6 +15,8 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts);
 
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2);
 
+void gaussKernel(cv::Mat &kernel, int size = 5, float sigma = 1.0);
+
 void imgNormalize(cv::Mat img, cv::Mat &img_norm);
 
 #endif

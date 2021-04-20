@@ -364,9 +364,9 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
 void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
              cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1])
 {
-  for(int o = 0; o < NUM_OCTAVES; o++)
+  for (int o = 0; o < NUM_OCTAVES; o++)
   {
-    for(int s = 0; s < NUM_SCALES - 1; s++)
+    for (int s = 0; s < NUM_SCALES - 1; s++)
     {
       dog[o][s] = cv::Mat::zeros(scales[o][s].size(), CV_32FC1);
       cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);

@@ -57,14 +57,8 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 
 	 while (std::getline(tokenStream, token, delimiter))
    {
-      while ((token[0] == ' ') || (token[0] == delimiter))
-			{
-				token.erase(0, 1);
-			}
-			if (token[0] != '\r')
-			{
-				tokens.push_back(token);
-			}
+      token.erase(std::remove(token.begin(), token.end(), ' '), token.end());
+			tokens.push_back(token);
    }
    return tokens;
 }
@@ -92,6 +86,16 @@ void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)
 {
 	cv::Rect roi = cv::Rect(v1, v2);
 	img_roi = img(roi);
+}
+
+void gaussKernel(cv::Mat &kernel, int size, float sigma)
+{
+	int k_mid = size / 2;
+	cv::Size k_size = cv::Size(size, size);
+	cv::Mat dirac = cv::Mat::zeros(k_size, CV_32FC1);
+
+	dirac.at<float>(k_mid, k_mid) = 1.0;
+	cv::GaussianBlur(dirac, kernel, k_size, sigma, sigma, cv::BORDER_REPLICATE);
 }
 
 void imgNormalize(cv::Mat img, cv::Mat &img_norm)
