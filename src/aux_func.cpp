@@ -39,6 +39,61 @@ std::string getFileName(std::string file_path)
   }
 }
 
+int sciToDec(const std::string &str)
+{
+	std::stringstream ss(str);
+  double num = 0;
+
+	ss >> num;
+
+  return((int) std::round(num));
+}
+
+std::vector<std::string> split(const std::string& s, char delimiter)
+{
+   std::vector<std::string> tokens;
+   std::string token;
+   std::istringstream tokenStream(s);
+
+	 while (std::getline(tokenStream, token, delimiter))
+   {
+      while ((token[0] == ' ') || (token[0] == delimiter))
+			{
+				token.erase(0, 1);
+			}
+			if (token[0] != '\r')
+			{
+				tokens.push_back(token);
+			}
+   }
+   return tokens;
+}
+
+void readROI(std::string roi_path, std::vector<cv::Point> &verts)
+{
+	std::fstream file;
+	std::string line;
+	std::vector<std::string> tokens;
+	int x, y;
+
+	file.open(roi_path, std::ios::in);
+
+	while (std::getline(file, line))
+	{
+		tokens = split(line, '\t');
+		x = sciToDec(tokens[0]);
+		y = sciToDec(tokens[1]);
+		verts.push_back(cv::Point(x, y));
+	}
+	file.close();
+}
+
+void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)
+{
+	cv::Rect roi = cv::Rect(v1, v2);
+	img_roi = img(roi);
+}
+
 void imgNormalize(cv::Mat img, cv::Mat &img_norm)
 {
   if (img.depth() == 0)

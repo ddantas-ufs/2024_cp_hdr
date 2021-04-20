@@ -17,11 +17,22 @@ void transformCoord(std::vector<KeyPoints> &kp)
   }
 }
 
-void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path)
+void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
+  int num_kp = 0;
+
   transformCoord(kp);
 
-  for (int i = 0; i < (int)kp.size(); i++)
+  if (max_kp == 0)
+  {
+    num_kp = (int)kp.size();
+  }
+  else
+  {
+    num_kp = std::min<int>((int)kp.size(), max_kp);
+  }
+
+  for (int i = 0; i < num_kp; i++)
   {
     cv::circle(img, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
   }
@@ -45,7 +56,7 @@ void saveKeypoints(std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 
   if (max_kp == 0)
   {
-    num_kp = (int)kp.size();
+    num_kp = (int)kp_aux.size();
   }
   else
   {
