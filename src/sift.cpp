@@ -156,9 +156,15 @@ void cartToPolarGradient( float dx, float dy, float mt[2] )
 {
   //std::cout << " dx: " << dx << "\t dy: " << dy << std::endl;
   mt[0] = std::sqrt( (dx*dx)+(dy*dy) );
+  //mt[1] = ( (std::atan2(dy, dx) ) * (180.0/M_PI) );
+  mt[1] = ( (std::atan2(-1.0, 0.0) ) * (180.0/M_PI) );
+
+  if( mt[1] < 0 ) mt[1] += (float) 360.0;
+  printf( "mt[1] %f ", mt[1] );
+
   //mt[1] = ( (std::atan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
-  float t = std::atan2(dy, dx);
-  mt[1] = (M_PI > 0 ? t : (2*M_PI + t)) * 360 / (2*M_PI);
+  //float t = std::atan2(dy, dx);
+  //mt[1] = (M_PI > 0 ? t : (2*M_PI + t)) * 360 / (2*M_PI);
   //std::cout << " mt[0]: " << mt[0] << " mt[1]: " << mt[1] << std::endl;
 }
 
@@ -582,7 +588,7 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   //}
 
   //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   //calculating keypoints description
   std::cout << "Executando calculo da descrição" << std::endl;
