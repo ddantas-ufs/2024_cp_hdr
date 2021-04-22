@@ -12,7 +12,7 @@ void returnRavel( cv::Mat& mat, cv::Mat& flat )
   {
     for( int j = 0; j < mat.cols; j++)
     {
-      double item = mat.at<double>(i, j);
+      float item = mat.at<float>(i, j);
       flat.at<float>(i*mat.cols+j, 0) = (float) item;
     }
   }
@@ -107,13 +107,12 @@ void repeatFirstColumn( cv::Mat &mat, cv::Mat &ret )
   }
 }
 
-void gaussianKernel( int size, cv::Mat &kernel )
+void gaussianKernel( int size, float sigma, cv::Mat &kernel )
 {
   int half = (int) size / 2;
 
-  double sigma = 1.0;  
-  double r, s = 2.0 * sigma * sigma;
-  double sum = 0.0; // to normalize
+  float r, s = 2.0 * sigma * sigma;
+  float sum = 0.0; // to normalize
 
   kernel = cv::Mat( cv::Size(size, size), CV_32FC1, cv::Scalar(0.0) );
 
@@ -123,7 +122,7 @@ void gaussianKernel( int size, cv::Mat &kernel )
     {
         r = std::sqrt( (x * x) + (y * y) );
         kernel.at<float>(x + half, y+half) = (float) (std::exp(-(r * r) / s)) / (M_PI * s);
-        sum += (double) kernel.at<float>(x + half, y+half);
+        sum += (float) kernel.at<float>(x + half, y+half);
     }
   }
 
@@ -140,11 +139,13 @@ void gaussianKernel( int size, cv::Mat &kernel )
  * @param dy y coordinate
  * @param dm return array with magnitude and theta
 **/
-void cartToPolarGradient( float dx, float dy, double mt[2] )
+void cartToPolarGradient( float dx, float dy, float mt[2] )
 {
-  //std::cout << " dx: " << dx << "\t dy: " << dy << std::endl;
+  std::cout << " dx: " << dx << "\t dy: " << dy << std::endl;
   mt[0] = std::sqrt( (dx*dx)+(dy*dy) );
-  mt[1] = ( (std::atan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
+  //mt[1] = ( (std::atan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
+  float t = std::atan2(dy, dx);
+  mt[1] = (M_PI > 0 ? t : (2*M_PI + t)) * 360 / (2*M_PI);
   //std::cout << " mt[0]: " << mt[0] << " mt[1]: " << mt[1] << std::endl;
 }
 
@@ -163,19 +164,19 @@ void cartToPolarGradientMat( cv::Mat& dx, cv::Mat& dy, cv::Mat& m, cv::Mat& thet
   {
     for( int j=0; j<dx.cols; j++ )
     {
-      double ret[2] = {0,0};
-      float x = (float) dx.at<double>(i, j);
-      float y = (float) dy.at<double>(i, j);
+      float ret[2] = {0,0};
+      float x = (float) dx.at<float>(i, j);
+      float y = (float) dy.at<float>(i, j);
 
       cartToPolarGradient( x, y, ret );
       
-      m.at<double>(i, j) = ret[0];
-      theta.at<double>(i, j) = ret[1];
+      m.at<float>(i, j) = ret[0];
+      theta.at<float>(i, j) = ret[1];
     }
   }
 }
 
-void getGradient( cv::Mat& img, int x, int y, double mt[2] )
+void getGradient( cv::Mat& img, int x, int y, float mt[2] )
 {
   int xm = x-1, xp = x+1;
   int ym = y-1, yp = y+1;
@@ -187,17 +188,21 @@ void getGradient( cv::Mat& img, int x, int y, double mt[2] )
   if( xm < 0 ) xm = std::abs( xm );
   if( ym < 0 ) ym = std::abs( ym );
 
-  dx = (img.at<float>( y, xp )) - (img.at<float>( y, xm )) * 255;
-  dy = (img.at<float>( yp, x )) - (img.at<float>( ym, x )) * 255;
+  dx = (img.at<float>( y, xp )) - (img.at<float>( y, xm ));
+  dy = (img.at<float>( yp, x )) - (img.at<float>( ym, x ));
 
   cartToPolarGradient( dx, dy, mt );
 }
 
-int quantizeOrientation( double theta, int bins )
+// 102740129374019237401
+int quantizeOrientation( float theta, int bins )
 {
-  int bin = std::floor( 360 / bins );
-  bin = ( int ) std::floor( theta ) / bin;
-  return std::abs( bin );
+  if( theta < 0 )
+    return quantizeOrientation(theta+360, bins);
+
+  int binSize = std::floor( 360 / bins );
+  binSize = (int) (std::floor(theta)/binSize);
+  return binSize;
 }
 
 /**
@@ -208,26 +213,32 @@ int quantizeOrientation( double theta, int bins )
  * 
  * @return the orientation of the keypoint
 **/
-void calcOrientation( cv::Mat &img, KeyPoints &kp/*, std::vector<KeyPoints> &auxList*/ )
+void calcOrientation( cv::Mat &img, KeyPoints &kp )
 {
-  cv::Mat kernel, hist;
-  float maxIndex, maxValue;
+  cv::Mat kernel;//, hist;
+  float hist[SIFT_DESC_ORIENT_HIST_BINS], maxIndex, maxValue;
   int radius, size;
 
-  hist = cv::Mat::zeros( cv::Size( SIFT_DESC_ORIENT_HIST_BINS, 1 ), CV_32FC1 );
+  //hist = cv::Mat::zeros( cv::Size( SIFT_DESC_ORIENT_HIST_BINS, 1 ), CV_32FC1 );
+
+  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
+  {
+    hist[z] = (float) 0.0;
+    std::cout << hist[z] << ", ";
+    //std::cout << hist.at<float>(z, 0) << ", ";
+  }
+  std::cout << std::endl;
 
   size = (int) ( (2 * std::ceil( 3 * SIFT_DESC_ORIENT_SIGMA )) + 1 );
   radius = (int) size / 2;
 
-  gaussianKernel( size, kernel );
+  gaussianKernel( size, SIFT_DESC_ORIENT_SIGMA*kp.scale, kernel );
 
   for( int i = -radius; i < radius+1; i++ )
   {
-    int y, binn;
-    double mt[2];
-
-    y = kp.y + i;
-
+    // stores Magnitude in [0] and Theta in [1] (M and T)
+    float mt[2];
+    int y = kp.y + i;
     if( !isOut(img, 1, y) )
     {
       for( int j = -radius; j < radius+1; j++ )
@@ -237,43 +248,44 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp/*, std::vector<KeyPoints> &aux
         {
           getGradient( img, x, y, mt );
           
-          double weight = (double) kernel.at<float>(i+radius, j+radius) * mt[0];
-          binn = quantizeOrientation(mt[1], SIFT_DESC_ORIENT_HIST_BINS) - 1;
+          float weight = (float) kernel.at<float>(i+radius, j+radius) * mt[0];
+          int binn = quantizeOrientation(mt[1], SIFT_DESC_ORIENT_HIST_BINS) - 1;
 
           //std::cout << "---> x=" << x << ", y=" << y << std::endl;
-          std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] <<std::endl;
-          std::cout << "---> binn=" << binn << ", weight=" << weight << std::endl;
-          std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl;
-          std::cout << "coords " << i+radius << ", " << j+radius << std::endl << std::endl;
+          std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] << ", binn=" << binn << ", weight=" << weight << std::endl;
+          std::cout << "---> coords y=" << y << ", x=" << x << ", i+r=" << i+radius << ", j+r=" << j+radius << std::endl;
           
-          //if( !std::isnan(weight) )
-          hist.at<float>(binn, 0) = hist.at<float>(binn, 0) + weight;
+          hist[binn] = hist[binn] + weight;
+          std::cout << "---> hist[binn]=" << hist[binn] << std::endl << std::endl;
+          //hist.at<float>(binn, 0) = hist.at<float>(binn, 0) + weight;
+          //std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl << std::endl;
         }
       }
     }
   }
 
   for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-    std::cout << hist.at<float>(z, 0) << ", ";
+    std::cout << hist[z] << ", ";
   std::cout << std::endl;
   
   maxIndex = std::numeric_limits<float>::min();
   maxValue = std::numeric_limits<float>::min();
-  for( int k = 0; k < SIFT_DESC_ORIENT_HIST_BINS; k++ )
+  for( int z = 0; z < SIFT_DESC_ORIENT_HIST_BINS; z++ )
   {
-    if( hist.at<float>(k, 0) > maxValue )
+    //float val = hist.at<float>(z, 0);
+    float val = hist[z];
+    if( val > maxValue )
     {
-      maxValue = hist.at<float>(k, 0);
-      maxIndex = k;
+      maxValue = val;
+      maxIndex = z;
     }
   }
   
   kp.direction = maxIndex * 10;
   std::cout << "kpIndex = " << maxIndex << std::endl;
   std::cout << "kpValue = " << maxValue << std::endl;
-  std::cout << "keypoint:" << std::endl;
-  std::cout << keypointToString(kp) << std::endl;
-  std::cout << kernel << std::endl;
+  printKeypoint( kp );
+  std::cout << "--------------------------------------------------" << std::endl;
 }
 
 /**
@@ -287,50 +299,12 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp/*, std::vector<KeyPoints> &aux
 void siftKPOrientation( std::vector<KeyPoints> &kp, cv::Mat &img, int mGauss,
                         float sigma )
 {
-  //std::vector<KeyPoints> auxList, newKp;
-
   cv::GaussianBlur( img, img, cv::Size(mGauss, mGauss), sigma, sigma, 
                     cv::BORDER_REPLICATE );
 
-  for( int i = 0; i < kp.size(); i++ ) 
-  {
-    int px, py;
-
+  for( int i = 0; i < kp.size(); i++ )
     calcOrientation( img, kp[i] );
-    std::cout << "############### >>> " << kp[i].direction << std::endl;
-    /*
-    //  30 * cos( radians( degrees ) ) AND sin( radians( degrees ) )
-    px = (int) ( 30 * ( std::cos( kp[i].direction * ( M_PI / 180) ) ) );
-    py = (int) ( 30 * ( std::sin( kp[i].direction * ( M_PI / 180) ) ) );
-
-    //cv::arrowedLine( imgCopy, cv::Point( key.x, key.y ),
-    //                 cv::Point( key.x + px, key.y + py ),
-    //                 cv::Scalar( 0, 0, 255 ), 1 );
-
-    for( int j = 0; j < auxList.size(); j++ )
-    {
-      KeyPoints point = auxList[j];
-
-      px = (int) ( 30 * ( std::cos( point.direction * ( M_PI / 180) ) ) );
-      py = (int) ( 30 * ( std::sin( point.direction * ( M_PI / 180) ) ) );
-      //cv::arrowedLine( imgCopy, cv::Point( point.x, point.y ), 
-      //                 cv::Point( point.x+px, point.y+py ), 
-      //                 cv::Scalar( 0, 0, 255 ), 1 );
-    }
-    // APPEND newKp
-    for( int k=0; k<auxList.size(); k++ )
-    {
-      newKp.push_back( auxList[k] );
-    }
-    */
-  }
-  /*
-  //std::cout << " append kp " << std::endl;
-  for( int k=0; k<newKp.size(); k++ )
-  {
-    kp.push_back( newKp[k] );
-  }
-  */
+  
   std::cout << " fim siftKPOrientation " << std::endl;
 }
 
@@ -390,7 +364,7 @@ void unravelIndex( int index, int rows, int cols, int ret[2] )
 void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int refAngle,
                                int binWidth, int subW, cv::Mat& hist )
 {
-  double minimum = 0.000001;
+  float minimum = 0.000001;
   float center = (subW/2) - 0.5;
   hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32FC1 );
 
@@ -409,23 +383,23 @@ void getHistogramForSubregion( cv::Mat& mag, cv::Mat& theta, int numBin, int ref
 
   for( int i=0; i<arrMag.cols; i++ )
   {
-    double mg = arrMag.at<float>(i, 0);
+    float mg = arrMag.at<float>(i, 0);
     int angle = (int) (arrThe.at<float>(i, 0)-refAngle) % 360;
     int b = quantizeOrientation(angle, numBin);
-    double vote = mg;
+    float vote = mg;
 
     // b*binWidth is the start angle of the histogram bin
     // b*binWidth+binWidth/2 is the center of the histogram bin
     // angle -[...] is the distance from the angle to the center of the bin 
-    double histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
+    float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
     vote = vote * std::max( histInterpWeight, minimum );
 
     int idx[2];
-    double xInterpWeight, yInterpWeight;
+    float xInterpWeight, yInterpWeight;
     unravelIndex( i, subW, subW, idx );
 
-    xInterpWeight = std::max( (double) 1-(std::abs(idx[0]-center)/center), minimum );
-    yInterpWeight = std::max( (double) 1-(std::abs(idx[1]-center)/center), minimum );
+    xInterpWeight = std::max( (float) 1-(std::abs(idx[0]-center)/center), minimum );
+    yInterpWeight = std::max( (float) 1-(std::abs(idx[1]-center)/center), minimum );
 
     vote = vote * (xInterpWeight * yInterpWeight);
     hist.at<float>(b, 0) += (float) vote;
@@ -441,7 +415,7 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
   cv::Mat siftWindow, kernel;
 
   // Calculates a 17x17 Gaussian kernel
-  gaussianKernel( SIFT_DESC_WINDOW+1, kernel );
+  gaussianKernel( SIFT_DESC_WINDOW+1, SIFT_DESC_ORIENT_SIGMA, kernel );
 
   for( int i = 0; i < kpList.size(); i++ )
   {
@@ -481,8 +455,8 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     getPatchGrads( siftWindow, dx, dy );
     std::cout << "getPatchGrads ok" << std::endl;
 
-    mag = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_64FC1 ); // magnitude
-    the = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_64FC1 ); // theta
+    mag = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_32FC1 ); // magnitude
+    the = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_32FC1 ); // theta
     
     std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
@@ -560,6 +534,6 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
 
   //printing keypoints and descriptions
-  //for( int i = 0; i < kp.size(); i++ )
-  //  printKeypoint( kp[i] );
+  for( int i = 0; i < kp.size(); i++ )
+    printKeypoint( kp[i] );
 }

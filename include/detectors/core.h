@@ -44,7 +44,7 @@ struct KeyPoints
   int scale;
   float direction;
 
-  std::vector<float> descriptor;
+  std::vector<int> descriptor;
 };
 
 #endif
