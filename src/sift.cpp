@@ -154,18 +154,12 @@ void gaussianKernel( int size, float sigma, cv::Mat &kernel )
 **/
 void cartToPolarGradient( float dx, float dy, float mt[2] )
 {
-  //std::cout << " dx: " << dx << "\t dy: " << dy << std::endl;
   mt[0] = std::sqrt( (dx*dx)+(dy*dy) );
-  //mt[1] = ( (std::atan2(dy, dx) ) * (180.0/M_PI) );
-  mt[1] = ( (std::atan2(-1.0, 0.0) ) * (180.0/M_PI) );
+  mt[1] = ( (std::atan2(dy, dx) ) * (180.0/M_PI) );
 
-  if( mt[1] < 0 ) mt[1] += (float) 360.0;
-  printf( "mt[1] %f ", mt[1] );
-
-  //mt[1] = ( (std::atan2(dy, dx) +M_PI) * (180/M_PI) ) - 90;
-  //float t = std::atan2(dy, dx);
-  //mt[1] = (M_PI > 0 ? t : (2*M_PI + t)) * 360 / (2*M_PI);
-  //std::cout << " mt[0]: " << mt[0] << " mt[1]: " << mt[1] << std::endl;
+  if( mt[1] < 0 ) mt[1] += 360.0f;
+  if( mt[1] >= 360.0f ) mt[1] = 0.0f; 
+  //printf( "mt[1] %f ", mt[1] );
 }
 
 /**
@@ -213,13 +207,12 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   cartToPolarGradient( dx, dy, mt );
 }
 
-// 102740129374019237401
 int quantizeOrientation( float theta, int bins )
 {
   if( theta < 0 )
     return quantizeOrientation(theta+360, bins);
 
-  int binSize = std::floor( 360 / bins );
+  int binSize = std::floor( 360/bins );
   binSize = (int) (std::floor(theta)/binSize);
   return binSize;
 }
@@ -234,19 +227,16 @@ int quantizeOrientation( float theta, int bins )
 **/
 void calcOrientation( cv::Mat &img, KeyPoints &kp )
 {
-  cv::Mat kernel;//, hist;
+  cv::Mat kernel;
   float hist[SIFT_DESC_ORIENT_HIST_BINS], maxIndex, maxValue;
   int radius, size;
 
-  //hist = cv::Mat::zeros( cv::Size( SIFT_DESC_ORIENT_HIST_BINS, 1 ), CV_32FC1 );
-
-  //for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-  //{
-  //  hist[z] = (float) 0.0;
-  //  std::cout << hist[z] << ", ";
-    //std::cout << hist.at<float>(z, 0) << ", ";
-  //}
-  //std::cout << std::endl;
+  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
+  {
+    hist[z] = 0.0f;
+    //std::cout << hist[z] << ", ";
+  }
+  std::cout << std::endl;
 
   size = (int) ( (2 * std::ceil( 3 * SIFT_DESC_ORIENT_SIGMA )) + 1 );
   radius = (int) size / 2;
@@ -268,13 +258,12 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
           getGradient( img, x, y, mt );
           
           float weight = (float) kernel.at<float>(i+radius, j+radius) * mt[0];
-          int binn = quantizeOrientation(mt[1], SIFT_DESC_ORIENT_HIST_BINS) - 1;
+          int binn = quantizeOrientation(mt[1], SIFT_DESC_ORIENT_HIST_BINS);
 
-          //std::cout << "---> x=" << x << ", y=" << y << std::endl;
           //std::cout << "---> mag=" << mt[0] << ", theta=" << mt[1] << ", binn=" << binn << ", weight=" << weight << std::endl;
           //std::cout << "---> coords y=" << y << ", x=" << x << ", i+r=" << i+radius << ", j+r=" << j+radius << std::endl;
           
-          hist[binn] = hist[binn] + weight;
+          hist[binn] += weight;
           //std::cout << "---> hist[binn]=" << hist[binn] << std::endl << std::endl;
           //hist.at<float>(binn, 0) = hist.at<float>(binn, 0) + weight;
           //std::cout << "---> hist[binn]=" << hist.at<float>(binn, 0) << std::endl << std::endl;
@@ -283,15 +272,14 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
     }
   }
 
-  //for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-  //  std::cout << hist[z] << ", ";
-  //std::cout << std::endl;
+  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
+    std::cout << hist[z] << ", ";
+  std::cout << std::endl;
   
   maxIndex = std::numeric_limits<float>::min();
   maxValue = std::numeric_limits<float>::min();
   for( int z = 0; z < SIFT_DESC_ORIENT_HIST_BINS; z++ )
   {
-    //float val = hist.at<float>(z, 0);
     float val = hist[z];
     if( val > maxValue )
     {
@@ -301,10 +289,11 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
   }
   
   kp.direction = maxIndex * 10;
-  //std::cout << "kpIndex = " << maxIndex << std::endl;
-  //std::cout << "kpValue = " << maxValue << std::endl;
+  std::cout << "kpIndex = " << maxIndex << std::endl;
+  std::cout << "kpValue = " << maxValue << std::endl;
+  std::cout << "kp.direction = " << kp.direction << std::endl;
   //printKeypoint( kp );
-  //std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << "--------------------------------------------------" << std::endl;
 }
 
 /**
@@ -581,19 +570,19 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   std::cout << "Calculando orientações" << std::endl;
   siftKPOrientation( kp, img_gray, mGauss, sigma );
   
-  //std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
-  //for( int i = 0; i < kp.size(); i++ )
-  //{
-  //  std::cout << "kp[" << i << "].direction: " << kp[i].direction << std::endl;
-  //}
+  std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
+  for( int i = 0; i < kp.size(); i++ )
+  {
+    std::cout << "kp[" << i << "].direction: " << kp[i].direction << std::endl;
+  }
 
   //removing blur applied in siftKPOrientation
   //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   //calculating keypoints description
-  std::cout << "Executando calculo da descrição" << std::endl;
-  siftExecuteDescription( kp, img_gray );
-  std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
+  //std::cout << "Executando calculo da descrição" << std::endl;
+  //siftExecuteDescription( kp, img_gray );
+  //std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
 
   //printing keypoints and descriptions
   //for( int i = 0; i < kp.size(); i++ )
