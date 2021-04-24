@@ -18,18 +18,18 @@ void printMat( cv::Mat &m, std::string nm )
  * 
  * @param mat cv::Mat matrix to be flatenned
  * @return the flatenned Matrix in a vector object
+ * 
 **/
-void returnRavel( cv::Mat& mat, cv::Mat& flat )
+void returnRavel( cv::Mat &mat, cv::Mat &flat )
 {
   for (int i = 0; i < mat.rows; i++)
   {
     for( int j = 0; j < mat.cols; j++)
     {
       float item = mat.at<float>(i, j);
-      flat.at<float>(i*mat.cols+j, 0) = (float) item;
+      flat.at<float>(i*mat.cols+j) = item;
     }
   }
-  //flat = flat * 255; // (putting in 0-255 range)
 }
 
 /**
@@ -231,12 +231,8 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
   float hist[SIFT_DESC_ORIENT_HIST_BINS], maxIndex, maxValue;
   int radius, size;
 
-  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-  {
-    hist[z] = 0.0f;
-    //std::cout << hist[z] << ", ";
-  }
-  std::cout << std::endl;
+  // Initializing hist array with 0.0f
+  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) hist[z] = 0.0f;
 
   size = (int) ( (2 * std::ceil( 3 * SIFT_DESC_ORIENT_SIGMA )) + 1 );
   radius = (int) size / 2;
@@ -272,9 +268,9 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
     }
   }
 
-  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-    std::cout << hist[z] << ", ";
-  std::cout << std::endl;
+  //for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
+  //  std::cout << hist[z] << ", ";
+  //std::cout << std::endl;
   
   maxIndex = std::numeric_limits<float>::min();
   maxValue = std::numeric_limits<float>::min();
@@ -289,11 +285,11 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
   }
   
   kp.direction = maxIndex * 10;
-  std::cout << "kpIndex = " << maxIndex << std::endl;
-  std::cout << "kpValue = " << maxValue << std::endl;
-  std::cout << "kp.direction = " << kp.direction << std::endl;
+  //std::cout << "kpIndex = " << maxIndex << std::endl;
+  //std::cout << "kpValue = " << maxValue << std::endl;
+  //std::cout << "kp.direction = " << kp.direction << std::endl;
   //printKeypoint( kp );
-  std::cout << "--------------------------------------------------" << std::endl;
+  //std::cout << "--------------------------------------------------" << std::endl;
 }
 
 /**
@@ -380,56 +376,80 @@ void unravelIndex( int index, int rows, int cols, int ret[2] )
 void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int refAngle,
                                int binWidth, int subW, cv::Mat& hist )
 {
-  float minimum = 0.000001;
-  float center = (subW/2) - 0.5;
+  float minimum = 0.000001f;
+  float center = (subW/2.0f) - 0.5f;
+  //hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32SC1 );
   hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32FC1 );
-
+  
   cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32FC1 );
   cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
-  std::cout << "-> arrMag size: " << mag.size() << std::endl;
-  std::cout << "-> mag cols: " << mag.cols << "mag rows: " << mag.rows << std::endl;
 
-  //std::cout << "-> mag size: " << mag.size() << std::endl;
   returnRavel( mag, arrMag );
-  //std::cout << "-> arrMag: " << arrMag << std::endl;
+  printMat( arrMag, "---------- arrMag ----------" );
   
-  //std::cout << "-> theta size: " << theta.size() << std::endl;
   returnRavel( theta, arrThe );
-  //std::cout << "-> arrTheta: " << arrThe << std::endl;
+  printMat( arrThe, "---------- arrThe ----------" );
 
   for( int i=0; i<arrMag.cols; i++ )
   {
-    float mg = arrMag.at<float>(i, 0);
-    int angle = (int) (arrThe.at<float>(i, 0)-refAngle) % 360;
+    float mg = arrMag.at<float>(i);
+    int angle = (int) (arrThe.at<float>(i)-refAngle) % 360;
     int b = quantizeOrientation(angle, numBin);
     float vote = mg;
+
+    //std::cout << "mg: " << mg << ", angle: " << angle << ", b: " << b << std::endl;
+    //std::cout << "vote1: " << vote << std::endl;
 
     // b*binWidth is the start angle of the histogram bin
     // b*binWidth+binWidth/2 is the center of the histogram bin
     // angle -[...] is the distance from the angle to the center of the bin 
-    float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
-    vote = vote * std::max( histInterpWeight, minimum );
+    //float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
+    //std::cout << "histInterpWeight: " << histInterpWeight << std::endl;
+    //vote = vote * std::max( histInterpWeight, minimum );
+    //std::cout << "vote2: " << vote << std::endl;
 
-    int idx[2];
-    float xInterpWeight, yInterpWeight;
-    unravelIndex( i, subW, subW, idx );
+    //int idx[2];
+    //float xInterpWeight, yInterpWeight;
+    //unravelIndex( i, subW, subW, idx );
 
-    xInterpWeight = std::max( (float) 1-(std::abs(idx[0]-center)/center), minimum );
-    yInterpWeight = std::max( (float) 1-(std::abs(idx[1]-center)/center), minimum );
+    //xInterpWeight = std::max( (float) 1-(std::abs(idx[0]-center)/center), minimum );
+    //yInterpWeight = std::max( (float) 1-(std::abs(idx[1]-center)/center), minimum );
+    //std::cout << "xInterpWeight: " << xInterpWeight << std::endl;
+    //std::cout << "yInterpWeight: " << yInterpWeight << std::endl;
 
-    vote = vote * (xInterpWeight * yInterpWeight);
-    hist.at<float>(b, 0) += (float) vote;
-    //std::cout << "--> vote: " << vote << std::endl;
+    //vote = vote * (xInterpWeight * yInterpWeight);
+    //std::cout << "vote3: " << vote << std::endl;
+    hist.at<float>(b) += /*vote **/ angle;
   }
   std::cout << "--> histSubregion: ";
-  for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k, 0) << " ";
+  //for(int k = 0; k<numBin; k++) std::cout << hist.at<int>(k) << " ";
+  for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
   std::cout << std::endl;
 }
 
 void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
 {
   cv::Mat siftWindow, kernel;
+  /*
+  double minVal, maxVal;
+  cv::Point minLoc, maxLoc;
 
+  cv::minMaxLoc( img, &minVal, &maxVal, &minLoc, &maxLoc );
+  std::cout << "minVal: " << minVal << std::endl;
+  std::cout << "minLoc: " << minLoc << std::endl;
+  std::cout << "maxVal: " << maxVal << std::endl;
+  std::cout << "maxLoc: " << maxLoc << std::endl;
+
+  if( maxVal <= 1.0f ) img = img * 255;
+
+  cv::minMaxLoc( img, &minVal, &maxVal, &minLoc, &maxLoc );
+  std::cout << "minVal: " << minVal << std::endl;
+  std::cout << "minLoc: " << minLoc << std::endl;
+  std::cout << "maxVal: " << maxVal << std::endl;
+  std::cout << "maxLoc: " << maxLoc << std::endl;
+
+  std::system("read -p \"Pressione enter para sair\" saindo");
+  */
   // Calculates a 17x17 Gaussian kernel
   gaussianKernel( SIFT_DESC_WINDOW+1, SIFT_DESC_ORIENT_SIGMA, kernel );
 
@@ -462,9 +482,9 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
       swRows = swRows + 1;
     }
 
+    //printMat( siftWindow, "---------- antes ----------" );
     //siftWindow = siftWindow.mul(kernel);
-
-    //std::cout << siftWindow << std::endl;
+    //printMat( siftWindow, "---------- depois ----------" );
 
     // Calculating magnitude and angle of pixels
     std::cout << "getPatchGrads" << std::endl;
@@ -482,8 +502,9 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     //printMat( mag, "---------- mag ----------" );
     //printMat( the, "---------- the ----------" );
 
-    // pixels that are closer to keypoint should have stronger values
-    siftWindow = siftWindow * kernel;
+    // mags that are closer to keypoint should have stronger values
+    //siftWindow = siftWindow * kernel;
+    mag = kernel.mul(mag);// * kernel;
     
     // dividir janela em 16 subjanelas 4x4.
     for( int swRows = 0; swRows < SIFT_DESC_SW_QTD; swRows++ )
@@ -525,15 +546,17 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
                       cv::Range(cIni, cIni+SIFT_DESC_SW_SIZE) );
         
         printMat( subMag, "---------- subMag ----------" );
+        subMag = subMag * 255;
+        printMat( subMag, "---------- subMag 2 ----------" );
         printMat( subThe, "---------- subThe ----------" );
         // calculate 8-bin histogram for subwindow
-        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i].scale,
+        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i].direction,
                                   360/SIFT_DESC_BINS_PER_SW, SIFT_DESC_SW_QTD, hist );
         
         // adding each bin value to descriptor
         for(int idx = 0; idx<SIFT_DESC_BINS_PER_SW; idx++)
         {
-          float hst = hist.at<float>(idx, 0);
+          int hst = (int) hist.at<float>(idx);
           kpList[i].descriptor.push_back( hst );
         }
       }
@@ -570,19 +593,19 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   std::cout << "Calculando orientações" << std::endl;
   siftKPOrientation( kp, img_gray, mGauss, sigma );
   
-  std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
-  for( int i = 0; i < kp.size(); i++ )
-  {
-    std::cout << "kp[" << i << "].direction: " << kp[i].direction << std::endl;
-  }
+  //std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
+  //for( int i = 0; i < kp.size(); i++ )
+  //{
+  //  std::cout << "kp[" << i << "].direction: " << kp[i].direction << std::endl;
+  //}
 
   //removing blur applied in siftKPOrientation
-  //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   //calculating keypoints description
-  //std::cout << "Executando calculo da descrição" << std::endl;
-  //siftExecuteDescription( kp, img_gray );
-  //std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
+  std::cout << "Executando calculo da descrição" << std::endl;
+  siftExecuteDescription( kp, img_gray );
+  std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
 
   //printing keypoints and descriptions
   //for( int i = 0; i < kp.size(); i++ )
