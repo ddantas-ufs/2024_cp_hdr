@@ -160,6 +160,9 @@ void cartToPolarGradient( float dx, float dy, float mt[2] )
   if( mt[1] < 0 ) mt[1] += 360.0f;
   if( mt[1] >= 360.0f ) mt[1] = 0.0f; 
   //printf( "mt[1] %f ", mt[1] );
+
+  if( std::isnan(mt[0]) || std::isnan(mt[1]) )
+    std::cout << "###################################---> NAN!! - dx: " << dx << ", dy: " << dy << std::endl;
 }
 
 /**
@@ -312,7 +315,7 @@ void siftKPOrientation( std::vector<KeyPoints> &kp, cv::Mat &img, int mGauss,
   std::cout << " fim siftKPOrientation " << std::endl;
 }
 
-void getPatchGrads( cv::Mat& subImage, cv::Mat& retX, cv::Mat& retY )
+void getPatchGrads( cv::Mat &subImage, cv::Mat &retX, cv::Mat &retY )
 {
   std::cout << "getPatches subImage size: " << subImage.size() << std::endl;
   cv::Mat r1 = cv::Mat( subImage.size(), subImage.type() );
@@ -385,10 +388,10 @@ void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int ref
   cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
 
   returnRavel( mag, arrMag );
-  printMat( arrMag, "---------- arrMag ----------" );
+  //printMat( arrMag, "---------- arrMag ----------" );
   
   returnRavel( theta, arrThe );
-  printMat( arrThe, "---------- arrThe ----------" );
+  //printMat( arrThe, "---------- arrThe ----------" );
 
   for( int i=0; i<arrMag.cols; i++ )
   {
@@ -430,26 +433,7 @@ void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int ref
 void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
 {
   cv::Mat siftWindow, kernel;
-  /*
-  double minVal, maxVal;
-  cv::Point minLoc, maxLoc;
 
-  cv::minMaxLoc( img, &minVal, &maxVal, &minLoc, &maxLoc );
-  std::cout << "minVal: " << minVal << std::endl;
-  std::cout << "minLoc: " << minLoc << std::endl;
-  std::cout << "maxVal: " << maxVal << std::endl;
-  std::cout << "maxLoc: " << maxLoc << std::endl;
-
-  if( maxVal <= 1.0f ) img = img * 255;
-
-  cv::minMaxLoc( img, &minVal, &maxVal, &minLoc, &maxLoc );
-  std::cout << "minVal: " << minVal << std::endl;
-  std::cout << "minLoc: " << minLoc << std::endl;
-  std::cout << "maxVal: " << maxVal << std::endl;
-  std::cout << "maxLoc: " << maxLoc << std::endl;
-
-  std::system("read -p \"Pressione enter para sair\" saindo");
-  */
   // Calculates a 17x17 Gaussian kernel
   gaussianKernel( SIFT_DESC_WINDOW+1, SIFT_DESC_ORIENT_SIGMA, kernel );
 
@@ -461,27 +445,32 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     // Generating 17x17 window (16x16 window) + keypoint's row and column
     siftWindow = cv::Mat::zeros( SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1, CV_32FC1 );
     int swRows = 0;
-    for( int rows = kpList[i].y-swHalf; rows < kpList[i].y+swHalf; rows++ )
+    for( int rows = kpList[i].y-swHalf; rows <= kpList[i].y+swHalf; rows++ )
     {
       int swCols = 0;
-      for( int cols = kpList[i].x-swHalf; cols < kpList[i].x+swHalf; cols++ )
+      for( int cols = kpList[i].x-swHalf; cols <= kpList[i].x+swHalf; cols++ )
       {
         int x = cols, y = rows;
 
         // Extrapolating image borders        
-        if( x > img.cols ) x = img.cols-(x - img.cols)-1;
-        if( y > img.rows ) y = img.rows-(y - img.rows)-1;
+        if( x >= img.cols ) x = img.cols-(x - img.cols)-1;
+        if( y >= img.rows ) y = img.rows-(y - img.rows)-1;
         if( x < 0 ) x = std::abs( x );
         if( y < 0 ) y = std::abs( y );
 
         //std::cout << "----> X: " << x << ", Y: " << y << std::endl;
         //std::cout << "----> swRows: " << swRows << ", swCols: " << swCols << std::endl;
-        siftWindow.at<float>(swRows, swCols) = img.at<float>(y, x);
+        float val = img.at<float>(y, x);
+        if( std::isnan(val))
+          std::cout << "x: " << x << ", cols: " << cols << ", y: " << y << ", rows: " << rows << std::endl;
+
+        siftWindow.at<float>(swRows, swCols) = val;
         swCols = swCols + 1;
       }
       swRows = swRows + 1;
     }
 
+    printMat( siftWindow, "---------- siftWindow ----------" );
     //printMat( siftWindow, "---------- antes ----------" );
     //siftWindow = siftWindow.mul(kernel);
     //printMat( siftWindow, "---------- depois ----------" );
@@ -497,14 +486,14 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     std::cout << "cartToPolarGradientMat" << std::endl;
     cartToPolarGradientMat( dx, dy, mag, the );
 
-    //printMat( dx, "---------- dx ----------" );
-    //printMat( dy, "---------- dy ----------" );
-    //printMat( mag, "---------- mag ----------" );
-    //printMat( the, "---------- the ----------" );
+    printMat( dx, "---------- dx ----------" );
+    printMat( dy, "---------- dy ----------" );
+    printMat( mag, "---------- mag ----------" );
+    printMat( the, "---------- the ----------" );
 
     // mags that are closer to keypoint should have stronger values
     //siftWindow = siftWindow * kernel;
-    mag = kernel.mul(mag);// * kernel;
+    //mag = kernel.mul(mag);// * kernel;
     
     // dividir janela em 16 subjanelas 4x4.
     for( int swRows = 0; swRows < SIFT_DESC_SW_QTD; swRows++ )
@@ -546,8 +535,8 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
                       cv::Range(cIni, cIni+SIFT_DESC_SW_SIZE) );
         
         printMat( subMag, "---------- subMag ----------" );
-        subMag = subMag * 255;
-        printMat( subMag, "---------- subMag 2 ----------" );
+        //subMag = subMag * 255.0f;
+        //printMat( subMag, "---------- subMag 2 ----------" );
         printMat( subThe, "---------- subThe ----------" );
         // calculate 8-bin histogram for subwindow
         getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i].direction,
@@ -580,11 +569,11 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   if (img_in.depth() == 0)
   {
     img_in.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / 255.0;
+    img_norm = img_norm / 255.0f;
   }
   else
   {
-    img_in = img_norm / 256.0;
+    img_in = img_norm / 256.0f;
   }
 
   //removing blur applied in siftKPOrientation
@@ -600,7 +589,7 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   //}
 
   //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   //calculating keypoints description
   std::cout << "Executando calculo da descrição" << std::endl;
