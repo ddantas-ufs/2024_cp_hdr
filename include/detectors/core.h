@@ -25,7 +25,7 @@
 #define CV_SIZE 5 // mask size to compute coefficient of variation
 
 // SIFT CONSTANTS
-#define SIFT_DESC_ORIENT_SIGMA 1.5
+#define SIFT_DESC_ORIENT_SIGMA 1.5f
 #define SIFT_DESC_ORIENT_WINDOW 5
 #define SIFT_DESC_ORIENT_HIST_BINS 36
 
@@ -34,6 +34,8 @@
 #define SIFT_DESC_SW_QTD 4 // SubWindow quantity
 #define SIFT_DESC_SW_SIZE 4 // SubWindow size
 #define SIFT_DESC_BINS_PER_SW 8 // bins for subwindow histogram 
+#define SIFT_DESC_MAG_THR 0.2f // magnitude threshold of descriptor elements
+#define SIFT_INT_DESC_FTR 512.0f // factor used to convert float descriptor to int
 
 struct KeyPoints
 {
