@@ -35,7 +35,8 @@
 #define SIFT_DESC_SW_SIZE 4 // SubWindow size
 #define SIFT_DESC_BINS_PER_SW 8 // bins for subwindow histogram 
 #define SIFT_DESC_MAG_THR 0.2f // magnitude threshold of descriptor elements
-#define SIFT_INT_DESC_FTR 512.0f // factor used to convert float descriptor to int
+#define SIFT_DESC_INT_FTR 512.0f // factor used to convert float descriptor to int
+#define SIFT_DESC_SCL_FTR 3.0f // to determine size of a single descriptor orientation histogram
 
 struct KeyPoints
 {

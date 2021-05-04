@@ -1,6 +1,6 @@
 CC = g++
 
-CV_LIB = `pkg-config opencv --cflags --libs`
+CV_LIB = `pkg-config opencv --cflags --libs` -g
 CPP_FLAGS = -fPIC -g
 LD_FLAGS = -shared
 
@@ -34,6 +34,7 @@ DEMO_HDR_IMG = $(IMG_DIR)/lena.png
 DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
 SIFT_DESCRIPTOR = demosift
+SIFT_OPENCV = demosift_opencv
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -64,6 +65,9 @@ defaultdog:
 descriptor_sift:
 	$(CC) -o $(BIN_DIR)/$(SIFT_DESCRIPTOR) $(TEST_DIR)/$(SIFT_DESCRIPTOR).cpp $(SRC_FILES) $(CV_LIB)
 
+demosift_opencv:
+	$(CC) -o $(BIN_DIR)/$(SIFT_OPENCV) $(TEST_DIR)/$(SIFT_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
+
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
@@ -84,6 +88,9 @@ run_defaultdog: defaultdog
 
 run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+
+run_demosift_opencv: demosift_opencv
+	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/
 	
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
