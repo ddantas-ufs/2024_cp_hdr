@@ -1,6 +1,14 @@
 #include <opencv2/features2d.hpp>
 #include "../include/cphdr.h"
 
+void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
+{
+    octave = kpt.octave & 255;
+    layer = (kpt.octave >> 8) & 255;
+    octave = octave < 128 ? octave : (-128 | octave);
+    scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+}
+
 int main(int argv, char** args)
 {
   std::cout << "OpenCV version: " << CV_MAJOR_VERSION << "." << CV_MINOR_VERSION << std::endl;
@@ -36,19 +44,24 @@ int main(int argv, char** args)
   {
     //cv::KeyPoint ckp = ocv_kp[i];
     KeyPoints nkp;
+    // cv::KeyPoint& kp, int& octave, int& layer, float& scale
+    int uOctave, uLayer;
+    float uScale; // 1/(2^octave)
+
+    unpackOpenCVOctave( ocv_kp[i], uOctave, uLayer, uScale );
 
     nkp.x = (float) ocv_kp[i].pt.x;
     nkp.y = (float) ocv_kp[i].pt.y;
     nkp.resp = (float) ocv_kp[i].response;
-    nkp.octave = (int) ocv_kp[i].octave;
+    nkp.octave = uOctave;
     nkp.direction = (float) ocv_kp[i].angle;
+    nkp.scale = uLayer;
 
-    //std::cout << "Px: " << ocv_kp[i].pt.x << std::endl;
-    //std::cout << "Py: " << ocv_kp[i].pt.y << std::endl;
-    //std::cout << "Re: " << ocv_kp[i].response << std::endl;
-    //std::cout << "Oc: " << ocv_kp[i].octave << std::endl;
-    //std::cout << "An: " << ocv_kp[i].angle << std::endl;
-    //std::cout << "De: ";
+    std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
+    std::cout << "Resp: " << uLayer << std::endl;
+    std::cout << "Octv: " << nkp.octave << std::endl;
+    std::cout << "Angl: " << nkp.direction << std::endl;
+    std::cout << "Scal: " << nkp.scale << std::endl;
 
     for( int j=0; j < 128; j++ )
     {

@@ -371,14 +371,15 @@ void unravelIndex( int index, int rows, int cols, int ret[2] )
  * @param mag the subregion's magnitudes
  * @param theta subregion's angles
  * @param numBin amount of values to be returned
- * @param refAngle angle of reference to calculate the histogram
- * @param binWidth width of the bin
- * @param subW width of the subregion
+ * @param refAngle Keypoint reference angle to calculate histogram
+ * @param binWidth width of the bin (360/8=45)
+ * @param subW width of the subregion (=4)
  * @param hist Matrix where the histogram is being returned
 **/
-void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int refAngle,
+void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, float refAngle,
                                int binWidth, int subW, cv::Mat& hist )
 {
+  std::cout << "---> getHistogramForSubregion_old" << std::endl;
   float minimum = 0.000001f;
   float center = (subW/2.0f) - 0.5f;
 
@@ -400,7 +401,7 @@ void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int ref
     // b*binWidth is the start angle of the histogram bin
     // b*binWidth+binWidth/2 is the center of the histogram bin
     // angle -[...] is the distance from the angle to the center of the bin 
-    float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
+    float histInterpWeight = 1-std::abs(angle-( (b*binWidth)+(binWidth/2)) ) / (binWidth/2);
     vote *= std::max( histInterpWeight, minimum );
     std::cout << "mg: " << mg << ", angle: " << angle << ", b: " << b << std::endl;
     std::cout << "histInterpWeight: " << histInterpWeight << ", vote1: " << vote << std::endl;
@@ -419,6 +420,77 @@ void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, int ref
     std::cout << "vote3: " << vote << std::endl;
     hist.at<float>(b) += vote;// * angle;
   }
+  std::cout << "--> histSubregion: ";
+  //for(int k = 0; k<numBin; k++) std::cout << hist.at<int>(k) << " ";
+  for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
+  std::cout << std::endl;
+}
+/**
+ * Return the histogram of a given subregion
+ * 
+ * @param mag the subregion's magnitudes
+ * @param theta subregion's angles
+ * @param numBin amount of values to be returned
+ * @param refAngle Keypoint reference angle to calculate histogram
+ * @param refScale Keypoint reference scale to calculate histogram
+ * @param binWidth width of the bin (360/8=45)
+ * @param subW width of the subregion (=4)
+ * @param hist Matrix where the histogram is being returned
+**/
+//*
+void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, KeyPoints &kp,
+                               int cIni, int rIni, int cFim, int rFim, int binWidth, 
+                               int subW, cv::Mat& hist )
+{
+  //float minimum = 0.000001f;
+  float minimum = 0.1f;
+  //float center = (subW/2.0f) - 0.5f;
+
+  hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32FC1 );
+
+  cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32FC1 );
+  cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
+
+  returnRavel( mag, arrMag );  
+  returnRavel( theta, arrThe );
+
+  for( int i=0; i<arrMag.cols; i++ )
+  {
+    float mg = arrMag.at<float>(i);
+    int angle = (int) (arrThe.at<float>(i)-kp.direction) % 360;
+    int b = quantizeOrientation(angle, numBin);
+    float vote = mg;
+    
+    // b*binWidth is the start angle of the histogram bin
+    // b*binWidth+binWidth/2 is the center of the histogram bin
+    // angle -[...] is the distance from the angle to the center of the bin 
+    float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
+    vote *= std::max( histInterpWeight, minimum );
+    std::cout << "mg: " << mg << ", angle: " << angle << ", b: " << b << std::endl;
+    std::cout << "histInterpWeight: " << histInterpWeight << ", vote1: " << vote << std::endl;
+
+    // interpolating
+    int idx[2];
+    float xInterpWeight, yInterpWeight;
+    unravelIndex( i, subW, subW, idx );
+
+    //xInterpWeight = std::max( (float) 1-(std::abs(idx[0]-center)/center), minimum );
+    //yInterpWeight = std::max( (float) 1-(std::abs(idx[1]-center)/center), minimum );
+    int xCoord = cIni + idx[0];
+    int yCoord = rIni + idx[1];
+    if(xCoord > cFim) xCoord = cFim;
+    if(yCoord > rFim) yCoord = rFim;
+    xInterpWeight = std::max( (float) std::abs((float)xCoord-kp.x), minimum );
+    yInterpWeight = std::max( (float) std::abs((float)yCoord-kp.y), minimum );
+    
+    std::cout << "xInterpWeight: " << xInterpWeight << std::endl;
+    std::cout << "yInterpWeight: " << yInterpWeight << std::endl;
+
+    vote *= (xInterpWeight * yInterpWeight);
+    std::cout << "vote3: " << vote << std::endl;
+    hist.at<float>(b) += vote;// * angle;
+  }
+
   std::cout << "--> histSubregion: ";
   //for(int k = 0; k<numBin; k++) std::cout << hist.at<int>(k) << " ";
   for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
@@ -493,14 +565,16 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
 
     // mags that are closer to keypoint should have stronger values
     //siftWindow = siftWindow * kernel;
-    //mag = kernel.mul(mag);// * kernel;
-    //mag = mag.mul( kernel );// kernel.mul(mag);// * kernel;
+    mag = mag * 255;// * kernel;
+    mag = mag.mul( kernel );// kernel.mul(mag);// * kernel;
     
     // dividir janela em 16 subjanelas 4x4.
     for( int swRows = 0; swRows < SIFT_DESC_SW_QTD; swRows++ )
     {
       for( int swCols = 0; swCols < SIFT_DESC_SW_QTD; swCols++ )
       {
+        int rIni, rFim, cIni, cFim;
+        int refIniR, refFimR, refIniC, refFimC;
         cv::Mat hist, subMag, subThe;
 
         subMag = cv::Mat::zeros( cv::Size(SIFT_DESC_SW_SIZE, SIFT_DESC_SW_SIZE),
@@ -508,25 +582,31 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
         subThe = cv::Mat::zeros( cv::Size(SIFT_DESC_SW_SIZE, SIFT_DESC_SW_SIZE),
                                  CV_32FC1 );
 
-        int rIni = SIFT_DESC_SW_SIZE*swRows;
-        int cIni = SIFT_DESC_SW_SIZE*swCols;
-        int a = 0, b = 0;
+        rIni = SIFT_DESC_SW_SIZE*swRows;
+        cIni = SIFT_DESC_SW_SIZE*swCols;
+        rFim = rIni+SIFT_DESC_SW_SIZE;
+        cFim = cIni+SIFT_DESC_SW_SIZE;
 
-        std::cout << "rIni: " << rIni << " rFim: " << rIni+SIFT_DESC_SW_SIZE << std::endl;
-        std::cout << "cIni: " << cIni << " cFim: " << cIni+SIFT_DESC_SW_SIZE << std::endl;
+        subMag = mag( cv::Range(rIni, rFim), cv::Range(cIni, cFim) );
+        subThe = the( cv::Range(rIni, rFim), cv::Range(cIni, cFim) );
 
-        subMag = mag( cv::Range(rIni, rIni+SIFT_DESC_SW_SIZE), 
-                      cv::Range(cIni, cIni+SIFT_DESC_SW_SIZE) );
-        subThe = the( cv::Range(rIni, rIni+SIFT_DESC_SW_SIZE), 
-                      cv::Range(cIni, cIni+SIFT_DESC_SW_SIZE) );
-
-        //printMat( subMag, "---------- subMag ----------" );
-        //subMag = subMag * 255.0f;
-        //printMat( subMag, "---------- subMag 2 ----------" );
-        //printMat( subThe, "---------- subThe ----------" );
-        // calculate 8-bin histogram for subwindow
-        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i].direction,
-                                  360/SIFT_DESC_BINS_PER_SW, SIFT_DESC_SW_QTD, hist );
+        // adapting references to img coordinates
+        if( rIni < SIFT_DESC_WINDOW/2 ) rIni = kpList[i].y-rIni;
+        if( cIni < SIFT_DESC_WINDOW/2 ) cIni = kpList[i].x-cIni;
+        if( rIni == SIFT_DESC_WINDOW/2 ) rIni = (int) kpList[i].y;
+        if( cIni == SIFT_DESC_WINDOW/2 ) cIni = (int) kpList[i].x;
+        if( rFim == SIFT_DESC_WINDOW/2 ) rFim = (int) kpList[i].y;
+        if( cFim == SIFT_DESC_WINDOW/2 ) cFim = (int) kpList[i].x;
+        if( rFim > SIFT_DESC_WINDOW/2 ) rFim = kpList[i].y+rFim;
+        if( cFim > SIFT_DESC_WINDOW/2 ) cFim = kpList[i].x+cFim;
+        
+        //getHistogramForSubregion_old( subMag, subThe, SIFT_DESC_BINS_PER_SW,
+        //                          kpList[i].direction, SIFT_DESC_BINS_PER_SW/360, 
+        //                          SIFT_DESC_SW_QTD, hist );
+        
+        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i],
+                                  cIni, rIni, cFim, rFim, 360/SIFT_DESC_BINS_PER_SW,
+                                  SIFT_DESC_SW_QTD, hist );
         
         // adding each bin value to descriptor
         for(int idx = 0; idx<SIFT_DESC_BINS_PER_SW; idx++)
@@ -559,10 +639,9 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     }
 
     // re-normalizing to get numbers big enough to be converted to int
-    float norm_factor = SIFT_INT_DESC_FTR / cv::sqrt( sum_square );
+    float norm_factor = SIFT_DESC_INT_FTR / cv::sqrt( sum_square );
     for (int i = 0; i < tempDescriptor.size(); i++)
       tempDescriptor[i] = tempDescriptor[i] * norm_factor;
-
 
     std::cout << std::endl << "Normalized float Descriptor " << i << std::endl;
     for( int k=0; k<tempDescriptor.size(); k++ ) std::cout << tempDescriptor[k] << ", ";
@@ -577,6 +656,43 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
     std::cout << std::endl;
   }
 }
+
+//*
+void unpackOpenCVOctave( cv::KeyPoint& kp, int& octave, int& layer, float& scale)
+{
+  octave = kp.octave & 255;
+  layer = (kp.octave >> 8) & 255;
+  octave = octave < 128 ? octave : (-128 | octave);
+  scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+}
+
+
+//void calcDescriptors(const vector<Mat>& gpyr, const vector<KeyPoint>& keypoints,
+//                          Mat& descriptors, int nOctaveLayers, int firstOctave )
+void calcDescriptors(std::vector<KeyPoints> kpl, cv::Mat &img )
+{
+  int d = SIFT_DESC_SW_QTD, n = SIFT_DESC_BINS_PER_SW;
+  std::vector<float> descriptors;
+  descriptors.resize(SIFT_DESC_SIZE);
+
+  for ( int i=0; i<kpl.size(); i++ )
+  {
+    KeyPoints kp = kpl[i];
+    //int octave, layer;
+    //float scale;
+    //unpackOpenCVOctave(kpt, octave, layer, scale);
+    //CV_Assert(octave >= firstOctave && layer <= NUM_SCALES+2);
+    float size = DOG_BORDER*kp.scale;
+    //cv::Point2f ptf(kpt.x*kpt.scale, kpt.y*kpt.scale);
+    //const Mat& img = gpyr[(octave - firstOctave)*(NUM_OCTAVES + 3) + layer];
+
+    float angle = 360.f - kp.direction;
+    if(std::abs(angle - 360.f) < FLT_EPSILON)
+        angle = 0.f;
+    calcSIFTDescriptor(img, kp, angle, size*0.5f, d, n, descriptors, i);
+  }
+}
+//*/
 
 /**
  * SIFT MAIN METHOD

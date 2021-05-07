@@ -67,7 +67,6 @@ void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
   fprintf(file, "%d\n", num_kp);
   for (int i = 0; i < num_kp; i++)
   {
-    std::cout << "x: " << kp_aux[i].x << " y: " << kp_aux[i].y << std::endl;
     fprintf(file, "%.4f \t %.4f \t %d \t %d \t %.4f\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].octave, kp_aux[i].scale, kp_aux[i].resp);
 
     int descSize = kp_aux[i].descriptor.size();
