@@ -658,6 +658,148 @@ void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
 }
 
 //*
+//calcSIFTDescriptor(img, kp, angle, size*0.5f, d, n, descriptors, i);
+void calcSIFTDescriptor( cv::Mat &img, KeyPoints &ptf, float ori, float scl,
+                         int d, int n, float* dst )
+{
+  cv::Point pt(cvRound(ptf.x), cvRound(ptf.y));
+  float cos_t = cosf(ori*(float)(CV_PI/180));
+  float sin_t = sinf(ori*(float)(CV_PI/180));
+  float bins_per_rad = n / 360.f;
+  float exp_scale = -1.f/(d * d * 0.5f);
+  float hist_width = SIFT_DESC_SCL_FTR * scl;
+  int radius = cvRound(hist_width * 1.4142135623730951f * (d + 1) * 0.5f);
+  cos_t /= hist_width;
+  sin_t /= hist_width;
+
+  int i, j, k, len = (radius*2+1)*(radius*2+1), histlen = (d+2)*(d+2)*(n+2);
+  int rows = img.rows, cols = img.cols;
+
+  cv::AutoBuffer<float> buf(len*6 + histlen);
+  float *X = buf, *Y = X + len, *Mag = Y, *Ori = Mag + len, *W = Ori + len;
+  float *RBin = W + len, *CBin = RBin + len, *hist = CBin + len;
+  //float X, Y, Mag, Ori, W, RBin, CBin, hist;
+
+  for( i = 0; i < d+2; i++ )
+  {
+    for( j = 0; j < d+2; j++ )
+      for( k = 0; k < n+2; k++ )
+        hist[(i*(d+2) + j)*(n+2) + k] = 0.;
+  }
+
+  for( i = -radius, k = 0; i <= radius; i++ )
+    for( j = -radius; j <= radius; j++ )
+    {
+      // Calculate sample's histogram array coords rotated relative to ori.
+      // Subtract 0.5 so samples that fall e.g. in the center of row 1 (i.e.
+      // r_rot = 1.5) have full weight placed in row 1 after interpolation.
+      float c_rot = j * cos_t - i * sin_t;
+      float r_rot = j * sin_t + i * cos_t;
+      float rbin = r_rot + d/2 - 0.5f;
+      float cbin = c_rot + d/2 - 0.5f;
+      int r = pt.y + i, c = pt.x + j;
+
+      if( rbin > -1 && rbin < d && cbin > -1 && cbin < d &&
+          r > 0 && r < rows - 1 && c > 0 && c < cols - 1 )
+      {
+        float dx = (float)(img.at<float>(r, c+1) - img.at<float>(r, c-1));
+        float dy = (float)(img.at<float>(r-1, c) - img.at<float>(r+1, c));
+        X[k] = dx; Y[k] = dy; RBin[k] = rbin; CBin[k] = cbin;
+        W[k] = (c_rot * c_rot + r_rot * r_rot)*exp_scale;
+        k++;
+      }
+    }
+
+  len = k;
+  cv::hal::fastAtan2(Y, X, Ori, len, true);
+  cv::hal::magnitude(X, Y, Mag, len);
+  cv::hal::exp(W, W, len);
+
+  for( k = 0; k < len; k++ )
+  {
+    float rbin = RBin[k], cbin = CBin[k];
+    float obin = (Ori[k] - ori)*bins_per_rad;
+    float mag = Mag[k]*W[k];
+
+    int r0 = cvFloor( rbin );
+    int c0 = cvFloor( cbin );
+    int o0 = cvFloor( obin );
+    rbin -= r0;
+    cbin -= c0;
+    obin -= o0;
+
+    if( o0 < 0 )
+        o0 += n;
+    if( o0 >= n )
+        o0 -= n;
+
+    // histogram update using tri-linear interpolation
+    float v_r1 = mag*rbin, v_r0 = mag - v_r1;
+    float v_rc11 = v_r1*cbin, v_rc10 = v_r1 - v_rc11;
+    float v_rc01 = v_r0*cbin, v_rc00 = v_r0 - v_rc01;
+    float v_rco111 = v_rc11*obin, v_rco110 = v_rc11 - v_rco111;
+    float v_rco101 = v_rc10*obin, v_rco100 = v_rc10 - v_rco101;
+    float v_rco011 = v_rc01*obin, v_rco010 = v_rc01 - v_rco011;
+    float v_rco001 = v_rc00*obin, v_rco000 = v_rc00 - v_rco001;
+
+    int idx = ((r0+1)*(d+2) + c0+1)*(n+2) + o0;
+    hist[idx] += v_rco000;
+    hist[idx+1] += v_rco001;
+    hist[idx+(n+2)] += v_rco010;
+    hist[idx+(n+3)] += v_rco011;
+    hist[idx+(d+2)*(n+2)] += v_rco100;
+    hist[idx+(d+2)*(n+2)+1] += v_rco101;
+    hist[idx+(d+3)*(n+2)] += v_rco110;
+    hist[idx+(d+3)*(n+2)+1] += v_rco111;
+  }
+
+  // finalize histogram, since the orientation histograms are circular
+  for( i = 0; i < d; i++ )
+    for( j = 0; j < d; j++ )
+    {
+      int idx = ((i+1)*(d+2) + (j+1))*(n+2);
+      hist[idx] += hist[idx+n];
+      hist[idx+1] += hist[idx+n+1];
+      for( k = 0; k < n; k++ )
+        dst[(i*d + j)*n + k] = hist[idx+k];
+      }
+  // copy histogram to the descriptor,
+  // apply hysteresis thresholding
+  // and scale the result, so that it can be easily converted
+  // to byte array
+  float nrm2 = 0;
+  len = d*d*n;
+  for( k = 0; k < len; k++ )
+      nrm2 += dst[k]*dst[k];
+  float thr = std::sqrt(nrm2)*SIFT_DESC_MAG_THR;
+  for( i = 0, nrm2 = 0; i < k; i++ )
+  {
+    float val = std::min(dst[i], thr);
+    dst[i] = val;
+    nrm2 += val*val;
+  }
+  nrm2 = SIFT_DESC_INT_FTR/std::max(std::sqrt(nrm2), FLT_EPSILON);
+
+#if 1
+  for( k = 0; k < len; k++ )
+  {
+    dst[k] = uchar( dst[k]*nrm2 );// saturate_cast<uchar>(dst[k]*nrm2);
+  }
+#else
+  float nrm1 = 0;
+  for( k = 0; k < len; k++ )
+  {
+    dst[k] *= nrm2;
+    nrm1 += dst[k];
+  }
+  nrm1 = 1.f/std::max(nrm1, FLT_EPSILON);
+  for( k = 0; k < len; k++ )
+  {
+    dst[k] = std::sqrt(dst[k] * nrm1);//saturate_cast<uchar>(std::sqrt(dst[k] * nrm1)*SIFT_INT_DESCR_FCTR);
+  }
+#endif
+}
+
 void unpackOpenCVOctave( cv::KeyPoint& kp, int& octave, int& layer, float& scale)
 {
   octave = kp.octave & 255;
@@ -669,27 +811,43 @@ void unpackOpenCVOctave( cv::KeyPoint& kp, int& octave, int& layer, float& scale
 
 //void calcDescriptors(const vector<Mat>& gpyr, const vector<KeyPoint>& keypoints,
 //                          Mat& descriptors, int nOctaveLayers, int firstOctave )
-void calcDescriptors(std::vector<KeyPoints> kpl, cv::Mat &img )
+void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 {
   int d = SIFT_DESC_SW_QTD, n = SIFT_DESC_BINS_PER_SW;
-  std::vector<float> descriptors;
-  descriptors.resize(SIFT_DESC_SIZE);
+
+  //std::vector<float> descriptors;
+  //descriptors.resize(SIFT_DESC_SIZE);
+  //float descriptor[SIFT_DESC_SIZE];
+  //descriptors.resize(SIFT_DESC_SIZE);
 
   for ( int i=0; i<kpl.size(); i++ )
   {
-    KeyPoints kp = kpl[i];
+    float descriptor[SIFT_DESC_SIZE];
+    //KeyPoints kp = kpl[i];
+    kpl[i].descriptor.resize(SIFT_DESC_SIZE);
+    //for( int k = 0; k < SIFT_DESC_SIZE; k++ )
+    //  descriptor[k] = 0.0f;
+
     //int octave, layer;
     //float scale;
     //unpackOpenCVOctave(kpt, octave, layer, scale);
     //CV_Assert(octave >= firstOctave && layer <= NUM_SCALES+2);
-    float size = DOG_BORDER*kp.scale;
+    float size = DOG_BORDER*kpl[i].scale;
     //cv::Point2f ptf(kpt.x*kpt.scale, kpt.y*kpt.scale);
     //const Mat& img = gpyr[(octave - firstOctave)*(NUM_OCTAVES + 3) + layer];
 
-    float angle = 360.f - kp.direction;
+    float angle = 360.f - kpl[i].direction;
     if(std::abs(angle - 360.f) < FLT_EPSILON)
         angle = 0.f;
-    calcSIFTDescriptor(img, kp, angle, size*0.5f, d, n, descriptors, i);
+    calcSIFTDescriptor(img, kpl[i], angle, size*0.5f, d, n, descriptor);
+
+    std::cout << "Keypoint: " << i << std::endl;
+    for( int k = 0; k < SIFT_DESC_SIZE; k++ )
+    {
+      kpl[i].descriptor[k] = descriptor[k];
+      std::cout << descriptor[k] << " ";
+    }
+    std::cout << std::endl;
   }
 }
 //*/
@@ -700,7 +858,7 @@ void calcDescriptors(std::vector<KeyPoints> kpl, cv::Mat &img )
  * @param kp KeyPoints detected
  * @param name string with image's name
 **/
-void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_gray,
+void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_gray,
                      int mGauss, float sigma )
 {
   cv::Mat img_norm;
@@ -718,12 +876,12 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
   cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
 
   std::cout << "Calculando orientações" << std::endl;
-  siftKPOrientation( kp, img_gray, mGauss, sigma );
+  siftKPOrientation( kpl, img_gray, mGauss, sigma );
   
-  //std::cout << "KeyPoints com calculo de orientação:" << kp.size() << std::endl;
-  //for( int i = 0; i < kp.size(); i++ )
+  //std::cout << "KeyPoints com calculo de orientação:" << kpl.size() << std::endl;
+  //for( int i = 0; i < kpl.size(); i++ )
   //{
-  //  std::cout << "kp[" << i << "].direction: " << kp[i].direction << std::endl;
+  //  std::cout << "kpl[" << i << "].direction: " << kpl[i].direction << std::endl;
   //}
 
   //removing blur applied in siftKPOrientation
@@ -731,10 +889,11 @@ void siftDescriptor( std::vector<KeyPoints> &kp, cv::Mat& img_in, cv::Mat& img_g
 
   //calculating keypoints description
   std::cout << "Executando calculo da descrição" << std::endl;
-  siftExecuteDescription( kp, img_gray );
-  std::cout << "Size da lista de Keypoints  :" << kp.size() << std::endl;
+  //siftExecuteDescription( kpl, img_gray );
+  calcDescriptors( kpl, img_gray );
+  std::cout << "Size da lista de Keypoints  :" << kpl.size() << std::endl;
 
   //printing keypoints and descriptions
-  //for( int i = 0; i < kp.size(); i++ )
-  //  printKeypoint( kp[i] );
+  //for( int i = 0; i < kpl.size(); i++ )
+  //  printKeypoint( kpl[i] );
 }
