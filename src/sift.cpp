@@ -48,78 +48,6 @@ bool isOut(cv::Mat &img, float x, float y)
   return ( x < 0 || x > cols-1 || y < 0 || y > rows-1 );
 }
 
-void repeatLastRow( cv::Mat &mat, cv::Mat &ret )
-{
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=1; i<rows; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i-1, j) = mat.at<float>(i, j);
-    }
-  }
-  
-  for( int j=0; j<cols; j++ )
-    ret.at<float>(rows-1, j) = mat.at<float>(rows-1, j);
-}
-
-void repeatFirstRow( cv::Mat &mat, cv::Mat &ret )
-{
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int j=0; j<cols; j++ )
-  {
-    ret.at<float>(0, j) = mat.at<float>(0, j);
-  }
-
-  for( int i=0; i<rows-1; i++ )
-  {
-    for( int j=0; j<cols; j++ )
-    {
-      ret.at<float>(i+1, j) = mat.at<float>(i, j);
-    }
-  }
-}
-
-void repeatLastColumn( cv::Mat &mat, cv::Mat &ret )
-{
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows; i++ )
-  {
-    for( int j=1; j<cols; j++ )
-    {
-      ret.at<float>(i, j-1) = mat.at<float>(i, j);
-    }
-  }
-
-  for( int i=0; i<rows; i++ )
-    ret.at<float>(i, cols-1) = mat.at<float>(i, cols-1);
-}
-
-void repeatFirstColumn( cv::Mat &mat, cv::Mat &ret )
-{
-  int rows = mat.rows;
-  int cols = mat.cols;
-
-  for( int i=0; i<rows; i++ )
-  {
-    ret.at<float>(i, 0) = mat.at<float>(i, 0);
-  }
-
-  for( int i=0; i<rows; i++ )
-  {
-    for( int j=0; j<cols-1; j++ )
-    {
-      ret.at<float>(i, j+1) = mat.at<float>(i, j);
-    }
-  }
-}
-
 void gaussianKernel( int size, float sigma, cv::Mat &kernel )
 {
   int half = (int) size / 2;
@@ -163,33 +91,6 @@ void cartToPolarGradient( float dx, float dy, float mt[2] )
 
   if( std::isnan(mt[0]) || std::isnan(mt[1]) )
     std::cout << "###################################---> NAN!! - dx: " << dx << ", dy: " << dy << std::endl;
-}
-
-/**
- * Cartesian to polar angle
- * 
- * @param dx x coordinate
- * @param dy y coordinate
- * @param m return array with magnitudes
- * @param theta return array with thetas
-**/
-void cartToPolarGradientMat( cv::Mat &dx, cv::Mat &dy, cv::Mat &m, cv::Mat &t )
-{
-  std::cout << "---> cartToPolarGradientMat" << std::endl;
-  for( int i=0; i<dx.rows; i++ )
-  {
-    for( int j=0; j<dx.cols; j++ )
-    {
-      float ret[2] = {0,0};
-      float x = (float) dx.at<float>(i, j);
-      float y = (float) dy.at<float>(i, j);
-
-      cartToPolarGradient( x, y, ret );
-      
-      m.at<float>(i, j) = ret[0];
-      t.at<float>(i, j) = ret[1];
-    }
-  }
 }
 
 void cartToPolarGradientMat( float dy[], float dx[], float thes[], float exps[], int t )
@@ -334,23 +235,6 @@ void siftKPOrientation( std::vector<KeyPoints> &kp, cv::Mat &img, int mGauss,
   std::cout << " fim siftKPOrientation " << std::endl;
 }
 
-void getPatchGrads( cv::Mat &subImage, cv::Mat &retX, cv::Mat &retY )
-{
-  std::cout << "getPatches subImage size: " << subImage.size() << std::endl;
-  cv::Mat r1 = cv::Mat( subImage.size(), subImage.type() );
-  cv::Mat r2 = cv::Mat( subImage.size(), subImage.type() );
-
-  repeatLastRow( subImage, r1 );
-  repeatFirstRow( subImage, r2 );
-
-  cv::subtract( r1, r2, retX );
-
-  repeatLastColumn( subImage, r1 );
-  repeatFirstColumn( subImage, r2 );
-  
-  cv::subtract( r1, r2, retY );
-}
-
 /**
  * convert an 1d array coordinate into a 2d array coordinates.
  * 
@@ -444,240 +328,45 @@ void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, flo
   for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
   std::cout << std::endl;
 }
+
 /**
- * Return the histogram of a given subregion
+ * Receive the histogram array and descriptor array, normalize the values and store
+ * the normalized values into descriptor array.
  * 
- * @param mag the subregion's magnitudes
- * @param theta subregion's angles
- * @param numBin amount of values to be returned
- * @param refAngle Keypoint reference angle to calculate histogram
- * @param refScale Keypoint reference scale to calculate histogram
- * @param binWidth width of the bin (360/8=45)
- * @param subW width of the subregion (=4)
- * @param hist Matrix where the histogram is being returned
+ * @param hist histogram array with calculated bins
+ * @param descriptor descriptor array where normalized values will be stored
+ * @param qtdSW the amount of subWindows calculated (default = 4)
+ * @param binsPerSW the amount of bins calculated per each subWindow (default = 8)
 **/
-//*
-void getHistogramForSubregion( cv::Mat &mag, cv::Mat &theta, int numBin, KeyPoints &kp,
-                               int cIni, int rIni, int cFim, int rFim, int binWidth, 
-                               int subW, cv::Mat& hist )
+void normalizeHistToDescriptor(float* hist, float* descriptor, int qtdSW, int binsPerSW )
 {
-  //float minimum = 0.000001f;
-  float minimum = 0.1f;
-  //float center = (subW/2.0f) - 0.5f;
+  int k = 0;
+  
+  // Preparing to normalize histogram
+  float nrm2 = 0.0f;
+  int len = qtdSW*qtdSW*binsPerSW;
+  for( k = 0; k < len; k++ )
+    nrm2 += descriptor[k]*descriptor[k];
 
-  hist = cv::Mat::zeros( cv::Size(numBin, 1), CV_32FC1 );
+  float thr = std::sqrt(nrm2)*SIFT_DESC_MAG_THR;
+  nrm2 = 0.0f;
 
-  cv::Mat arrMag = cv::Mat::zeros( cv::Size(mag.rows*mag.cols, 1), CV_32FC1 );
-  cv::Mat arrThe = cv::Mat::zeros( cv::Size(theta.rows*theta.cols, 1), CV_32FC1 );
-
-  returnRavel( mag, arrMag );  
-  returnRavel( theta, arrThe );
-
-  for( int i=0; i<arrMag.cols; i++ )
+  for( int i = 0; i < k; i++ )
   {
-    float mg = arrMag.at<float>(i);
-    int angle = (int) (arrThe.at<float>(i)-kp.direction) % 360;
-    int b = quantizeOrientation(angle, numBin);
-    float vote = mg;
-    
-    // b*binWidth is the start angle of the histogram bin
-    // b*binWidth+binWidth/2 is the center of the histogram bin
-    // angle -[...] is the distance from the angle to the center of the bin 
-    float histInterpWeight = 1-std::abs(angle-((b*binWidth)+(binWidth/2)))/(binWidth/2);
-    vote *= std::max( histInterpWeight, minimum );
-    std::cout << "mg: " << mg << ", angle: " << angle << ", b: " << b << std::endl;
-    std::cout << "histInterpWeight: " << histInterpWeight << ", vote1: " << vote << std::endl;
-
-    // interpolating
-    int idx[2];
-    float xInterpWeight, yInterpWeight;
-    unravelIndex( i, subW, subW, idx );
-
-    //xInterpWeight = std::max( (float) 1-(std::abs(idx[0]-center)/center), minimum );
-    //yInterpWeight = std::max( (float) 1-(std::abs(idx[1]-center)/center), minimum );
-    int xCoord = cIni + idx[0];
-    int yCoord = rIni + idx[1];
-    if(xCoord > cFim) xCoord = cFim;
-    if(yCoord > rFim) yCoord = rFim;
-    xInterpWeight = std::max( (float) std::abs((float)xCoord-kp.x), minimum );
-    yInterpWeight = std::max( (float) std::abs((float)yCoord-kp.y), minimum );
-    
-    std::cout << "xInterpWeight: " << xInterpWeight << std::endl;
-    std::cout << "yInterpWeight: " << yInterpWeight << std::endl;
-
-    vote *= (xInterpWeight * yInterpWeight);
-    std::cout << "vote3: " << vote << std::endl;
-    hist.at<float>(b) += vote;// * angle;
+    float val = std::min(descriptor[i], thr);
+    descriptor[i] = val;
+    nrm2 += val*val;
   }
 
-  std::cout << "--> histSubregion: ";
-  //for(int k = 0; k<numBin; k++) std::cout << hist.at<int>(k) << " ";
-  for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
-  std::cout << std::endl;
+  nrm2 = SIFT_DESC_INT_FTR/std::max(std::sqrt(nrm2), FLT_EPSILON);
+
+  // Copying normalized data to descriptor
+  for( k = 0; k < len; k++ )
+    descriptor[k] = uchar( descriptor[k]*nrm2 );
 }
 
-void siftExecuteDescription( std::vector<KeyPoints> &kpList, cv::Mat &img )
-{
-  cv::Mat siftWindow, kernel;
-
-  // Calculates a 17x17 Gaussian kernel
-  gaussianKernel( SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW/2, kernel );
-
-  for( int i = 0; i < kpList.size(); i++ )
-  {
-    cv::Mat mag, the, dx, dy;
-    std::vector<float> tempDescriptor;
-    int swHalf = (int) SIFT_DESC_WINDOW / 2;
-
-    // Generating 17x17 window (16x16 window) + keypoint's row and column
-    siftWindow = cv::Mat::zeros( SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1, CV_32FC1 );
-    int swRows = 0;
-    for( int rows = kpList[i].y-swHalf; rows <= kpList[i].y+swHalf; rows++ )
-    {
-      int swCols = 0;
-      for( int cols = kpList[i].x-swHalf; cols <= kpList[i].x+swHalf; cols++ )
-      {
-        int x = cols, y = rows;
-
-        // Extrapolating image borders        
-        if( x >= img.cols ) x = img.cols-(x - img.cols)-1;
-        if( y >= img.rows ) y = img.rows-(y - img.rows)-1;
-        if( x < 0 ) x = std::abs( x );
-        if( y < 0 ) y = std::abs( y );
-
-        //std::cout << "----> X: " << x << ", Y: " << y << std::endl;
-        //std::cout << "----> swRows: " << swRows << ", swCols: " << swCols << std::endl;
-        float val = img.at<float>(y, x);
-        if( std::isnan(val))
-          std::cout << "x: " << x << ", cols: " << cols << ", y: " << y << ", rows: " << rows << std::endl;
-
-        siftWindow.at<float>(swRows, swCols) = val;
-        swCols = swCols + 1;
-      }
-      swRows = swRows + 1;
-    }
-
-    //printMat( siftWindow, "---------- siftWindow ----------" );
-    //printMat( siftWindow, "---------- antes ----------" );
-    //siftWindow = siftWindow.mul(kernel);
-    //printMat( siftWindow, "---------- depois ----------" );
-
-    // Calculating magnitude and angle of pixels
-    std::cout << "getPatchGrads" << std::endl;
-    getPatchGrads( siftWindow, dx, dy );
-    std::cout << "getPatchGrads ok" << std::endl;
-
-    mag = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_32FC1 ); // magnitude
-    the = cv::Mat::zeros( cv::Size(SIFT_DESC_WINDOW+1, SIFT_DESC_WINDOW+1), CV_32FC1 ); // theta
-    
-    std::cout << "cartToPolarGradientMat" << std::endl;
-    cartToPolarGradientMat( dx, dy, mag, the );
-
-    //printMat( mag, "---------- mag Original ----------" );
-    //mag = mag.mul( kernel );
-    //printMat( mag, "---------- mag Gaussian ----------" );
-
-    //printMat( dx, "---------- dx ----------" );
-    //printMat( dy, "---------- dy ----------" );
-    //printMat( mag, "---------- mag Normalized ----------" );
-    //printMat( the, "---------- the ----------" );
-
-    // mags that are closer to keypoint should have stronger values
-    //siftWindow = siftWindow * kernel;
-    mag = mag * 255;// * kernel;
-    mag = mag.mul( kernel );// kernel.mul(mag);// * kernel;
-    
-    // dividir janela em 16 subjanelas 4x4.
-    for( int swRows = 0; swRows < SIFT_DESC_SW_QTD; swRows++ )
-    {
-      for( int swCols = 0; swCols < SIFT_DESC_SW_QTD; swCols++ )
-      {
-        int rIni, rFim, cIni, cFim;
-        int refIniR, refFimR, refIniC, refFimC;
-        cv::Mat hist, subMag, subThe;
-
-        subMag = cv::Mat::zeros( cv::Size(SIFT_DESC_SW_SIZE, SIFT_DESC_SW_SIZE),
-                                 CV_32FC1 );
-        subThe = cv::Mat::zeros( cv::Size(SIFT_DESC_SW_SIZE, SIFT_DESC_SW_SIZE),
-                                 CV_32FC1 );
-
-        rIni = SIFT_DESC_SW_SIZE*swRows;
-        cIni = SIFT_DESC_SW_SIZE*swCols;
-        rFim = rIni+SIFT_DESC_SW_SIZE;
-        cFim = cIni+SIFT_DESC_SW_SIZE;
-
-        subMag = mag( cv::Range(rIni, rFim), cv::Range(cIni, cFim) );
-        subThe = the( cv::Range(rIni, rFim), cv::Range(cIni, cFim) );
-
-        // adapting references to img coordinates
-        if( rIni < SIFT_DESC_WINDOW/2 ) rIni = kpList[i].y-rIni;
-        if( cIni < SIFT_DESC_WINDOW/2 ) cIni = kpList[i].x-cIni;
-        if( rIni == SIFT_DESC_WINDOW/2 ) rIni = (int) kpList[i].y;
-        if( cIni == SIFT_DESC_WINDOW/2 ) cIni = (int) kpList[i].x;
-        if( rFim == SIFT_DESC_WINDOW/2 ) rFim = (int) kpList[i].y;
-        if( cFim == SIFT_DESC_WINDOW/2 ) cFim = (int) kpList[i].x;
-        if( rFim > SIFT_DESC_WINDOW/2 ) rFim = kpList[i].y+rFim;
-        if( cFim > SIFT_DESC_WINDOW/2 ) cFim = kpList[i].x+cFim;
-        
-        //getHistogramForSubregion_old( subMag, subThe, SIFT_DESC_BINS_PER_SW,
-        //                          kpList[i].direction, SIFT_DESC_BINS_PER_SW/360, 
-        //                          SIFT_DESC_SW_QTD, hist );
-        
-        getHistogramForSubregion( subMag, subThe, SIFT_DESC_BINS_PER_SW, kpList[i],
-                                  cIni, rIni, cFim, rFim, 360/SIFT_DESC_BINS_PER_SW,
-                                  SIFT_DESC_SW_QTD, hist );
-        
-        // adding each bin value to descriptor
-        for(int idx = 0; idx<SIFT_DESC_BINS_PER_SW; idx++)
-        {
-          tempDescriptor.push_back( hist.at<float>(idx) );
-          //int hst = (int) hist.at<float>(idx);
-          //kpList[i].descriptor.push_back( hst );
-        }
-      }
-    }
-
-    std::cout << std::endl << "Calculated float Descriptor " << i << std::endl;
-    for( int k=0; k<tempDescriptor.size(); k++ ) std::cout << tempDescriptor[k] << ", ";
-    std::cout << std::endl;
-
-    // Normalizing resulting descriptor
-    float sum_square = 0.0f;
-    for (int i = 0; i < tempDescriptor.size(); i++)
-      sum_square += tempDescriptor[i] * tempDescriptor[i];
-    
-    float thr = cv::sqrt( sum_square ) * SIFT_DESC_MAG_THR;
-    float tmp = 0.0;
-
-    // removing > 0.2 elements after normalized
-    sum_square = 0.0;
-    for (int i = 0; i < tempDescriptor.size(); i++) {
-      tmp = std::fmin(thr, tempDescriptor[i]);
-      tempDescriptor[i] = tmp;
-      sum_square += tmp * tmp;
-    }
-
-    // re-normalizing to get numbers big enough to be converted to int
-    float norm_factor = SIFT_DESC_INT_FTR / cv::sqrt( sum_square );
-    for (int i = 0; i < tempDescriptor.size(); i++)
-      tempDescriptor[i] = tempDescriptor[i] * norm_factor;
-
-    std::cout << std::endl << "Normalized float Descriptor " << i << std::endl;
-    for( int k=0; k<tempDescriptor.size(); k++ ) std::cout << tempDescriptor[k] << ", ";
-    std::cout << std::endl;
-
-    // converting descriptor to int numbers
-    for(int k=0; k < tempDescriptor.size(); k++)
-      kpList[i].descriptor.push_back( (int) tempDescriptor[k] );
-
-    std::cout << std::endl << "Calculated int Descriptor " << i << std::endl;
-    for( int k=0; k<kpList[i].descriptor.size(); k++ ) std::cout << kpList[i].descriptor[k] << ", ";
-    std::cout << std::endl;
-  }
-}
-
-void calcDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float scale,
-                     float* descriptor )
+void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float scale,
+                             float* descriptor )
 {
   int qtdSW = SIFT_DESC_SW_QTD, binsPerSW = SIFT_DESC_BINS_PER_SW;
 
@@ -702,7 +391,7 @@ void calcDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float scale,
 
   // Auxiliar arrays and histogram array  
   float arr_dx[len], arr_dy[len], arr_angles[len], exponencials[len], rowBins[len];
-  float colBins[len], hist[histlen];//, *Mag = arr_dy;
+  float colBins[len], hist[histlen];
 
   // Setting all histogram to 0.0
   for( i = 0; i < qtdSW+2; i++ )
@@ -745,75 +434,68 @@ void calcDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float scale,
 
   //std::cout << " ########## MEU ########## " << std::endl;
   cartToPolarGradientMat(arr_dy, arr_dx, arr_angles, exponencials, len);
-  //for(int z=0; z<len; z++) std::cout << arr_angles[z] << " ";
-  //std::cout << std::endl;
-  //for(int z=0; z<len; z++) std::cout << Mag[z] << " ";
-  //std::cout << std::endl;
 
-  //std::cout << " ########## OPENCV ########## " << std::endl;  
-  //cv::hal::fastAtan2(arr_dy, arr_dx, arr_angles, len, true);
-  //cv::hal::magnitude(arr_dx, arr_dy, Mag, len);
-  //cv::hal::exp(exponencials, exponencials, len);
-  //for(int z=0; z<len; z++) std::cout << arr_angles[z] << " ";
-  //std::cout << std::endl;
-  //for(int z=0; z<len; z++) std::cout << Mag[z] << " ";
-  //std::cout << std::endl;
-
+  // each loop calculates an 8-bin histogram
   for( k = 0; k < len; k++ )
   {
     float rbin = rowBins[k], cbin = colBins[k];
-    float obin = (arr_angles[k] - angle) * bins_per_rad;
+    float abin = (arr_angles[k] - angle) * bins_per_rad;
     float mag = arr_dy[k]*exponencials[k];
 
     // integer part
     int intr = (int) rbin;
     int intc = (int) cbin;
-    int into = (int) obin;
+    int inta = (int) abin;
 
+    // real part
     rbin -= intr;
     cbin -= intc;
-    obin -= into;
+    abin -= inta;
 
-    if( into < 0 ) into += binsPerSW;
-    if( into >= binsPerSW ) into -= binsPerSW;
+    // [0, 359] range
+    if( inta < 0 ) inta += binsPerSW;
+    if( inta >= binsPerSW ) inta -= binsPerSW;
 
-    // interpolating values
+    // row interpolation
     float row1 = mag * rbin;
     float row0 = mag - row1;
 
+    // column interpolation
     float row1_col1 = row1 * cbin;
     float row1_col0 = row1 - row1_col1;
     float row0_col1 = row0 * cbin;
     float row0_col0 = row0 - row0_col1;
     
-    float row1_col1_ori1 = row1_col1 * obin;
-    float rol1_col1_ori0 = row1_col1 - row1_col1_ori1;
-    float row1_col0_ori1 = row1_col0 * obin;
-    float row1_col0_ori0 = row1_col0 - row1_col0_ori1;
-    float row0_col1_ori1 = row0_col1 * obin;
-    float row0_col1_ori0 = row0_col1 - row0_col1_ori1;
-    float row0_col0_ori1 = row0_col0 * obin;
-    float row0_col0_ori0 = row0_col0 - row0_col0_ori1;
+    // angle interpolation
+    float row1_col1_ang1 = row1_col1 * abin;
+    float rol1_col1_ang0 = row1_col1 - row1_col1_ang1;
+    float row1_col0_ang1 = row1_col0 * abin;
+    float row1_col0_ang0 = row1_col0 - row1_col0_ang1;
+    float row0_col1_ang1 = row0_col1 * abin;
+    float row0_col1_ang0 = row0_col1 - row0_col1_ang1;
+    float row0_col0_ang1 = row0_col0 * abin;
+    float row0_col0_ang0 = row0_col0 - row0_col0_ang1;
 
     // Calculate index ((row+1) * (4+2) + col+1) * (8+2) + ori
     // 4 + 2 = subWindow + 2
     // 8 + 2 = window + 2
-    int idx = ((intr+1)*(qtdSW+2) + intc+1)*(binsPerSW+2) + into;
+    int idx = ((intr+1)*(qtdSW+2) + intc+1)*(binsPerSW+2) + inta;
 
     // Incrementing points on histogram
-    hist[idx] += row0_col0_ori0;
-    hist[idx+1] += row0_col0_ori1;
-    hist[idx+(binsPerSW+2)] += row0_col1_ori0;
-    hist[idx+(binsPerSW+3)] += row0_col1_ori1;
-    hist[idx+(qtdSW+2)*(binsPerSW+2)] += row1_col0_ori0;
-    hist[idx+(qtdSW+2)*(binsPerSW+2)+1] += row1_col0_ori1;
-    hist[idx+(qtdSW+3)*(binsPerSW+2)] += rol1_col1_ori0;
-    hist[idx+(qtdSW+3)*(binsPerSW+2)+1] += row1_col1_ori1;
+    hist[idx] += row0_col0_ang0;
+    hist[idx+1] += row0_col0_ang1;
+    hist[idx+(binsPerSW+2)] += row0_col1_ang0;
+    hist[idx+(binsPerSW+3)] += row0_col1_ang1;
+    hist[idx+(qtdSW+2)*(binsPerSW+2)] += row1_col0_ang0;
+    hist[idx+(qtdSW+2)*(binsPerSW+2)+1] += row1_col0_ang1;
+    hist[idx+(qtdSW+3)*(binsPerSW+2)] += rol1_col1_ang0;
+    hist[idx+(qtdSW+3)*(binsPerSW+2)+1] += row1_col1_ang1;
   }
 
-  // applying weights to histogram
-  for( i = 0; i < qtdSW; i++ )
-    for( j = 0; j < qtdSW; j++ )
+  // Putting histogram in 128-value shape
+  for( int i = 0; i < qtdSW; i++ )
+  {
+    for( int j = 0; j < qtdSW; j++ )
     {
       int idx = ((i+1)*(qtdSW+2) + (j+1))*(binsPerSW+2);
       hist[idx] += hist[idx+binsPerSW];
@@ -821,25 +503,9 @@ void calcDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float scale,
       for( k = 0; k < binsPerSW; k++ )
         descriptor[(i*qtdSW + j)*binsPerSW + k] = hist[idx+k];
     }
-  
-  // Preparing to normalize histogram
-  float nrm2 = 0;
-  len = qtdSW*qtdSW*binsPerSW;
-  for( k = 0; k < len; k++ )
-    nrm2 += descriptor[k]*descriptor[k];
-
-  float thr = std::sqrt(nrm2)*SIFT_DESC_MAG_THR;
-  for( i = 0, nrm2 = 0; i < k; i++ )
-  {
-    float val = std::min(descriptor[i], thr);
-    descriptor[i] = val;
-    nrm2 += val*val;
   }
-  nrm2 = SIFT_DESC_INT_FTR/std::max(std::sqrt(nrm2), FLT_EPSILON);
 
-  // Copying normalized data to descriptor
-  for( k = 0; k < len; k++ )
-    descriptor[k] = uchar( descriptor[k]*nrm2 );
+  normalizeHistToDescriptor( hist, descriptor, qtdSW, binsPerSW );
 }
 
 void unpackOpenCVOctave( cv::KeyPoint &kp, int &octave, int &layer, float &scale)
@@ -868,7 +534,7 @@ void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
     else
       angle = angle = 360.f - kpl[i].direction;
 
-    calcDescriptor( img, kpl[i], angle, size*0.5f, descriptor);
+    calcKeypointDescriptor( img, kpl[i], angle, size*0.5f, descriptor);
 
     std::cout << "Keypoint: " << i << std::endl;
     for( int k = 0; k < SIFT_DESC_SIZE; k++ )
@@ -879,7 +545,6 @@ void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
     std::cout << std::endl;
   }
 }
-//*/
 
 /**
  * SIFT MAIN METHOD
