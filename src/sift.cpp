@@ -93,20 +93,19 @@ void cartToPolarGradient( float dx, float dy, float mt[2] )
     std::cout << "###################################---> NAN!! - dx: " << dx << ", dy: " << dy << std::endl;
 }
 
-void cartToPolarGradientMat( float dy[], float dx[], float thes[], float exps[], int t )
-{
-
-  for( int i = 0; i < t; i++ )
+void cartToPolarGradientMat( float dy[], float dx[], float thes[], float exps[], int size )
+{ 
+  for( int i = 0; i < size; i++ )
   {
     float x = dx[i], y = dy[i];
 
     float exp = std::exp( exps[i] );
     float the = cv::fastAtan2(y, x);
 
-    float mag = (x*x) + (y*y);
-    mag = cv::sqrt( mag );
+    float m = (x*x) + (y*y);
+    m = cv::sqrt( m );
     
-    dy[i] = mag;
+    dy[i] = m;
     thes[i] = the;
     exps[i] = exp;
   }
@@ -369,62 +368,65 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
                              float* descriptor )
 {
   int qtdSW = SIFT_DESC_SW_QTD, binsPerSW = SIFT_DESC_BINS_PER_SW;
+  
+  // get sin and cos to rotate angle
+  float angleCos = cosf(angle*(float)(M_PI/180.0f));
+  float angleSin = sinf(angle*(float)(M_PI/180.0f));
+  float bins_per_rad = binsPerSW / 360.0f;
+  float exp_scale = -1.0f/( qtdSW*qtdSW*0.5f ); // -1/8
 
-  // Get sin and cos to rotate angle
-  float angleCos = cosf(angle*(float)(M_PI/180));
-  float angleSin = sinf(angle*(float)(M_PI/180));
-  float bins_per_rad = binsPerSW / 360.f;
-  float exp_scale = -1.f/( qtdSW*qtdSW*0.5f ); // -1/8
-
-  // Radius size according to keypoint's scale
+  // radius size according to keypoint's scale
   float hist_width = SIFT_DESC_SCL_FTR * scale;
   int radius = cvRound(hist_width * sqrtf(2) * (qtdSW + 1) * 0.5f);
 
-  // Interpolating sin and cos to hist width
+  // value to interpolate sin and cos with complete histogram width length
   angleCos /= hist_width;
   angleSin /= hist_width;
 
-  // Calculating histogram and auxiliar arrays sizes
+  // calculating histogram segment and auxiliar arrays length
   int i, j, k;
-  int len = (radius*2+1)*(radius*2+1); // Size based on gaussian kernel to weight values
-  int histlen = (qtdSW+2)*(qtdSW+2)*(binsPerSW+2); // Real size is 288 but usable is 128
+  int len = (radius*2+1)*(radius*2+1); // size based on gaussian kernel to weight values
+  int histlen = (qtdSW+2)*(qtdSW+2)*(binsPerSW+2); // real size is 288 but usable is 128
 
-  // Auxiliar arrays and histogram array  
+  // auxiliar arrays and histogram arrays
   float arr_dx[len], arr_dy[len], arr_angles[len], exponencials[len], rowBins[len];
   float colBins[len], hist[histlen];
+  float *mag = arr_dy;
 
-  // Setting all histogram to 0.0
+  // setting histogram to 0.0
   for( i = 0; i < qtdSW+2; i++ )
     for( j = 0; j < qtdSW+2; j++ )
       for( k = 0; k < binsPerSW+2; k++ )
-        hist[(i*(qtdSW+2) + j)*(binsPerSW+2) + k] = 0.f;
-  
-  // Populating arrays with their values
+        hist[(i*(qtdSW+2) + j)*(binsPerSW+2) + k] = 0.0f;
+
+  // populating arrays with their respective values
   for( i = -radius, k = 0; i <= radius; i++ )
     for( j = -radius; j <= radius; j++ )
     {
-      // Rotate sin and cos relatively to dominant keypoint's angle.
-      // If rbin or cbin are half, we need to make it fall into integer, decreasing 0.5. 
+      // rotate sin and cos relatively to dominant keypoint's angle.
+      // if rbin or cbin are half, we need to make it fall into integer, decreasing 0.5. 
       float colRot = j * angleCos - i * angleSin;
       float rowRot = j * angleSin + i * angleCos;
       float rowBin = rowRot + qtdSW/2.0f - 0.5f;
       float colBin = colRot + qtdSW/2.0f - 0.5f;
-      int r = kp.y + i, c = kp.x + j;
+      
+      int r = cvRound(kp.y) + i;
+      int c = cvRound(kp.x) + j;
 
-      // Execute only if values are inside of image sizes
+      // execute only if values are inside of image sizes
       if( rowBin > -1 && rowBin < qtdSW && colBin > -1 && colBin < qtdSW &&
           r > 0 && r < img.rows - 1 && c > 0 && c < img.cols - 1 )
       {
         float dx = (float)(img.at<float>(r, c+1) - img.at<float>(r, c-1));
         float dy = (float)(img.at<float>(r-1, c) - img.at<float>(r+1, c));
-
-        // exp = ( ((j*cos)-(x*sin))² + ((j*cos)+(x*sin))² ) * (-1/8)
+        
+        // exponencial = ( ((j*cos)-(x*sin))² + ((j*cos)+(x*sin))² ) * (-1/8)
         exponencials[k] = (colRot * colRot + rowRot * rowRot) * exp_scale;
 
-        // Populate arrays
-        arr_dx[k] = dx; 
-        arr_dy[k] = dy; 
-        rowBins[k] = rowBin; 
+        // populating auxiliar arrays
+        arr_dx[k] = dx;
+        arr_dy[k] = dy;
+        rowBins[k] = rowBin;
         colBins[k] = colBin;
         k++;
       }
@@ -432,40 +434,41 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
 
   len = k;
 
-  //std::cout << " ########## MEU ########## " << std::endl;
+  // populate auxiliar arr_angles, exponencials and recalculate arr_dy
   cartToPolarGradientMat(arr_dy, arr_dx, arr_angles, exponencials, len);
-
+  
   // each loop calculates an 8-bin histogram
   for( k = 0; k < len; k++ )
   {
-    float rbin = rowBins[k], cbin = colBins[k];
+    float rbin = rowBins[k];
+    float cbin = colBins[k];
     float abin = (arr_angles[k] - angle) * bins_per_rad;
-    float mag = arr_dy[k]*exponencials[k];
+    float magv = mag[k] * exponencials[k];
 
     // integer part
-    int intr = (int) rbin;
-    int intc = (int) cbin;
-    int inta = (int) abin;
+    int introw = cvFloor( rbin );
+    int intcol = cvFloor( cbin );
+    int intang = cvFloor( abin );
 
     // real part
-    rbin -= intr;
-    cbin -= intc;
-    abin -= inta;
+    rbin -= introw;
+    cbin -= intcol;
+    abin -= intang;
 
     // [0, 359] range
-    if( inta < 0 ) inta += binsPerSW;
-    if( inta >= binsPerSW ) inta -= binsPerSW;
+    if( intang < 0 ) intang += binsPerSW;
+    if( intang >= binsPerSW ) intang -= binsPerSW;
 
     // row interpolation
-    float row1 = mag * rbin;
-    float row0 = mag - row1;
+    float row1 = magv * rbin;
+    float row0 = magv - row1;
 
     // column interpolation
     float row1_col1 = row1 * cbin;
     float row1_col0 = row1 - row1_col1;
     float row0_col1 = row0 * cbin;
     float row0_col0 = row0 - row0_col1;
-    
+
     // angle interpolation
     float row1_col1_ang1 = row1_col1 * abin;
     float rol1_col1_ang0 = row1_col1 - row1_col1_ang1;
@@ -476,12 +479,12 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
     float row0_col0_ang1 = row0_col0 * abin;
     float row0_col0_ang0 = row0_col0 - row0_col0_ang1;
 
-    // Calculate index ((row+1) * (4+2) + col+1) * (8+2) + ori
+    // calculate index ((row+1) * (4+2) + col+1) * (8+2) + angle
     // 4 + 2 = subWindow + 2
     // 8 + 2 = window + 2
-    int idx = ((intr+1)*(qtdSW+2) + intc+1)*(binsPerSW+2) + inta;
+    int idx = ((introw+1)*(qtdSW+2) + intcol+1)*(binsPerSW+2) + intang;
 
-    // Incrementing points on histogram
+    // incrementing points on histogram
     hist[idx] += row0_col0_ang0;
     hist[idx+1] += row0_col0_ang1;
     hist[idx+(binsPerSW+2)] += row0_col1_ang0;
@@ -492,19 +495,17 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
     hist[idx+(qtdSW+3)*(binsPerSW+2)+1] += row1_col1_ang1;
   }
 
-  // Putting histogram in 128-value shape
-  for( int i = 0; i < qtdSW; i++ )
-  {
-    for( int j = 0; j < qtdSW; j++ )
+  // finalize histogram, since the orientation histograms are circular
+  for( i = 0; i < qtdSW; i++ )
+    for( j = 0; j < qtdSW; j++ )
     {
       int idx = ((i+1)*(qtdSW+2) + (j+1))*(binsPerSW+2);
       hist[idx] += hist[idx+binsPerSW];
       hist[idx+1] += hist[idx+binsPerSW+1];
       for( k = 0; k < binsPerSW; k++ )
         descriptor[(i*qtdSW + j)*binsPerSW + k] = hist[idx+k];
-    }
-  }
-
+      }
+  
   normalizeHistToDescriptor( hist, descriptor, qtdSW, binsPerSW );
 }
 
@@ -515,6 +516,7 @@ void unpackOpenCVOctave( cv::KeyPoint &kp, int &octave, int &layer, float &scale
   octave = octave < 128 ? octave : (-128 | octave);
   scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
 }
+
 /**
  * 
 **/
