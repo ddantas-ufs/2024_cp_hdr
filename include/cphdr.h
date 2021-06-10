@@ -7,7 +7,7 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#include "detectors/input.h"
+#include "detectors/aux_func.h"
 #include "detectors/keypoint.h"
 #include "detectors/hdr.h"
 #include "detectors/harris.h"

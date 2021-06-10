@@ -1,9 +1,10 @@
 #include "../include/detectors/harris.h"
 #include "../include/detectors/keypoint.h"
 #include "../include/detectors/hdr.h"
+#include "../include/detectors/aux_func.h"
 
 void harrisCalc(cv::Mat img, cv::Mat &resp_map, int msobel, int mgauss, float sigma_x,
-                float sigma_y, int k)
+                float sigma_y, float k)
 {
   cv::Mat Ix, Iy, Ixx, Iyy, Ixy, resp_aux;
 
@@ -103,15 +104,8 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
 {
   cv::Mat resp_map, img_norm, img_blur, img_aux;
 
-  if (img.depth() == 0)
-  {
-    img.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / 255.0;
-  }
-  else
-  {
-    img = img_norm / 256.0;
-  }
+  imgNormalize(img, img_norm);
+
   cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
                    cv::BORDER_REPLICATE);
 

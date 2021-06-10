@@ -25,6 +25,8 @@
 #define MIN_QUALITY 0.01 // quality percentual for the kp response
 #define MAX_KP 500 // if zero, it is not used
 #define CV_SIZE 5 // mask size to compute coefficient of variation
+#define LDR_MAX_RANGE 255.0
+#define HDR_MAX_RANGE 256.0
 
 // SIFT CONSTANTS
 #define SIFT_DESC_ORIENT_SIGMA 1.5f

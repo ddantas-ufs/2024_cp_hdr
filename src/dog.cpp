@@ -1,5 +1,6 @@
 #include "../include/detectors/dog.h"
 #include "../include/detectors/hdr.h"
+#include "../include/detectors/aux_func.h"
 
 /**
  * Computes the partial derivatives in \a y, \a x, and \a s (scale of a pixel in the DoG scale space pyramid)
@@ -363,9 +364,9 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
 void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
              cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1])
 {
-  for(int o = 0; o < NUM_OCTAVES; o++)
+  for (int o = 0; o < NUM_OCTAVES; o++)
   {
-    for(int s = 0; s < NUM_SCALES - 1; s++)
+    for (int s = 0; s < NUM_SCALES - 1; s++)
     {
       dog[o][s] = cv::Mat::zeros(scales[o][s].size(), CV_32FC1);
       cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);
@@ -391,15 +392,16 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
   cv::Mat img_norm;
 
-  if (img.depth() == 0)
-  {
-    img.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / 255.0;
-  }
-  else
-  {
-    img_norm = img_norm / 256.0;
-  }
+//  if (img.depth() == 0)
+//  {
+//    img.convertTo(img_norm, CV_32FC1);
+//    img_norm = img_norm / 255.0;
+//  }
+//  else
+//  {
+//    img_norm = img_norm / 256.0;
+//  }
+  imgNormalize(img, img_norm);
 
   dogInitScales(img_norm, scales, mgauss, is_hdr);
   dogCalc(scales, dog);

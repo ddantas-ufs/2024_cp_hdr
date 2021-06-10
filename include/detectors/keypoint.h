@@ -5,15 +5,15 @@
 
 std::string keypointToString( KeyPoints &kp );
 
+void printKeypoint( KeyPoints &kp );
+
 bool outOfBounds(int i, int j, cv::Size size_img);
 
-void plotKeyPoints(cv::Mat &img, std::vector<KeyPoints> &kp, std::string out_path);
+void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp = MAX_KP);
 
 void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp = MAX_KP,
                    bool transformCoordinate = true, bool descriptorToBundler = false);
 
 std::vector<KeyPoints> loadKeypoints(std::string arqPath);
-
-void printKeypoint( KeyPoints &kp );
 
 #endif
