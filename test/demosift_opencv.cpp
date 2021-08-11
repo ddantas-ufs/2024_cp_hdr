@@ -1,20 +1,12 @@
 #include <opencv2/features2d.hpp>
 #include "../include/cphdr.h"
 
-void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
-{
-    octave = kpt.octave & 255;
-    layer = (kpt.octave >> 8) & 255;
-    octave = octave < 128 ? octave : (-128 | octave);
-    scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
-}
-
 int main(int argv, char** args)
 {
   std::cout << "OpenCV version: " << CV_MAJOR_VERSION << "." << CV_MINOR_VERSION << std::endl;
 
   cv::Mat img_in, img_gray, descriptor;
-  std::vector<KeyPoints> kp;
+  std::vector<KeyPoints> kpListOcv, kpList2;
   std::string img_name, out_path;
 
   std::cout << "argv: " << argv << std::endl;
@@ -24,11 +16,8 @@ int main(int argv, char** args)
   std::vector<cv::KeyPoint> ocv_kp; // OpenCV KeyPoints
   
   readImg(args[1], img_in, img_gray, img_name);
-  out_path = std::string(args[2]) + img_name + ".dog_opencv";
+  out_path = std::string(args[2]) + img_name;// + ".dog_opencv";
   
-  //dogKp(img_gray, kp);
-  //std::cout << "Quantidade de KeyPoints lidos:" << kp.size() << std::endl;
-
   // nFeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma
   cv::Ptr<cv::SIFT> siftObj = cv::SIFT::create(0, 3, 0.03, 10, 1.6 );
   siftObj->detect( img_gray, ocv_kp );
@@ -39,6 +28,34 @@ int main(int argv, char** args)
   std::cout << "descriptor size      : " << descriptor.size() << std::endl;
   std::cout << "########################################" << std::endl;
 
+  importOpenCVKeyPoints(ocv_kp, descriptor, kpListOcv, true);
+
+  // Saving results with OpenCV Descriptor
+  cv::Mat img_out;
+  cv::drawKeypoints(img_in, ocv_kp, img_out);
+  cv::imwrite(out_path+".dog_opencv.png", img_out);
+  saveKeypoints(kpListOcv, out_path+".dog_opencv", false);
+
+  //for(int k=0; k < kpList.size(); k++ ) kpList[k].descriptor.clear();
+  readImg(args[1], img_in, img_gray, img_name);
+  importOpenCVKeyPoints(ocv_kp, descriptor, kpList2, false);
+
+  // Calculating description and saving it with our algorithm
+  siftDescriptor(kpList2, img_in, img_gray);
+  saveKeypoints(kpList2, out_path, false);
+
+  //cv::
+  /*
+  //siftDescriptor(kp, img_in, img_gray);
+  //saveKeypoints(kp, out_path);
+  plotKeyPoints(img_in, kp, out_path);
+  
+  img_gray.release();
+  img_in.release();
+  */
+  return 0;
+
+  /*
   // converting cv::KeyPoint to KeyPoints
   for(int i=0; i<ocv_kp.size(); i++)
   {
@@ -72,12 +89,13 @@ int main(int argv, char** args)
     kp.push_back(nkp);
     //std::cout << std::endl << "########################################" << std::endl;
   }
+  */
 
   // Add results to image and save.
-  cv::Mat img_out;
-  cv::drawKeypoints(img_in, ocv_kp, img_out);
-  cv::imwrite(out_path+".png", img_out);
-  saveKeypoints(kp, out_path, false);
+  //cv::Mat img_out;
+  //cv::drawKeypoints(img_in, ocv_kp, img_out);
+  //cv::imwrite(out_path+".png", img_out);
+  //saveKeypoints(kpList, out_path, false);
 
   //cv::
   /*
@@ -88,5 +106,5 @@ int main(int argv, char** args)
   img_gray.release();
   img_in.release();
   */
-  return 0;
+  //return 0;
 }

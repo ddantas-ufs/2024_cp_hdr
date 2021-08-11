@@ -19,4 +19,9 @@ void gaussKernel(cv::Mat &kernel, int size = 5, float sigma = 1.0);
 
 void imgNormalize(cv::Mat img, cv::Mat &img_norm);
 
+void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale);
+
+void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
+                            std::vector<KeyPoints> &kpList, bool comDescritor = false );
+
 #endif

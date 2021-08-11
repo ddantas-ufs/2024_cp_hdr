@@ -110,3 +110,52 @@ void imgNormalize(cv::Mat img, cv::Mat &img_norm)
     img_norm = img / HDR_MAX_RANGE;
   }
 }
+
+void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
+{
+    octave = kpt.octave & 255;
+    layer = (kpt.octave >> 8) & 255;
+    octave = octave < 128 ? octave : (-128 | octave);
+    scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+}
+
+void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
+                            std::vector<KeyPoints> &kpList, bool comDescritor )
+{
+  std::cout << "Importing " << ocv_kp.size() << " Keypoints ";
+  if( comDescritor ) std::cout << "with description" << std::endl;
+  else std::cout << "without description" << std::endl;
+
+  for(int i=0; i<ocv_kp.size(); i++)
+  {
+    KeyPoints nkp;
+    int uOctave, uLayer;
+    float uScale;
+
+    unpackOpenCVOctave( ocv_kp[i], uOctave, uLayer, uScale );
+
+    nkp.x = (float) ocv_kp[i].pt.x;
+    nkp.y = (float) ocv_kp[i].pt.y;
+    nkp.resp = (float) ocv_kp[i].response;
+    nkp.direction = (float) ocv_kp[i].angle;
+    nkp.octave = (int) uOctave;
+    nkp.scale = (int) uLayer;
+
+    //std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
+    //std::cout << "Resp: " << uLayer << std::endl;
+    //std::cout << "Octv: " << nkp.octave << std::endl;
+    //std::cout << "Angl: " << nkp.direction << std::endl;
+    //std::cout << "Scal: " << nkp.scale << std::endl;
+
+    if( comDescritor )
+    {
+      for( int j=0; j < descriptor.cols; j++ )
+      {
+        float d = descriptor.at<float>(j, i);
+        nkp.descriptor.push_back( (int) d );
+      }
+    }
+    kpList.push_back(nkp);
+  }
+
+}

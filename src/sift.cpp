@@ -117,7 +117,7 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   int ym = y-1, yp = y+1;
   float dy, dx;
 
-  // Extrapolating image borders        
+  // Extrapolating image borders
   if( xp > img.cols ) xp = img.cols-(xp - img.cols)-1;
   if( yp > img.rows ) yp = img.rows-(yp - img.rows)-1;
   if( xm < 0 ) xm = std::abs( xm );
@@ -125,6 +125,19 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
 
   dx = (img.at<float>( y, xp )) - (img.at<float>( y, xm ));
   dy = (img.at<float>( yp, x )) - (img.at<float>( ym, x ));
+
+  if( std::isnan( dx ) ) dx = 0.0f;
+  if( std::isnan( dy ) ) dy = 0.0f;
+
+  /*
+  std::cout << "----------------------------" << std::endl;
+  std::cout << "x:  " << x  << ", y:  " << y  << std::endl;
+  std::cout << "xp: " << xp << ", yp: " << yp << std::endl;
+  std::cout << "xm: " << xm << ", ym: " << ym << std::endl;
+  std::cout << "dx: " << dx << ", dy: " << dy << std::endl;
+  
+  std::cout << "img dy1: " << img.at<float>( yp, x ) << ", img dy2: " << img.at<float>( ym, x ) << std::endl;
+  */
 
   cartToPolarGradient( dx, dy, mt );
 }
@@ -504,22 +517,11 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
       hist[idx+1] += hist[idx+binsPerSW+1];
       for( k = 0; k < binsPerSW; k++ )
         descriptor[(i*qtdSW + j)*binsPerSW + k] = hist[idx+k];
-      }
+    }
   
   normalizeHistToDescriptor( hist, descriptor, qtdSW, binsPerSW );
 }
 
-void unpackOpenCVOctave( cv::KeyPoint &kp, int &octave, int &layer, float &scale)
-{
-  octave = kp.octave & 255;
-  layer = (kp.octave >> 8) & 255;
-  octave = octave < 128 ? octave : (-128 | octave);
-  scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
-}
-
-/**
- * 
-**/
 void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 {
   // FOR EACH KP IN LIST...
@@ -538,13 +540,13 @@ void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 
     calcKeypointDescriptor( img, kpl[i], angle, size*0.5f, descriptor);
 
-    std::cout << "Keypoint: " << i << std::endl;
+    //std::cout << "Keypoint: " << i << std::endl;
     for( int k = 0; k < SIFT_DESC_SIZE; k++ )
     {
       kpl[i].descriptor[k] = descriptor[k];
       //std::cout << descriptor[k] << " ";
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
   }
 }
 
@@ -568,28 +570,13 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
     img_in = img_norm / 256.0f;
   }
 
-  //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
-
+  // calculating keypoints orientation
   std::cout << "Calculando orientações" << std::endl;
   siftKPOrientation( kpl, img_gray, mGauss, sigma );
-  
-  //std::cout << "KeyPoints com calculo de orientação:" << kpl.size() << std::endl;
-  //for( int i = 0; i < kpl.size(); i++ )
-  //{
-  //  std::cout << "kpl[" << i << "].direction: " << kpl[i].direction << std::endl;
-  //}
 
   //removing blur applied in siftKPOrientation
-  //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
-
+  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  
   //calculating keypoints description
-  std::cout << "Executando calculo da descrição" << std::endl;
-  //siftExecuteDescription( kpl, img_gray );
   calcDescriptors( kpl, img_gray );
-  std::cout << "Size da lista de Keypoints  :" << kpl.size() << std::endl;
-
-  //printing keypoints and descriptions
-  //for( int i = 0; i < kpl.size(); i++ )
-  //  printKeypoint( kpl[i] );
 }
