@@ -33,6 +33,8 @@ DEMO_SURF_HDR = demosurf_hdr
 DEMO_HDR_IMG = $(IMG_DIR)/lena.png
 DEMO_LDR_IMG = $(IMG_DIR)/lena.png
 
+DEMO_LDR_IMG_LOWE_KEYPOINTS = $(IMG_DIR)/lena_lowe.key
+
 SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
 
@@ -90,7 +92,7 @@ run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demosift_opencv: demosift_opencv
-	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/ $(DEMO_LDR_IMG_LOWE_KEYPOINTS)
 	
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

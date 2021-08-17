@@ -12,6 +12,13 @@ int main(int argv, char** args)
   std::cout << "argv: " << argv << std::endl;
   for( int i = 0; i < argv; i++ )
     std::cout << "i: " << i << " " << args[i] << std::endl;
+  
+  if(argv > 3 )
+  {
+    std::cout << " Reading Lowe's Keypoint File... " << std::endl;
+    std::vector<KeyPoints> loweKeypoints = loadLoweKeypoints(args[3]);
+    for(int i=0; i<loweKeypoints.size(); i++) printKeypoint(loweKeypoints[i]);
+  }
 
   std::vector<cv::KeyPoint> ocv_kp; // OpenCV KeyPoints
   
@@ -44,67 +51,5 @@ int main(int argv, char** args)
   siftDescriptor(kpList2, img_in, img_gray);
   saveKeypoints(kpList2, out_path, false);
 
-  //cv::
-  /*
-  //siftDescriptor(kp, img_in, img_gray);
-  //saveKeypoints(kp, out_path);
-  plotKeyPoints(img_in, kp, out_path);
-  
-  img_gray.release();
-  img_in.release();
-  */
   return 0;
-
-  /*
-  // converting cv::KeyPoint to KeyPoints
-  for(int i=0; i<ocv_kp.size(); i++)
-  {
-    //cv::KeyPoint ckp = ocv_kp[i];
-    KeyPoints nkp;
-    // cv::KeyPoint& kp, int& octave, int& layer, float& scale
-    int uOctave, uLayer;
-    float uScale; // 1/(2^octave)
-
-    unpackOpenCVOctave( ocv_kp[i], uOctave, uLayer, uScale );
-
-    nkp.x = (float) ocv_kp[i].pt.x;
-    nkp.y = (float) ocv_kp[i].pt.y;
-    nkp.resp = (float) ocv_kp[i].response;
-    nkp.octave = uOctave;
-    nkp.direction = (float) ocv_kp[i].angle;
-    nkp.scale = uLayer;
-
-    std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
-    std::cout << "Resp: " << uLayer << std::endl;
-    std::cout << "Octv: " << nkp.octave << std::endl;
-    std::cout << "Angl: " << nkp.direction << std::endl;
-    std::cout << "Scal: " << nkp.scale << std::endl;
-
-    for( int j=0; j < 128; j++ )
-    {
-      float d = descriptor.at<float>(j, i);
-      //std::cout << "i: " << i << " j: " << j << std::endl;
-      nkp.descriptor.push_back( (int) d );
-    }
-    kp.push_back(nkp);
-    //std::cout << std::endl << "########################################" << std::endl;
-  }
-  */
-
-  // Add results to image and save.
-  //cv::Mat img_out;
-  //cv::drawKeypoints(img_in, ocv_kp, img_out);
-  //cv::imwrite(out_path+".png", img_out);
-  //saveKeypoints(kpList, out_path, false);
-
-  //cv::
-  /*
-  //siftDescriptor(kp, img_in, img_gray);
-  //saveKeypoints(kp, out_path);
-  plotKeyPoints(img_in, kp, out_path);
-  
-  img_gray.release();
-  img_in.release();
-  */
-  //return 0;
 }

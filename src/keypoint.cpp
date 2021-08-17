@@ -175,6 +175,110 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
   return kp;
 }
 
+/**
+ * Loads keypoints saved using Lowe implementation,
+ * avaliable at https://www.cs.ubc.ca/~lowe/keypoints/
+ * 
+ * @param kp KeyPoints vector to store the loaded keypoints
+ * @param arqPath path to archive containing the saved keypoints
+ * 
+ * File format:
+ * qtdKeypoints 128
+ * X Y Scale Orientation (-pi, pi)
+ * 128-dimension descriptor
+**/
+std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
+{
+  std::cout << " 1 " << std::endl;
+  std::fstream arch; 
+  std::string line, strY, strX, strOctave, strScale, strOrientation;
+  std::vector<KeyPoints> kp;
+
+  arch.open( arqPath, std::ios::in ); 
+  std::cout << " 2 " << std::endl;
+
+  if( arch.is_open() )
+  {
+    std::cout << " 2 " << std::endl;
+    int qtdKeypoints;
+    std::string qtdKeypointsStr;
+    int sz = line.size();
+    char* buff;
+    char ln[sz+1];
+    getline( arch, line );
+
+    // READING QUANTITY OF KEYPOINTS TO BE LOADED
+    strcpy( ln, line.c_str() );
+    buff = strtok( ln, " " );
+    std::cout << " 4 " << std::endl;
+
+    std::string strBuff = buff;
+    strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
+    qtdKeypointsStr = strBuff;
+    qtdKeypoints = std::stoi(qtdKeypointsStr);
+    //delete buff;
+
+    for(int i=0; i < qtdKeypoints; i++)
+    {
+      std::cout << " 5 " << std::endl;
+      getline( arch, line );
+
+      // READING KEYPOINT POSITION, SCALE AND ORIENTATION
+      strcpy( ln, line.c_str() );
+      buff = strtok( ln, " " );
+      strBuff = buff;
+      std::cout << " 6 " << std::endl;
+
+      for( int keypoints = 0; keypoints < 4; keypoints++ )
+      {
+        std::cout << " 7 " << std::endl;
+        strBuff = buff;
+        strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
+        if( keypoints == 0 )
+        {
+          strY = strBuff;
+        }
+        if( keypoints == 1 )
+        {
+          strX = strBuff;
+        }
+        if( keypoints == 2 )
+        {
+          strScale = strBuff;
+        }
+        if( keypoints == 3 )
+        {
+          strOrientation = strBuff;
+        }
+        std::cout << strBuff << "\n";
+        buff = strtok( NULL, " ");
+        std::cout << " 8 " << std::endl;
+      }
+
+      // IGNORING 7 LINES CONTAINING DESCRIPTOR INFORMATION
+      for(int desc = 0; desc < 7; desc++) getline( arch, line );
+      std::cout << " 9 " << std::endl;
+
+      // SAVE KEYPOINT
+      KeyPoints key;
+      key.y = std::stof(strY);
+      key.x = std::stof(strX);
+      key.scale = std::stof(strScale);
+      key.direction = (std::stof(strOrientation) + M_PI) * (180.0 / M_PI); // converting to degrees
+      key.resp = 0.0;
+      key.octave = 0;
+
+      kp.push_back( key );
+      //delete buff;
+      std::cout << " 10 " << std::endl;
+    }
+    arch.close();
+    std::cout << " 11 " << std::endl;
+  }
+
+  return kp;
+}
+
 void printKeypoint( KeyPoints &kp )
 {
   std::cout << "X: " << kp.x << ", Y: " << kp.y << std::endl;
