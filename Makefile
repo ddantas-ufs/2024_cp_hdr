@@ -5,6 +5,7 @@ CPP_FLAGS = -fPIC -g
 LD_FLAGS = -shared
 
 BIN_DIR = bin
+OLD_DIR = old
 TEST_DIR = test
 SRC_DIR = src
 INC_DIR = include
@@ -23,6 +24,9 @@ GET_URL = wget -r -np -R "index.html*" -e robots=off
 PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
 RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Scenes.zip
 
+DEMO_IMG_LOWE = lena.pgm
+DEMO_IMG = lena.png
+
 DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_DOG_HDR = demodog_hdr
@@ -30,11 +34,11 @@ DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
-DEMO_HDR_IMG = $(IMG_DIR)/lena.png
-DEMO_LDR_IMG = $(IMG_DIR)/lena.png
+DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
+DEMO_LDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
+DEMO_LDR_IMG_LOWE = $(IMG_DIR)/$(DEMO_IMG_LOWE)
 
-DEMO_LDR_IMG_LOWE_KEYPOINTS = $(IMG_DIR)/lena_lowe.key
-
+LOWE_SIFT = $(OLD_DIR)/sift_lowe_implementation/sift
 SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
 
@@ -92,7 +96,8 @@ run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demosift_opencv: demosift_opencv
-	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/ $(DEMO_LDR_IMG_LOWE_KEYPOINTS)
+	./$(LOWE_SIFT) <./$(DEMO_LDR_IMG_LOWE) >./$(OUT_DIR)/$(DEMO_IMG_LOWE).key
+	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/ $(OUT_DIR)/$(DEMO_IMG_LOWE).key
 	
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

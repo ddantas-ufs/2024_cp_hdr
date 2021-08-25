@@ -17,7 +17,7 @@ int main(int argv, char** args)
   {
     std::cout << " Reading Lowe's Keypoint File... " << std::endl;
     std::vector<KeyPoints> loweKeypoints = loadLoweKeypoints(args[3]);
-    for(int i=0; i<loweKeypoints.size(); i++) printKeypoint(loweKeypoints[i]);
+    //for(int i=0; i<loweKeypoints.size(); i++) printKeypoint(loweKeypoints[i]);
   }
 
   std::vector<cv::KeyPoint> ocv_kp; // OpenCV KeyPoints
@@ -25,6 +25,7 @@ int main(int argv, char** args)
   readImg(args[1], img_in, img_gray, img_name);
   out_path = std::string(args[2]) + img_name;// + ".dog_opencv";
   
+  std::cout << " Computing with OpenCV Detector and Descriptor... " << std::endl;
   // nFeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma
   cv::Ptr<cv::SIFT> siftObj = cv::SIFT::create(0, 3, 0.03, 10, 1.6 );
   siftObj->detect( img_gray, ocv_kp );
@@ -37,6 +38,7 @@ int main(int argv, char** args)
 
   importOpenCVKeyPoints(ocv_kp, descriptor, kpListOcv, true);
 
+  std::cout << " Saving OpenCV Keypoints... " << std::endl;
   // Saving results with OpenCV Descriptor
   cv::Mat img_out;
   cv::drawKeypoints(img_in, ocv_kp, img_out);
@@ -47,9 +49,14 @@ int main(int argv, char** args)
   readImg(args[1], img_in, img_gray, img_name);
   importOpenCVKeyPoints(ocv_kp, descriptor, kpList2, false);
 
+  std::cout << " Computing with our descriptor and OpenCV detector... " << std::endl;
   // Calculating description and saving it with our algorithm
   siftDescriptor(kpList2, img_in, img_gray);
   saveKeypoints(kpList2, out_path, false);
+
+  // TRYING TO USE OPENCV DESCRIPTOR
+  siftObj->detectAndCompute(img_gray, NULL, ocv_kp, descriptor, true );
+  
 
   return 0;
 }

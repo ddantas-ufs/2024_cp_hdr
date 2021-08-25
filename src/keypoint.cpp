@@ -152,7 +152,7 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
         {
           strResp = strBuff;
         }
-        std::cout << strBuff << "\n";
+        //std::cout << strBuff << "\n";
         buff = strtok( NULL, "\t");
         i = i + 1;
       }
@@ -189,17 +189,14 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
 **/
 std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
 {
-  std::cout << " 1 " << std::endl;
   std::fstream arch; 
   std::string line, strY, strX, strOctave, strScale, strOrientation;
   std::vector<KeyPoints> kp;
 
   arch.open( arqPath, std::ios::in ); 
-  std::cout << " 2 " << std::endl;
 
   if( arch.is_open() )
   {
-    std::cout << " 2 " << std::endl;
     int qtdKeypoints;
     std::string qtdKeypointsStr;
     int sz = line.size();
@@ -210,7 +207,6 @@ std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
     // READING QUANTITY OF KEYPOINTS TO BE LOADED
     strcpy( ln, line.c_str() );
     buff = strtok( ln, " " );
-    std::cout << " 4 " << std::endl;
 
     std::string strBuff = buff;
     strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
@@ -220,18 +216,15 @@ std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
 
     for(int i=0; i < qtdKeypoints; i++)
     {
-      std::cout << " 5 " << std::endl;
       getline( arch, line );
 
       // READING KEYPOINT POSITION, SCALE AND ORIENTATION
       strcpy( ln, line.c_str() );
       buff = strtok( ln, " " );
       strBuff = buff;
-      std::cout << " 6 " << std::endl;
 
       for( int keypoints = 0; keypoints < 4; keypoints++ )
       {
-        std::cout << " 7 " << std::endl;
         strBuff = buff;
         strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
         if( keypoints == 0 )
@@ -250,14 +243,12 @@ std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
         {
           strOrientation = strBuff;
         }
-        std::cout << strBuff << "\n";
+        //std::cout << strBuff << "\n";
         buff = strtok( NULL, " ");
-        std::cout << " 8 " << std::endl;
       }
 
       // IGNORING 7 LINES CONTAINING DESCRIPTOR INFORMATION
       for(int desc = 0; desc < 7; desc++) getline( arch, line );
-      std::cout << " 9 " << std::endl;
 
       // SAVE KEYPOINT
       KeyPoints key;
@@ -270,10 +261,8 @@ std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
 
       kp.push_back( key );
       //delete buff;
-      std::cout << " 10 " << std::endl;
     }
     arch.close();
-    std::cout << " 11 " << std::endl;
   }
 
   return kp;

@@ -123,21 +123,22 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   if( xm < 0 ) xm = std::abs( xm );
   if( ym < 0 ) ym = std::abs( ym );
 
-  dx = (img.at<float>( y, xp )) - (img.at<float>( y, xm ));
-  dy = (img.at<float>( yp, x )) - (img.at<float>( ym, x ));
+  float dxa = 0.0f, dxb = 0.0f, dya = 0.0f, dyb = 0.0f;
+  dxa = img.at<float>( y, xp );
+  dxb = img.at<float>( y, xm );
+  dya = img.at<float>( yp, x );
+  dyb = img.at<float>( ym, x );
 
-  if( std::isnan( dx ) ) dx = 0.0f;
-  if( std::isnan( dy ) ) dy = 0.0f;
+  if( std::isnan( dxa ) ) dxa = 0.0f;
+  if( std::isnan( dxb ) ) dxb = 0.0f;
+  if( std::isnan( dya ) ) dya = 0.0f;
+  if( std::isnan( dyb ) ) dyb = 0.0f;
 
-  /*
-  std::cout << "----------------------------" << std::endl;
-  std::cout << "x:  " << x  << ", y:  " << y  << std::endl;
-  std::cout << "xp: " << xp << ", yp: " << yp << std::endl;
-  std::cout << "xm: " << xm << ", ym: " << ym << std::endl;
-  std::cout << "dx: " << dx << ", dy: " << dy << std::endl;
-  
-  std::cout << "img dy1: " << img.at<float>( yp, x ) << ", img dy2: " << img.at<float>( ym, x ) << std::endl;
-  */
+  //dx = dxa - dxb;
+  //dy = dya - dyb;
+
+  //if( std::isnan( dx ) ) dx = 0.0f;
+  //if( std::isnan( dy ) ) dy = 0.0f;
 
   cartToPolarGradient( dx, dy, mt );
 }
