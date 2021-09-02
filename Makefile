@@ -27,6 +27,9 @@ RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Sce
 DEMO_IMG_LOWE = lena.pgm
 DEMO_IMG = lena.png
 
+DEMO_IMG1_MATCH = 01.LDR.jpg
+DEMO_IMG2_MATCH = 02.LDR.jpg
+
 DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_DOG_HDR = demodog_hdr
@@ -38,9 +41,14 @@ DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
 DEMO_LDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
 DEMO_LDR_IMG_LOWE = $(IMG_DIR)/$(DEMO_IMG_LOWE)
 
+DEMO_LDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_IMG1_MATCH)
+DEMO_LDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_IMG2_MATCH)
+
 LOWE_SIFT = $(OLD_DIR)/sift_lowe_implementation/sift
 SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
+
+MATCHING_OPENCV = matching_opencv
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -74,6 +82,9 @@ descriptor_sift:
 demosift_opencv:
 	$(CC) -o $(BIN_DIR)/$(SIFT_OPENCV) $(TEST_DIR)/$(SIFT_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
 
+matching_opencv:
+	$(CC) -o $(BIN_DIR)/$(MATCHING_OPENCV) $(TEST_DIR)/$(MATCHING_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
+
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
@@ -98,7 +109,10 @@ run_descriptor_sift: descriptor_sift
 run_demosift_opencv: demosift_opencv
 	./$(LOWE_SIFT) <./$(DEMO_LDR_IMG_LOWE) >./$(OUT_DIR)/$(DEMO_IMG_LOWE).key
 	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/ $(OUT_DIR)/$(DEMO_IMG_LOWE).key
-	
+
+run_matching_opencv: matching_opencv
+	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
+
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 

@@ -1,12 +1,11 @@
-#include <opencv2/features2d.hpp>
 #include "../include/cphdr.h"
 
 int main(int argv, char** args)
 {
   std::cout << "OpenCV version: " << CV_MAJOR_VERSION << "." << CV_MINOR_VERSION << std::endl;
 
-  cv::Mat img_in, img_gray, descriptor;
-  std::vector<KeyPoints> kpListOcv, kpList2;
+  cv::Mat img_in, img_gray, descriptor, descriptor2;
+  std::vector<KeyPoints> kpListOcv, kpList2, kpList3, loweKeypoints;
   std::string img_name, out_path;
 
   std::cout << "argv: " << argv << std::endl;
@@ -16,7 +15,7 @@ int main(int argv, char** args)
   if(argv > 3 )
   {
     std::cout << " Reading Lowe's Keypoint File... " << std::endl;
-    std::vector<KeyPoints> loweKeypoints = loadLoweKeypoints(args[3]);
+    loweKeypoints = loadLoweKeypoints(args[3]);
     //for(int i=0; i<loweKeypoints.size(); i++) printKeypoint(loweKeypoints[i]);
   }
 
@@ -54,9 +53,24 @@ int main(int argv, char** args)
   siftDescriptor(kpList2, img_in, img_gray);
   saveKeypoints(kpList2, out_path, false);
 
-  // TRYING TO USE OPENCV DESCRIPTOR
-  siftObj->detectAndCompute(img_gray, NULL, ocv_kp, descriptor, true );
-  
+  std::cout << " .................................................... " << std::endl;
+  std::cout << " Using Lowe detector and OpenCV descriptor... " << std::endl;
+  readImg(args[1], img_in, img_gray, img_name);
+  cv::Mat mask = cv::Mat::ones(3,3, img_gray.depth()); // 3x3 mask of ones to not interfere
+  std::vector<cv::KeyPoint> ocv_kp2; // OpenCV KeyPoints
 
+  // TRYING TO USE OPENCV DESCRIPTOR
+  exportToOpenCVKeyPointsObject( loweKeypoints, ocv_kp2 );
+  std::cout << " Keypoints Loaded into OpenCV object... " << std::endl;
+
+  // COMPUTING
+  cv::Ptr<cv::SIFT> siftObj2 = cv::SIFT::create(0, 3, 0.03, 10, 1.6 );
+  //siftObj2->detectAndCompute(img_gray, mask, ocv_kp2, descriptor2, true );
+  siftObj->compute( img_gray, ocv_kp2, descriptor2);
+
+  // SAVING RESULTS
+  importOpenCVKeyPoints(ocv_kp2, descriptor2, kpList3, true);
+  saveKeypoints(kpList3, out_path+".dog_loweDetector_ocvDesc", false);
+  
   return 0;
 }

@@ -3,6 +3,7 @@
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
 {
   img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
+  std::cout << "reading image " << img_path << std::endl;
 
   if (img_in.channels() != 1)
   {
@@ -113,10 +114,10 @@ void imgNormalize(cv::Mat img, cv::Mat &img_norm)
 
 void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
 {
-    octave = kpt.octave & 255;
-    layer = (kpt.octave >> 8) & 255;
-    octave = octave < 128 ? octave : (-128 | octave);
-    scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+  octave = kpt.octave & 255;
+  layer = (kpt.octave >> 8) & 255;
+  octave = octave < 128 ? octave : (-128 | octave);
+  scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
 }
 
 void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
@@ -160,30 +161,53 @@ void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descript
 
 }
 
-void packOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
+/*
+  Pack info into octave variable
+  Octave integer variable stores 2 informations 
+  that are stored in the first 2 binary octets.
+  + xxxxxxxx xxxxxxxx llllllll oooooooo -
+  Where:
+    x = Unused octets
+    l = Layer information octet
+    o = Octave information octet (less significant octet)
+*/
+void packOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer )
 {
-    octave = kpt.octave & 255;
-    layer = (kpt.octave >> 8) & 255;
-    octave = octave < 128 ? octave : (-128 | octave);
-    scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+  int oct = octave;
+  int aux = layer;
+  aux = aux << 8; // pass first octet to second octet
+  aux = aux | ( 15 && oct ); // Octave is the first octet
+
+  octave = oct;
 }
 
 void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<cv::KeyPoint> &ocv_kp )
 {
-  std::cout << "Exporting " << kpList.size() << " Keypoints ";
+  std::cout << "Exporting " << kpList.size() << " Keypoints " << std::endl;
 
   for(int i=0; i<kpList.size(); i++)
   {
+    //std::cout << "kp " << i << std::endl;
     cv::KeyPoint nkp;
+    int oct = kpList[i].octave;
+    int lay = kpList[i].scale;
 
-    packOpenCVOctave( ocv_kp[i], kpList[i].octave, kpList[i].scale, 0.0f );
+    packOpenCVOctave( ocv_kp[i], oct, lay );
 
+    nkp.pt.x = kpList[i].x;
+    nkp.pt.y = kpList[i].y;
+    nkp.response = kpList[i].resp;
+    nkp.angle = kpList[i].direction;
+    nkp.octave = (int) oct;
+
+    /*
     nkp.x = (float) ocv_kp[i].pt.x;
     nkp.y = (float) ocv_kp[i].pt.y;
     nkp.resp = (float) ocv_kp[i].response;
     nkp.direction = (float) ocv_kp[i].angle;
     nkp.octave = (int) uOctave;
     nkp.scale = (int) uLayer;
+    */
 
     //std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
     //std::cout << "Resp: " << uLayer << std::endl;
@@ -191,5 +215,8 @@ void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<
     //std::cout << "Angl: " << nkp.direction << std::endl;
     //std::cout << "Scal: " << nkp.scale << std::endl;
 
-    kpList.push_back(nkp);
+    //std::cout << "push_back 1" << std::endl;;
+    ocv_kp.push_back(nkp);
+    //std::cout << "push_back 2" << std::endl;;
   }
+}
