@@ -561,16 +561,28 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
                      int mGauss, float sigma )
 {
   cv::Mat img_norm;
-  if (img_in.depth() == 0)
+  if (img_in.depth() == CV_8U)
   {
-    img_in.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / 255.0f;
+    std::cout << " ---> LDR, 255 division " << std::endl;
+    img_in.convertTo( img_norm, CV_32FC1, (1.0f/255.0f) );
   }
   else
   {
-    img_in = img_norm / 256.0f;
+    std::cout << " ---> HDR, 256 division " << std::endl;
+    img_in.convertTo( img_norm, CV_32FC1, (1.0f/256.0f) );
   }
-
+  /*
+  double inMax, inMin, grayMax, grayMin, normMin, normMax;
+  cv::minMaxLoc( img_in, &inMin, &inMax );
+  cv::minMaxLoc( img_gray, &grayMin, &grayMax );
+  std::cout << " ######################################## " << std::endl;
+  std::cout << "in_min: " << inMin << ", in_max: " << inMax << std::endl;
+  std::cout << "gray_min: " << grayMin << ", gray_max: " << grayMax << std::endl;
+  std::cout << " -------------------------------------------- " << std::endl;
+  cv::minMaxLoc( img_norm, &normMin, &normMax );
+  std::cout << "norm_min: " << normMin << ", norm_max: " << normMax << std::endl;
+  std::cout << " ######################################## " << std::endl;
+  */
   // calculating keypoints orientation
   std::cout << "Calculando orientações" << std::endl;
   siftKPOrientation( kpl, img_gray, mGauss, sigma );

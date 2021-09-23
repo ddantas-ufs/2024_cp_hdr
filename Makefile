@@ -25,10 +25,15 @@ PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
 RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Scenes.zip
 
 DEMO_IMG_LOWE = lena.pgm
-DEMO_IMG = lena.png
+#DEMO_IMG = lena.png
+DEMO_IMG = 00.jpg
+DEMO_HDR = 00.hdr
 
-DEMO_IMG1_MATCH = 01.LDR.jpg
-DEMO_IMG2_MATCH = 02.LDR.jpg
+DEMO_IMG1_MATCH = 00.jpg
+DEMO_IMG2_MATCH = 04.jpg
+
+DEMO_HDR1_MATCH = 00.hdr
+DEMO_HDR2_MATCH = 04.hdr
 
 DEF_DOG = defaultdog
 DEMO_DOG = demodog
@@ -37,12 +42,15 @@ DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
-DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
+DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_HDR)
 DEMO_LDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
 DEMO_LDR_IMG_LOWE = $(IMG_DIR)/$(DEMO_IMG_LOWE)
 
 DEMO_LDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_IMG1_MATCH)
 DEMO_LDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_IMG2_MATCH)
+
+DEMO_HDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_HDR1_MATCH)
+DEMO_HDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_HDR2_MATCH)
 
 LOWE_SIFT = $(OLD_DIR)/sift_lowe_implementation/sift
 SIFT_DESCRIPTOR = demosift
@@ -105,6 +113,7 @@ run_defaultdog: defaultdog
 
 run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
 run_demosift_opencv: demosift_opencv
 	./$(LOWE_SIFT) <./$(DEMO_LDR_IMG_LOWE) >./$(OUT_DIR)/$(DEMO_IMG_LOWE).key
@@ -112,6 +121,7 @@ run_demosift_opencv: demosift_opencv
 
 run_matching_opencv: matching_opencv
 	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
+	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
 
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

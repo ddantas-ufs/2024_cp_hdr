@@ -1,22 +1,37 @@
 #include "../include/detectors/aux_func.h"
 
-void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name)
+/**
+* Reads image in img_path and stores a RGB, Grayscale and image name. 
+* In case img_path points to a grayscale image, img_in and img_gray will point to same object 
+* img_name will store the image name according to withExtension parameter 
+*
+* @param img_path: string object path where image is in the disk
+* @param img_in: cv::Mat object where RGB version will be stored
+* @param img_gray: cv::Mat object where grayscale version will be stored
+* @param img_name: string object where the image name will be stored
+* @param withExtension: defines if img_name will be store with extension. Default is false.
+**/
+void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
 {
   img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
   std::cout << "reading image " << img_path << std::endl;
 
-  if (img_in.channels() != 1)
-  {
-    cv::cvtColor(img_in, img_gray, cv::COLOR_BGR2GRAY);
-  }
-  else
-  {
-    img_gray = img_in;
-  }
-  img_name = getFileName(std::string(img_path));
+  if (img_in.channels() != 1){ cv::cvtColor(img_in, img_gray, cv::COLOR_BGR2GRAY); }
+  else { img_gray = img_in; }
+  /*
+  double inMax, inMin, grayMax, grayMin, normMin, normMax;
+  cv::minMaxLoc( img_in, &inMin, &inMax );
+  cv::minMaxLoc( img_gray, &grayMin, &grayMax );
+  std::cout << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << std::endl;
+  std::cout << "img type: " << img_in.depth() << std::endl;
+  std::cout << "in_min: " << inMin << ", in_max: " << inMax << std::endl;
+  std::cout << "gray_min: " << grayMin << ", gray_max: " << grayMax << std::endl;
+  std::cout << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << std::endl;
+  */
+  img_name = getFileName(std::string(img_path), withExtension);
 }
 
-std::string getFileName(std::string file_path)
+std::string getFileName(std::string file_path, bool withExtension)
 {
   size_t size = file_path.rfind("/", file_path.length());
 
@@ -28,15 +43,23 @@ std::string getFileName(std::string file_path)
   {
     file_path = "";
   }
-  size = file_path.rfind(".", file_path.length());
 
-  if (size != std::string::npos)
+  if( withExtension ) 
   {
-    return file_path.substr(0, size);
+    return file_path;
   }
   else
   {
-    return file_path;
+    size = file_path.rfind(".", file_path.length());
+    
+    if (size != std::string::npos)
+    {
+      return file_path.substr(0, size);
+    }
+    else
+    {
+      return file_path;
+    }
   }
 }
 
