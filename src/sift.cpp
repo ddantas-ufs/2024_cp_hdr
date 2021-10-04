@@ -1,18 +1,5 @@
 #include "../include/descriptors/sift.h"
 
-
-void printMat( cv::Mat &m, std::string nm )
-{
-    std::cout << nm << std::endl;
-    for(int i=0; i<m.rows; i++)
-    {
-      for(int j=0; j<m.cols; j++)
-        std::cout << m.at<float>(i,j) << " ";
-        
-      std::cout << std::endl;
-    }
-}
-
 /**
  * Return a flattened array of a cv::Mat object
  * 

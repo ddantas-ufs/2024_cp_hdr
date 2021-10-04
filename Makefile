@@ -57,6 +57,7 @@ SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
 
 MATCHING_OPENCV = matching_opencv
+MATCHING_CPHDR = matching_cphdr
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -93,6 +94,9 @@ demosift_opencv:
 matching_opencv:
 	$(CC) -o $(BIN_DIR)/$(MATCHING_OPENCV) $(TEST_DIR)/$(MATCHING_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
 
+matching_cphdr:
+	$(CC) -o $(BIN_DIR)/$(MATCHING_CPHDR) $(TEST_DIR)/$(MATCHING_CPHDR).cpp $(SRC_FILES) $(CV_LIB)
+
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
@@ -122,6 +126,10 @@ run_demosift_opencv: demosift_opencv
 run_matching_opencv: matching_opencv
 	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
 	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
+
+run_matching_cphdr: matching_cphdr
+	./$(BIN_DIR)/$(MATCHING_CPHDR) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
+	./$(BIN_DIR)/$(MATCHING_CPHDR) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
 
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/

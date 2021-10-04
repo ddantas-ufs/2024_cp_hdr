@@ -1,5 +1,17 @@
 #include "../include/detectors/aux_func.h"
 
+void printMat( cv::Mat &m, std::string mat_name )
+{
+    std::cout << mat_name << std::endl;
+    for(int i=0; i<m.rows; i++)
+    {
+      for(int j=0; j<m.cols; j++)
+        std::cout << m.at<float>(i,j) << " ";
+        
+      std::cout << std::endl;
+    }
+}
+
 /**
 * Reads image in img_path and stores a RGB, Grayscale and image name. 
 * In case img_path points to a grayscale image, img_in and img_gray will point to same object 
@@ -242,4 +254,88 @@ void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<
     ocv_kp.push_back(nkp);
     //std::cout << "push_back 2" << std::endl;;
   }
+}
+
+/**
+ * Maps the value t from the range [a, b] to [c, d].
+ * @param a: minimum value origin range
+ * @param b: maximum value origin range
+ * @param c: minimum value destination range
+ * @param d: maximum value destination range
+ * @param t: value to be mapped
+ * 
+ * @return float value in the range [c, d].
+**/
+float f_t( float a, float b, float c, float d, float t )
+{
+  return c + ( ( d-c ) / ( b-a ) ) * ( t-a );
+}
+
+/**
+ * Maps the Matrix values from the range oriRange to desRange.
+ * @param mat: original image
+ * @param img_out: resulting image, with mapped pixel values
+ * @param oriRange: original range (defaults to 0, 255)
+ * @param desRange: destination range (defaults to 0, 1)
+ * 
+ * @return float value in the range [c, d].
+**/
+void mapMatValues( cv::Mat &mat, cv::Mat &mat_out, float oriRange[], float desRange[] )
+{
+  for( int i = 0; i < mat.rows; i++ )
+    for( int j = 0; j < mat.cols; i++ )
+    {
+      if( mat.channels() == 1 )
+      {
+        mat_out = cv::Mat::zeros( cv::Size( mat.rows, mat.cols ), CV_32F );
+        float p = float( mat.at<int>(i,j) + 0.0f );
+        mat_out.at<float>(i,j) = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], p );
+      }
+      else
+      {
+        mat_out = cv::Mat::zeros( cv::Size( mat.rows, mat.cols ), CV_32FC3 );
+
+        float b = float( mat.at<cv::Vec3b>(i,j)[0] + 0.0f ); // erro aqui
+        float g = float( mat.at<cv::Vec3b>(i,j)[1] + 0.0f );
+        float r = float( mat.at<cv::Vec3b>(i,j)[2] + 0.0f );
+
+        mat_out.at<cv::Vec3f>(i,j)[0] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], b );
+        mat_out.at<cv::Vec3f>(i,j)[1] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], g );
+        mat_out.at<cv::Vec3f>(i,j)[2] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], r );
+      }
+    }
+}
+
+void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
+{
+  double imgMin, imgMax;
+  cv::minMaxLoc( img, &imgMin, &imgMax );
+  
+  float oriRange[2] = { float(imgMin), float(imgMax)}, desRange[2] = {0.0f, 1.0f};
+  mapMatValues(img, img_out, oriRange, desRange);
+}
+
+int imvert(cv::Mat image) {
+//    cv::Mat image = cv::imread("image.jpg", CV_LOAD_IMAGE_COLOR);
+
+    if(!image.data) {
+        std::cout << "Error: the image wasn't correctly loaded." << std::endl;
+        return -1;
+    }
+
+    // We iterate over all pixels of the image
+    for(int r = 0; r < image.rows; r++) {
+        // We obtain a pointer to the beginning of row r
+        cv::Vec3b* ptr = image.ptr<cv::Vec3b>(r);
+
+        for(int c = 0; c < image.cols; c++) {
+            // We invert the blue and red values of the pixel
+            ptr[c] = cv::Vec3b(ptr[c][2], ptr[c][1], ptr[c][0]);
+        }
+    }
+
+    cv::imshow("Inverted Image", image);
+    cv::waitKey();
+
+    return 0;
 }
