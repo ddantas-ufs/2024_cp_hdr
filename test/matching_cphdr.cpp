@@ -32,7 +32,7 @@ int main(int argv, char** args)
   outputPath = std::string(args[3]) + "match_" +outImageName1;
 
   readImg(args[2], inputImage2, grayInputImage2, outImageName2);
-  outputPath = outputPath + "_"+ outImageName2 +".png";
+  outputPath = outputPath + "_"+ outImageName2 +".hdr";
 
   if ( inputImage1.empty() || inputImage2.empty() || grayInputImage1.empty() || grayInputImage2.empty() )
   {
@@ -47,17 +47,21 @@ int main(int argv, char** args)
 
   std::cout << " ####################################" << std::endl;
   std::cout << " --> Printing in array .at<cv::Vec3f>(5, 5)" << std::endl;
-  std::cout << grayInputImage1.at<cv::Vec3f>(5, 5) << std::endl;
+  std::cout << inputImage1.at<cv::Vec3f>(5, 5) << std::endl;
 
   std::cout << " --> Mapping pixels" << std::endl;
-  mapPixelValues01(grayInputImage1, outputImage);
+  mapPixelValues01(inputImage1, outputImage);
   std::cout << " --> Pixels mapped" << std::endl;
 
-  cv::Mat mat1 = grayInputImage1(cv::Range(0, 10), cv::Range(0, 10));
-  cv::Mat mat2 = outputImage(cv::Range(0, 10), cv::Range(0, 10));
+//  printMat( grayInputImage1, "Original subregion" );
+//  printMat( outputImage, "Mapped subregion" );
 
-  printMat( mat1, "Original subregion" );
-  printMat( mat2, "Mapped subregion" );
+  // SAVING OUTPUT IMAGE
+  std::cout << "Saving original image..." << std::endl;
+  cv::imwrite(outputPath+"_original.hdr", inputImage1);
+
+//  std::cout << "Saving output image..." << std::endl;
+//  cv::imwrite(outputPath+".hdr", outputImage);
 
   return 0;
 }

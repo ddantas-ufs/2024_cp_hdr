@@ -280,6 +280,26 @@ float f_t( float a, float b, float c, float d, float t )
  * 
  * @return float value in the range [c, d].
 **/
+void f_t( float a, float b, float c, float d, cv::Mat &img, cv::Mat &img_out )
+{
+  float frac = ( d-c ) / ( b-a );
+  cv::subtract( img, a, img_out, cv::noArray(), img_out.depth() );
+  
+  img_out.forEach<float>([&](float& element, const int position[]) -> void
+  { element *= frac; });
+
+  cv::add( img_out, c, img_out, cv::noArray(), img_out.depth() );
+}
+
+/**
+ * Maps the Matrix values from the range oriRange to desRange.
+ * @param mat: original image
+ * @param img_out: resulting image, with mapped pixel values
+ * @param oriRange: original range (defaults to 0, 255)
+ * @param desRange: destination range (defaults to 0, 1)
+ * 
+ * @return float value in the range [c, d].
+*
 void mapMatValues( cv::Mat &mat, cv::Mat &mat_out, float oriRange[], float desRange[] )
 {
   for( int i = 0; i < mat.rows; i++ )
@@ -305,37 +325,18 @@ void mapMatValues( cv::Mat &mat, cv::Mat &mat_out, float oriRange[], float desRa
       }
     }
 }
+**/
 
 void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
 {
   double imgMin, imgMax;
   cv::minMaxLoc( img, &imgMin, &imgMax );
-  
-  float oriRange[2] = { float(imgMin), float(imgMax)}, desRange[2] = {0.0f, 1.0f};
-  mapMatValues(img, img_out, oriRange, desRange);
-}
 
-int imvert(cv::Mat image) {
-//    cv::Mat image = cv::imread("image.jpg", CV_LOAD_IMAGE_COLOR);
+  // initialize output image
+  if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
+  else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
 
-    if(!image.data) {
-        std::cout << "Error: the image wasn't correctly loaded." << std::endl;
-        return -1;
-    }
-
-    // We iterate over all pixels of the image
-    for(int r = 0; r < image.rows; r++) {
-        // We obtain a pointer to the beginning of row r
-        cv::Vec3b* ptr = image.ptr<cv::Vec3b>(r);
-
-        for(int c = 0; c < image.cols; c++) {
-            // We invert the blue and red values of the pixel
-            ptr[c] = cv::Vec3b(ptr[c][2], ptr[c][1], ptr[c][0]);
-        }
-    }
-
-    cv::imshow("Inverted Image", image);
-    cv::waitKey();
-
-    return 0;
+  // float oriRange[2] = { float(imgMin), float(imgMax)}, desRange[2] = {0.0f, 1.0f};
+  // mapMatValues(img, img_out, oriRange, desRange);
+  f_t( imgMin, imgMax, 0, 1, img, img_out );
 }
