@@ -20,6 +20,11 @@ int main(int argv, char** args)
   std::string outImageName1, outImageName2, outputPath;
   std::vector<cv::KeyPoint> kpsImage1, kpsImage2;
 
+  std::string imgPath = args[1], hdrSuf = ".hdr";
+
+  // teste
+  double imgMin, imgMax;
+
   // SHOWING INPUTS
   std::cout << "received " << argv << " arguments." << std::endl;
   
@@ -32,7 +37,11 @@ int main(int argv, char** args)
   outputPath = std::string(args[3]) + "match_" +outImageName1;
 
   readImg(args[2], inputImage2, grayInputImage2, outImageName2);
-  outputPath = outputPath + "_"+ outImageName2 +".hdr";
+
+  if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
+    outputPath = outputPath + "_"+ outImageName2 +".hdr";
+  else
+    outputPath = outputPath + "_"+ outImageName2 +".png";
 
   if ( inputImage1.empty() || inputImage2.empty() || grayInputImage1.empty() || grayInputImage2.empty() )
   {
@@ -46,22 +55,32 @@ int main(int argv, char** args)
   }
 
   std::cout << " ####################################" << std::endl;
-  std::cout << " --> Printing in array .at<cv::Vec3f>(5, 5)" << std::endl;
-  std::cout << inputImage1.at<cv::Vec3f>(5, 5) << std::endl;
+
+  /////////////////////////////////////
+  imgMin = 0.0, imgMax = 0.0;
+  cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
+  std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
 
   std::cout << " --> Mapping pixels" << std::endl;
-  mapPixelValues01(inputImage1, outputImage);
+  mapPixelValues01( inputImage1, outputImage );
   std::cout << " --> Pixels mapped" << std::endl;
 
-//  printMat( grayInputImage1, "Original subregion" );
-//  printMat( outputImage, "Mapped subregion" );
+  /////////////////////////////////////
+  imgMin = 0.0, imgMax = 0.0;
+  cv::minMaxLoc( outputImage, &imgMin, &imgMax );
+  std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
+
+  /*/ SAVING ORIGINAL IMAGE
+  std::cout << "Saving original image..." << std::endl;
+  if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
+    cv::imwrite(outputPath+"_original.hdr", inputImage1);
+  else
+    cv::imwrite(outputPath+"_original.png", inputImage1);
+  */
 
   // SAVING OUTPUT IMAGE
   std::cout << "Saving original image..." << std::endl;
-  cv::imwrite(outputPath+"_original.hdr", inputImage1);
-
-//  std::cout << "Saving output image..." << std::endl;
-//  cv::imwrite(outputPath+".hdr", outputImage);
+  cv::imwrite(outputPath, outputImage);
 
   return 0;
 }

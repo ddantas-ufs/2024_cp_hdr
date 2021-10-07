@@ -272,71 +272,20 @@ float f_t( float a, float b, float c, float d, float t )
 }
 
 /**
- * Maps the Matrix values from the range oriRange to desRange.
+ * Linearly maps the Matrix values from an interval to another.
+ * 
  * @param mat: original image
  * @param img_out: resulting image, with mapped pixel values
- * @param oriRange: original range (defaults to 0, 255)
- * @param desRange: destination range (defaults to 0, 1)
+ * @param a: minimum of original range
+ * @param b: maximum of original range
  * 
- * @return float value in the range [c, d].
-**/
-void f_t( float a, float b, float c, float d, cv::Mat &img, cv::Mat &img_out )
-{
-  float frac = ( d-c ) / ( b-a );
-  cv::subtract( img, a, img_out, cv::noArray(), img_out.depth() );
-  
-  img_out.forEach<float>([&](float& element, const int position[]) -> void
-  { element *= frac; });
-
-  cv::add( img_out, c, img_out, cv::noArray(), img_out.depth() );
-}
-
-/**
- * Maps the Matrix values from the range oriRange to desRange.
- * @param mat: original image
- * @param img_out: resulting image, with mapped pixel values
- * @param oriRange: original range (defaults to 0, 255)
- * @param desRange: destination range (defaults to 0, 1)
- * 
- * @return float value in the range [c, d].
-*
-void mapMatValues( cv::Mat &mat, cv::Mat &mat_out, float oriRange[], float desRange[] )
-{
-  for( int i = 0; i < mat.rows; i++ )
-    for( int j = 0; j < mat.cols; i++ )
-    {
-      if( mat.channels() == 1 )
-      {
-        mat_out = cv::Mat::zeros( cv::Size( mat.rows, mat.cols ), CV_32F );
-        float p = float( mat.at<int>(i,j) + 0.0f );
-        mat_out.at<float>(i,j) = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], p );
-      }
-      else
-      {
-        mat_out = cv::Mat::zeros( cv::Size( mat.rows, mat.cols ), CV_32FC3 );
-
-        float b = float( mat.at<cv::Vec3b>(i,j)[0] + 0.0f ); // erro aqui
-        float g = float( mat.at<cv::Vec3b>(i,j)[1] + 0.0f );
-        float r = float( mat.at<cv::Vec3b>(i,j)[2] + 0.0f );
-
-        mat_out.at<cv::Vec3f>(i,j)[0] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], b );
-        mat_out.at<cv::Vec3f>(i,j)[1] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], g );
-        mat_out.at<cv::Vec3f>(i,j)[2] = f_t( oriRange[0], oriRange[1], desRange[0], desRange[1], r );
-      }
-    }
-}
 **/
 
 void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
 {
-  double imgMin, imgMax;
-  cv::minMaxLoc( img, &imgMin, &imgMax );
-
   // initialize output image
   if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
-  else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
+  else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32FC3 );
 
-  // float oriRange[2] = { float(imgMin), float(imgMax)}, desRange[2] = {0.0f, 1.0f};
-  // mapMatValues(img, img_out, oriRange, desRange);
-  f_t( imgMin, imgMax, 0, 1, img, img_out );
+  cv::normalize( img, img_out, 0.0, 1.0, cv::NORM_MINMAX, img_out.depth(), cv::noArray() );
 }
