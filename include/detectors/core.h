@@ -42,6 +42,10 @@
 #define SIFT_DESC_INT_FTR 512.0f // factor used to convert float descriptor to int
 #define SIFT_DESC_SCL_FTR 3.0f // to determine size of a single descriptor orientation histogram
 
+// MATCHING CONSTANTS
+#define MATCHING_HAMMING_DIST_CALC 0
+#define MATCHING_EUCLIDIAN_DIST_CALC 1
+
 struct KeyPoints
 {
   float y;
