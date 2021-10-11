@@ -16,5 +16,6 @@
 #include "detectors/dog.h"
 
 #include "descriptors/sift.h"
+#include "descriptors/matching.h"
 
 #endif

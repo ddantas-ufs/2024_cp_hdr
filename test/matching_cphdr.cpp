@@ -13,7 +13,7 @@
 ** @author arturxz, 01/10/2021 (created)
 */
 int main(int argv, char** args)
-{
+{/*
   // CREATING OBJECTS
   cv::Mat inputImage1, inputImage2, grayInputImage1, grayInputImage2,
           descriptor1, descriptor2, outputImage;
@@ -70,17 +70,17 @@ int main(int argv, char** args)
   cv::minMaxLoc( outputImage, &imgMin, &imgMax );
   std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
 
-  /*/ SAVING ORIGINAL IMAGE
-  std::cout << "Saving original image..." << std::endl;
-  if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
-    cv::imwrite(outputPath+"_original.hdr", inputImage1);
-  else
-    cv::imwrite(outputPath+"_original.png", inputImage1);
-  */
-
   // SAVING OUTPUT IMAGE
   std::cout << "Saving original image..." << std::endl;
   cv::imwrite(outputPath, outputImage);
+  */
+  std::vector<int> v1 = {1,2,3,4,5};
+  std::vector<int> v2 = {5,4,3,2,1};
+  std::cout << "Distance between vectors:" << std::endl;
 
+  std::cout << "Not specified: " << calculateDistance( v1, v2 ) << std::endl;
+  std::cout << "Euclidean    : " << calculateDistance( v1, v2, MATCHING_EUCLIDIAN_DIST_CALC ) << std::endl;
+  std::cout << "Hamming      : " << calculateDistance( v1, v2, MATCHING_HAMMING_DIST_CALC ) << std::endl;
+  
   return 0;
 }
