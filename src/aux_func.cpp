@@ -23,7 +23,7 @@ void printMat( cv::Mat &m, std::string mat_name )
 * @param img_name: string object where the image name will be stored
 * @param withExtension: defines if img_name will be store with extension. Default is false.
 **/
-void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
+void readImg( std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
 {
   img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
   std::cout << "reading image " << img_path << std::endl;
@@ -40,7 +40,13 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
   std::cout << "gray_min: " << grayMin << ", gray_max: " << grayMax << std::endl;
   std::cout << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << std::endl;
   */
-  img_name = getFileName(std::string(img_path), withExtension);
+  img_name = getFileName(img_path, withExtension);
+}
+
+void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
+{
+  std::string strImgPath = std::string(img_path);
+  readImg(img_path, img_in, img_gray, img_name, withExtension);
 }
 
 std::string getFileName(std::string file_path, bool withExtension)

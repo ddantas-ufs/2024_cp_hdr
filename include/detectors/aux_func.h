@@ -7,6 +7,8 @@ void printMat( cv::Mat &m, std::string mat_name );
 
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);
 
+void readImg(std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);
+
 std::string getFileName(std::string file_path, bool withExtension);
 
 int sciToDec(const std::string &str);

@@ -12,5 +12,8 @@ void matchDescriptors(std::vector<KeyPoints> kpListImg1,
 float calculateDistance( std::vector<int> vec1, std::vector<int> vec2, 
                          int distanceMethod = MATCHING_EUCLIDIAN_DIST_CALC );
 
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList );
+
 #endif
 

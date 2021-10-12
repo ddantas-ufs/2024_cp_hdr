@@ -46,6 +46,9 @@
 #define MATCHING_HAMMING_DIST_CALC 0
 #define MATCHING_EUCLIDIAN_DIST_CALC 1
 
+#define MATCHING_RATIO_MATCH 15
+#define MATCHING_NNDR_THRESHOLD 0.7f
+
 struct KeyPoints
 {
   float y;
@@ -56,6 +59,11 @@ struct KeyPoints
   float direction;
 
   std::vector<int> descriptor;
+};
+
+struct MatchedKeyPoints
+{
+  KeyPoints kp1, kp2;
 };
 
 #endif
