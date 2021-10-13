@@ -13,36 +13,34 @@
 ** @author arturxz, 01/10/2021 (created)
 */
 int main(int argv, char** args)
-{/*
-  // CREATING OBJECTS
+{
   cv::Mat inputImage1, inputImage2, grayInputImage1, grayInputImage2,
           descriptor1, descriptor2, outputImage;
   std::string outImageName1, outImageName2, outputPath;
-  std::vector<cv::KeyPoint> kpsImage1, kpsImage2;
+  
+  std::vector<KeyPoints> kp1, kp2;
 
   std::string imgPath = args[1], hdrSuf = ".hdr";
+  std::string outDir = std::string(args[3]);
 
-  // teste
-  double imgMin, imgMax;
-
-  // SHOWING INPUTS
-  std::cout << "received " << argv << " arguments." << std::endl;
-  
+  // Showing inputs
+  std::cout << "----------------------------------" << std::endl;
+  std::cout << "Received " << argv << " arguments." << std::endl;
   for( int i = 0; i < argv; i++ )
     std::cout << "  args[" << i << "]: " << args[i] << std::endl;
 
-  // READING IMAGES AND SETTING OUTPUT IMAGE NAME
+  // Reading images and setting output image name
   std::cout << "Reading images..." << std::endl;
   readImg(args[1], inputImage1, grayInputImage1, outImageName1);
-  outputPath = std::string(args[3]) + "match_" +outImageName1;
-
   readImg(args[2], inputImage2, grayInputImage2, outImageName2);
 
+  // Setting up output image name extension based on input image name
   if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
-    outputPath = outputPath + "_"+ outImageName2 +".hdr";
+    outputPath = outDir +outImageName1 + "_"+ outImageName2 +"_matching.hdr";
   else
-    outputPath = outputPath + "_"+ outImageName2 +".png";
+    outputPath = outDir +outImageName1 + "_"+ outImageName2 +"_matching.png";
 
+  // Granting that all images are not empty
   if ( inputImage1.empty() || inputImage2.empty() || grayInputImage1.empty() || grayInputImage2.empty() )
   {
     std::cout << "Could not open or find the image!" << std::endl;
@@ -54,9 +52,22 @@ int main(int argv, char** args)
     return -1;
   }
 
-  std::cout << " ####################################" << std::endl;
+  concatenateImages(grayInputImage1, grayInputImage2, outputImage);
 
-  /////////////////////////////////////
+  double imgMin = 0.0, imgMax = 0.0;
+  cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
+  std::cout << "----> inputImage1 imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
+  cv::minMaxLoc( inputImage2, &imgMin, &imgMax );
+  std::cout << "----> inputImage2 imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
+  cv::minMaxLoc( outputImage, &imgMin, &imgMax );
+  std::cout << "----> outputImage imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
+
+  std::cout << "Saving concatenated image into:" << outputPath << std::endl;
+  //cv::imwrite(outputPath, grayInputImage2);
+  cv::imwrite(outputPath, outputImage);
+  return 0;
+
+  /*////////////////////////////////////
   imgMin = 0.0, imgMax = 0.0;
   cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
   std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
@@ -69,11 +80,46 @@ int main(int argv, char** args)
   imgMin = 0.0, imgMax = 0.0;
   cv::minMaxLoc( outputImage, &imgMin, &imgMax );
   std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
+  */
+  
+  // Generating images description
+  std::cout << "Detecting and Describing Keypoints Image 1" << std::endl;
+  dogKp(grayInputImage1, kp1);
+  siftDescriptor(kp1, inputImage1, grayInputImage1);
+
+  std::cout << "Detecting and Describing Keypoints Image 2" << std::endl;
+  dogKp(grayInputImage2, kp2);
+  siftDescriptor(kp2, inputImage2, grayInputImage2);
+
+  // Saving images description
+  if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
+  {
+    std::cout << "--> outImageName1: " +outDir+outImageName1+".hdr.sift.txt" << std::endl;
+    std::cout << "--> outImageName2: " +outDir+outImageName2+".hdr.sift.txt" << std::endl;
+    saveKeypoints(kp1, outDir+outImageName1+".hdr.sift.txt", kp1.size());
+    saveKeypoints(kp2, outDir+outImageName2+".hdr.sift.txt", kp2.size());
+  }
+  else
+  {
+    std::cout << "--> outImageName1: " +outDir+outImageName1+".ldr.sift.txt" << std::endl;
+    std::cout << "--> outImageName2: " +outDir+outImageName2+".ldr.sift.txt" << std::endl;
+    saveKeypoints(kp1, outDir+outImageName1+".ldr.sift.txt", kp1.size());
+    saveKeypoints(kp2, outDir+outImageName2+".ldr.sift.txt", kp2.size());
+  }
+
+  std::cout << "Matching FPs and saving resulting image" << std::endl;
+  matchFPs(inputImage1, kp1, inputImage2, kp2, outputImage);
+  cv::imwrite(outputPath, outputImage);
 
   // SAVING OUTPUT IMAGE
-  std::cout << "Saving original image..." << std::endl;
-  cv::imwrite(outputPath, outputImage);
-  */
+//  std::cout << "Saving original image..." << std::endl;
+//  cv::imwrite(outputPath, outputImage);
+  
+  /* --------------------------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------------------------- */
+
+  /*
   std::vector<int> v1 = {1,2,3,4,5};
   std::vector<int> v2 = {5,4,3,2,1};
   std::cout << "Distance between vectors:" << std::endl;
@@ -81,6 +127,6 @@ int main(int argv, char** args)
   std::cout << "Not specified: " << calculateDistance( v1, v2 ) << std::endl;
   std::cout << "Euclidean    : " << calculateDistance( v1, v2, MATCHING_EUCLIDIAN_DIST_CALC ) << std::endl;
   std::cout << "Hamming      : " << calculateDistance( v1, v2, MATCHING_HAMMING_DIST_CALC ) << std::endl;
-  
+  */ 
   return 0;
 }

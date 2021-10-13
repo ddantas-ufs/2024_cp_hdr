@@ -1,4 +1,3 @@
-#include "../include/descriptors/matching.h"
 #include "../include/cphdr.h"
 
 float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
@@ -42,35 +41,45 @@ float calculateDistance( std::vector<int> vec1, std::vector<int> vec2,
   return 0.0f;
 }
 
-void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat out )
+void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
 {
   int totalRows = std::max(img1.rows, img2.rows);
   int totalCols = img1.cols + img2.cols;
 
+  std::cout << "Total Rows: " << totalRows << ", Cols:" << totalCols << std::endl;
   out = cv::Mat( totalRows, totalCols, img1.depth() );
+  std::cout << " --> Allocated images" << std::endl;
 
   // Mounting output image with img1 and img2 side-by-side
+  std::cout << " --> copying img1" << std::endl;
   for(int i=0; i<img1.rows; i++)
   {
     for( int j=0; j<img1.cols; j++ )
     {
       if( img1.channels() == 1 )
-      {
         out.at<float>(i,j) = img1.at<float>(i,j);
-        out.at<float>(i+img1.cols,j) = img2.at<float>(i,j);
-      }
       else
-      {
         out.at<cv::Point3f>(i,j) = img1.at<cv::Point3f>(i,j);
-        out.at<cv::Point3f>(i+img1.cols,j) = img2.at<cv::Point3f>(i,j);
-      }
     }
   }
 
+  std::cout << " --> copying img2" << std::endl;
+  for(int i=0; i<img2.rows; i++)
+  {
+    for( int j=0; j<img2.cols; j++ )
+    {
+      if( img1.channels() == 1 )
+        out.at<float>(i,j+img1.cols) = img1.at<float>(i,j);
+      else
+        out.at<cv::Point3f>(i,j+img1.cols) = img1.at<cv::Point3f>(i,j);
+    }
+  }
+
+  std::cout << " --> writing line" << std::endl;
   if( img1.channels() == 1 )
-    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), 50, 1);
+    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(50), 1);
   else 
-    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), (50,50,50), 1);
+    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(50,50,50), 1);
 
 }
 
@@ -91,6 +100,9 @@ void nndr( std::vector<KeyPoints> kpListImg1,
                                              calcDistMode ) );
     }
 
+    std::cout << " ### Tamanho distList ###" << std::endl;
+    std::cout << " distList: " << distList.size() << std::endl;
+
     // Getting 1st and 2nd smallest distance from kpListImg1 description
     float minVal1 = FLT_MAX, minVal2 = FLT_MAX;
     int minValIdx1 = -1, minValIdx2 = -1;
@@ -105,6 +117,8 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         minValIdx1 = j;
       }
     }
+    std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+    std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
 
     // Granting that the algorithm won't take same distance
     if( minVal1 == minVal2 )
@@ -122,6 +136,9 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         }
       }
     }
+    std::cout << " ## Depois de garantir diferença..." << std::endl;
+    std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+    std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
     
     // Calculating if ratio respect threshold
     float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
@@ -129,8 +146,8 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     if( ratio < threshold )
     {
       MatchedKeyPoints kps;
-      kps.kp1 = kpListImg1[minValIdx1];
-      kps.kp2 = kpListImg2[minValIdx2];
+      kps.kp1 = kpListImg1[i];
+      kps.kp2 = kpListImg2[minValIdx1];
       output.push_back( kps );
     }
   }
@@ -159,8 +176,8 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
   }
 }
 
-void matchingFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
-                  cv::Mat img2, std::vector<KeyPoints> img2KpList )
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList )
 {
   cv::Mat imgOut;
   std::vector<MatchedKeyPoints> matchings;
@@ -169,16 +186,25 @@ void matchingFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   printLineOnImages(img1, img2, imgOut, matchings);
 }
 
-void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
-                  std::string img2Path, std::vector<KeyPoints> img2KpList )
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList,
+               cv::Mat &imgOut )
 {
-  cv::Mat img1, img2, imgOut, img;
+  std::vector<MatchedKeyPoints> matchings;
+  
+  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_RATIO_MATCH);
+  printLineOnImages(img1, img2, imgOut, matchings);
+}
+
+void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
+               std::string img2Path, std::vector<KeyPoints> img2KpList )
+{
+  cv::Mat img1, img2, img;
   std::vector<MatchedKeyPoints> matchings;
   std::string str = "";
 
   readImg(img1Path, img1, img, str);
   readImg(img2Path, img2, img, str);
   
-  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_RATIO_MATCH);
-  printLineOnImages(img1, img2, imgOut, matchings);
+  matchFPs( img1, img1KpList, img2, img2KpList );
 }

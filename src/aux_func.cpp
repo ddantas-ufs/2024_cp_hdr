@@ -46,7 +46,7 @@ void readImg( std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::str
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
 {
   std::string strImgPath = std::string(img_path);
-  readImg(img_path, img_in, img_gray, img_name, withExtension);
+  readImg(strImgPath, img_in, img_gray, img_name, withExtension);
 }
 
 std::string getFileName(std::string file_path, bool withExtension)
