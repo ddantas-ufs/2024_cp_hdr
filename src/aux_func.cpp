@@ -263,21 +263,6 @@ void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<
 }
 
 /**
- * Maps the value t from the range [a, b] to [c, d].
- * @param a: minimum value origin range
- * @param b: maximum value origin range
- * @param c: minimum value destination range
- * @param d: maximum value destination range
- * @param t: value to be mapped
- * 
- * @return float value in the range [c, d].
-**/
-float f_t( float a, float b, float c, float d, float t )
-{
-  return c + ( ( d-c ) / ( b-a ) ) * ( t-a );
-}
-
-/**
  * Linearly maps the Matrix values from an interval to another.
  * 
  * @param mat: original image
@@ -286,12 +271,12 @@ float f_t( float a, float b, float c, float d, float t )
  * @param b: maximum of original range
  * 
 **/
-
 void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
 {
-  // initialize output image
-  if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
-  else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32FC3 );
+  // If empty, initialize output image
+  if( img_out.empty() )
+    if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
+    else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32FC3 );
 
   cv::normalize( img, img_out, 0.0, 1.0, cv::NORM_MINMAX, img_out.depth(), cv::noArray() );
 }

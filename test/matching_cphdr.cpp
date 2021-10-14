@@ -52,7 +52,12 @@ int main(int argv, char** args)
     return -1;
   }
 
-  concatenateImages(grayInputImage1, grayInputImage2, outputImage);
+//  mapPixelValues01( inputImage1, inputImage1 );
+//  mapPixelValues01( inputImage2, inputImage2 );
+//  mapPixelValues01( grayInputImage1, grayInputImage1 );
+//  mapPixelValues01( grayInputImage2, grayInputImage2 );
+
+  concatenateImages(inputImage1, inputImage2, outputImage);
 
   double imgMin = 0.0, imgMax = 0.0;
   cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
@@ -62,7 +67,7 @@ int main(int argv, char** args)
   cv::minMaxLoc( outputImage, &imgMin, &imgMax );
   std::cout << "----> outputImage imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
 
-  std::cout << "Saving concatenated image into:" << outputPath << std::endl;
+  std::cout << "Saving concatenated image into: " << outputPath << std::endl;
   //cv::imwrite(outputPath, grayInputImage2);
   cv::imwrite(outputPath, outputImage);
   return 0;

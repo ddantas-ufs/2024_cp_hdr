@@ -45,41 +45,15 @@ void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
 {
   int totalRows = std::max(img1.rows, img2.rows);
   int totalCols = img1.cols + img2.cols;
+  int img2IniCol = totalCols-img2.cols;
 
-  std::cout << "Total Rows: " << totalRows << ", Cols:" << totalCols << std::endl;
-  out = cv::Mat( totalRows, totalCols, img1.depth() );
-  std::cout << " --> Allocated images" << std::endl;
-
-  // Mounting output image with img1 and img2 side-by-side
-  std::cout << " --> copying img1" << std::endl;
-  for(int i=0; i<img1.rows; i++)
-  {
-    for( int j=0; j<img1.cols; j++ )
-    {
-      if( img1.channels() == 1 )
-        out.at<float>(i,j) = img1.at<float>(i,j);
-      else
-        out.at<cv::Point3f>(i,j) = img1.at<cv::Point3f>(i,j);
-    }
-  }
-
-  std::cout << " --> copying img2" << std::endl;
-  for(int i=0; i<img2.rows; i++)
-  {
-    for( int j=0; j<img2.cols; j++ )
-    {
-      if( img1.channels() == 1 )
-        out.at<float>(i,j+img1.cols) = img1.at<float>(i,j);
-      else
-        out.at<cv::Point3f>(i,j+img1.cols) = img1.at<cv::Point3f>(i,j);
-    }
-  }
+  cv::hconcat(img1, img2, out);
 
   std::cout << " --> writing line" << std::endl;
   if( img1.channels() == 1 )
-    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(50), 1);
+    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(125), 1);
   else 
-    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(50,50,50), 1);
+    cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(125,125,125), 1);
 
 }
 
