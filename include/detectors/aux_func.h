@@ -31,5 +31,6 @@ void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descript
 void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<cv::KeyPoint> &ocv_kp );
 
 void mapPixelValues01( cv::Mat &img, cv::Mat &img_out );
+void mapPixelValues0255( cv::Mat &img, cv::Mat &img_out );
 
 #endif

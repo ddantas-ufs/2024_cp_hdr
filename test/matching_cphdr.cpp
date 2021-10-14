@@ -52,13 +52,14 @@ int main(int argv, char** args)
     return -1;
   }
 
-//  mapPixelValues01( inputImage1, inputImage1 );
-//  mapPixelValues01( inputImage2, inputImage2 );
+  mapPixelValues0255( inputImage1, inputImage1 );
+  mapPixelValues0255( inputImage2, inputImage2 );
 //  mapPixelValues01( grayInputImage1, grayInputImage1 );
 //  mapPixelValues01( grayInputImage2, grayInputImage2 );
 
-  concatenateImages(inputImage1, inputImage2, outputImage);
+//  concatenateImages(grayInputImage1, grayInputImage2, outputImage);
 
+  /*
   double imgMin = 0.0, imgMax = 0.0;
   cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
   std::cout << "----> inputImage1 imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
@@ -68,10 +69,11 @@ int main(int argv, char** args)
   std::cout << "----> outputImage imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
 
   std::cout << "Saving concatenated image into: " << outputPath << std::endl;
-  //cv::imwrite(outputPath, grayInputImage2);
   cv::imwrite(outputPath, outputImage);
+  //cv::imwrite(outputPath, outputImage);
+  
   return 0;
-
+  */
   /*////////////////////////////////////
   imgMin = 0.0, imgMax = 0.0;
   cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
@@ -103,6 +105,9 @@ int main(int argv, char** args)
     std::cout << "--> outImageName2: " +outDir+outImageName2+".hdr.sift.txt" << std::endl;
     saveKeypoints(kp1, outDir+outImageName1+".hdr.sift.txt", kp1.size());
     saveKeypoints(kp2, outDir+outImageName2+".hdr.sift.txt", kp2.size());
+
+    plotKeyPoints(inputImage1, kp1, outDir+outImageName1+"_kps.hdr", kp1.size());
+    plotKeyPoints(inputImage2, kp2, outDir+outImageName2+"_kps.hdr", kp1.size());
   }
   else
   {
@@ -110,6 +115,9 @@ int main(int argv, char** args)
     std::cout << "--> outImageName2: " +outDir+outImageName2+".ldr.sift.txt" << std::endl;
     saveKeypoints(kp1, outDir+outImageName1+".ldr.sift.txt", kp1.size());
     saveKeypoints(kp2, outDir+outImageName2+".ldr.sift.txt", kp2.size());
+
+    plotKeyPoints(inputImage1, kp1, outDir+outImageName1+"_kps.png", kp1.size());
+    plotKeyPoints(inputImage2, kp2, outDir+outImageName2+"_kps.png", kp1.size());
   }
 
   std::cout << "Matching FPs and saving resulting image" << std::endl;

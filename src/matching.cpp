@@ -43,18 +43,17 @@ float calculateDistance( std::vector<int> vec1, std::vector<int> vec2,
 
 void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
 {
-  int totalRows = std::max(img1.rows, img2.rows);
-  int totalCols = img1.cols + img2.cols;
-  int img2IniCol = totalCols-img2.cols;
-
+  // Concatenating img1 and img2 into out
   cv::hconcat(img1, img2, out);
 
+  // drawing a grayscale line in the middle of the image.
+  // just for debugging purposes
   std::cout << " --> writing line" << std::endl;
   if( img1.channels() == 1 )
     cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(125), 1);
   else 
     cv::line( out, cv::Point(img1.cols, 0), cv::Point(img1.cols, img1.rows), cv::Scalar(125,125,125), 1);
-
+  
 }
 
 void nndr( std::vector<KeyPoints> kpListImg1,
