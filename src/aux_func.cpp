@@ -140,6 +140,7 @@ void gaussKernel(cv::Mat &kernel, int size, float sigma)
 	cv::GaussianBlur(dirac, kernel, k_size, sigma, sigma, cv::BORDER_REPLICATE);
 }
 
+/*
 void imgNormalize(cv::Mat img, cv::Mat &img_norm)
 {
   if (img.depth() == 0)
@@ -152,6 +153,7 @@ void imgNormalize(cv::Mat img, cv::Mat &img_norm)
     img_norm = img / HDR_MAX_RANGE;
   }
 }
+*/
 
 void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
 {

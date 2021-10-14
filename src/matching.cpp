@@ -61,10 +61,11 @@ void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<MatchedKeyPoints> &output,
            float threshold, int calcDistMode )
 {
-  std::vector<float> distList;
 
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
+    std::vector<float> distList;
+
     // Calculating all distances to descriptor
     for( int j = 0; j < kpListImg2.size(); j++ )
     {
@@ -77,7 +78,8 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     std::cout << " distList: " << distList.size() << std::endl;
 
     // Getting 1st and 2nd smallest distance from kpListImg1 description
-    float minVal1 = FLT_MAX, minVal2 = FLT_MAX;
+    float minVal1 = std::numeric_limits<float>::max();
+    float minVal2 = std::numeric_limits<float>::max();
     int minValIdx1 = -1, minValIdx2 = -1;
     for( int j = 0; j < kpListImg2.size(); j++ )
     {
@@ -90,13 +92,15 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         minValIdx1 = j;
       }
     }
-    std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
-    std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
 
     // Granting that the algorithm won't take same distance
     if( minVal1 == minVal2 )
     {
-      minVal2 = FLT_MAX;
+      std::cout << " ## Valores obtidos são iguais" << std::endl;
+      std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+      std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
+
+      minVal2 = std::numeric_limits<float>::max();
       minValIdx2 = -1;
 
       for( int j = 0; j < kpListImg2.size(); j++ )
@@ -108,10 +112,11 @@ void nndr( std::vector<KeyPoints> kpListImg1,
           minValIdx2 = j;
         }
       }
+
+      std::cout << " ## Depois de garantir diferença..." << std::endl;
+      std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+      std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
     }
-    std::cout << " ## Depois de garantir diferença..." << std::endl;
-    std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
-    std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
     
     // Calculating if ratio respect threshold
     float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);

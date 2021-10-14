@@ -548,6 +548,8 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
                      int mGauss, float sigma )
 {
   cv::Mat img_norm;
+  mapPixelValues01(img_in, img_norm);
+  /*
   if (img_in.depth() == CV_8U)
   {
     std::cout << " ---> LDR, 255 division " << std::endl;
@@ -558,6 +560,7 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
     std::cout << " ---> HDR, 256 division " << std::endl;
     img_in.convertTo( img_norm, CV_32FC1, (1.0f/256.0f) );
   }
+  */
   /*
   double inMax, inMin, grayMax, grayMin, normMin, normMax;
   cv::minMaxLoc( img_in, &inMin, &inMax );
