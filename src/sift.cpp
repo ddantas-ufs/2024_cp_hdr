@@ -226,13 +226,14 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
 void siftKPOrientation( std::vector<KeyPoints> &kp, cv::Mat &img, int mGauss,
                         float sigma )
 {
+//  cv::Mat auxImg;
+//  img.copyTo( auxImg ); // Allocating auxImg to be equal to img
+
   cv::GaussianBlur( img, img, cv::Size(mGauss, mGauss), sigma, sigma, 
                     cv::BORDER_REPLICATE );
 
   for( int i = 0; i < kp.size(); i++ )
     calcOrientation( img, kp[i] );
-  
-  std::cout << " fim siftKPOrientation " << std::endl;
 }
 
 /**
@@ -548,7 +549,7 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
                      int mGauss, float sigma )
 {
   cv::Mat img_norm;
-  mapPixelValues01(img_in, img_norm);
+  mapPixelValues(img_in, img_norm);
   /*
   if (img_in.depth() == CV_8U)
   {
@@ -574,12 +575,15 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
   std::cout << " ######################################## " << std::endl;
   */
   // calculating keypoints orientation
-  std::cout << "Calculando orientações" << std::endl;
+  std::cout << "Calculating orientations" << std::endl;
   siftKPOrientation( kpl, img_gray, mGauss, sigma );
+  std::cout << " orientations calculated" << std::endl;
 
   //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  cv::cvtColor( img_norm, img_gray, cv::COLOR_BGR2GRAY ); 
   
   //calculating keypoints description
+  std::cout << "Calculating description" << std::endl;
   calcDescriptors( kpl, img_gray );
+  std::cout << " descriptions calculated" << std::endl;
 }

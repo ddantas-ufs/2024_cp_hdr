@@ -109,7 +109,7 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   ** changed normalization method
   */
   //imgNormalize(img, img_norm);
-  mapPixelValues01(img, img_norm);
+  mapPixelValues(img, img_norm);
 
   cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
                    cv::BORDER_REPLICATE);

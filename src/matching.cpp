@@ -65,6 +65,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
     std::vector<float> distList;
+    std::cout << " ### Calculating distances to description " << i << " ###"  << std::endl;
 
     // Calculating all distances to descriptor
     for( int j = 0; j < kpListImg2.size(); j++ )
@@ -74,8 +75,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
                                              calcDistMode ) );
     }
 
-    std::cout << " ### Tamanho distList ###" << std::endl;
-    std::cout << " distList: " << distList.size() << std::endl;
+    std::cout << " IMG 2 has " << kpListImg2.size() << " descriptions." << std::endl;
 
     // Getting 1st and 2nd smallest distance from kpListImg1 description
     float minVal1 = std::numeric_limits<float>::max();
@@ -96,9 +96,9 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     // Granting that the algorithm won't take same distance
     if( minVal1 == minVal2 )
     {
-      std::cout << " ## Valores obtidos são iguais" << std::endl;
-      std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
-      std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
+      std::cout << " --> Obtained values are equal." << std::endl;
+      std::cout << "     minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+      std::cout << "     minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
 
       minVal2 = std::numeric_limits<float>::max();
       minValIdx2 = -1;
@@ -113,9 +113,9 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         }
       }
 
-      std::cout << " ## Depois de garantir diferença..." << std::endl;
-      std::cout << "minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
-      std::cout << "minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
+      std::cout << " --> Granting that minimal values are different:" << std::endl;
+      std::cout << "     minValIdx1: " << minValIdx1 << ", minVal1: " << minVal1 << std::endl;
+      std::cout << "     minValIdx2: " << minValIdx2 << ", minVal2: " << minVal2 << std::endl;
     }
     
     // Calculating if ratio respect threshold
@@ -123,6 +123,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
 
     if( ratio < threshold )
     {
+      std::cout << " --> Ratio below threshold. Adding matching description " << minVal1 << std::endl;
       MatchedKeyPoints kps;
       kps.kp1 = kpListImg1[i];
       kps.kp2 = kpListImg2[minValIdx1];

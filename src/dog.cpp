@@ -396,7 +396,7 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   ** changed normalization method
   */
   //imgNormalize(img, img_norm);
-  mapPixelValues01(img, img_norm);
+  mapPixelValues(img, img_norm);
 
   dogInitScales(img_norm, scales, mgauss, is_hdr);
   dogCalc(scales, dog);

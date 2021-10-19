@@ -27,6 +27,15 @@ void transformCoord(std::vector<KeyPoints> &kp)
   }
 }
 
+std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &v, int m, int n)
+{
+  auto first = v.cbegin() + m;
+  auto last = v.cbegin() + n;
+
+  std::vector<KeyPoints> vec(first, last);
+  return vec;
+}
+
 void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
   int num_kp = 0;
@@ -54,33 +63,40 @@ bool compareResponse(KeyPoints a, KeyPoints b)
   return (a.resp > b.resp);
 }
 
+void sortKeypoints( std::vector<KeyPoints> &vec )
+{
+  //std::vector<KeyPoints> vec_aux = vec;
+  std::sort(vec.begin(), vec.end(), compareResponse);
+}
+
 void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
                    bool transformCoordinate, bool descriptorToBundler)
 {
   FILE *file;
-  std::vector<KeyPoints> kp_aux = kp;
+//  std::vector<KeyPoints> kp_aux = kp;
   int num_kp = 0;
 
+  sortKeypoints( kp );
   //if( transformCoordinate ) transformCoord(kp_aux);
 
-  std::sort(kp_aux.begin(), kp_aux.end(), compareResponse);
+//  std::sort(kp_aux.begin(), kp_aux.end(), compareResponse);
 
-  if (max_kp == 0)
+  if (max_kp <= 0)
   {
-    num_kp = (int)kp_aux.size();
+    num_kp = (int) kp.size();
   }
   else
   {
-    num_kp = std::min<int>((int)kp_aux.size(), max_kp);
+    num_kp = std::min<int>((int) kp.size(), max_kp);
   }
 
   file = fopen((out_path + ".kp.txt").c_str(), "w+");
   fprintf(file, "%d\n", num_kp);
   for (int i = 0; i < num_kp; i++)
   {
-    fprintf(file, "%.4f \t %.4f \t %d \t %d \t %.4f\n", kp_aux[i].y, kp_aux[i].x, kp_aux[i].octave, kp_aux[i].scale, kp_aux[i].resp);
+    fprintf(file, "%.4f \t %.4f \t %d \t %d \t %.4f\n", kp[i].y, kp[i].x, kp[i].octave, kp[i].scale, kp[i].resp);
 
-    int descSize = kp_aux[i].descriptor.size();
+    int descSize = kp[i].descriptor.size();
     if( descSize == 0 )
     {
         fprintf(file, "0\n" ); // print 0 as descriptor
@@ -89,7 +105,7 @@ void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
     {
       for( int j=0; j<descSize; j++ )
       {
-        int desc = (int) kp_aux[i].descriptor[j];
+        int desc = (int) kp[i].descriptor[j];
         fprintf(file, "%d ", desc );
 
         if( descriptorToBundler && (i % 10) == 0 && (i != 0) && j != descSize-1 )

@@ -21,8 +21,6 @@ void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2);
 
 void gaussKernel(cv::Mat &kernel, int size = 5, float sigma = 1.0);
 
-//void imgNormalize(cv::Mat img, cv::Mat &img_norm);
-
 void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale);
 
 void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
@@ -30,7 +28,10 @@ void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descript
 
 void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<cv::KeyPoint> &ocv_kp );
 
-void mapPixelValues01( cv::Mat &img, cv::Mat &img_out );
-void mapPixelValues0255( cv::Mat &img, cv::Mat &img_out );
+void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval = MAPPING_INTERVAL_FLOAT_0_255 );
+
+//void mapPixelValues0_1( cv::Mat &img, cv::Mat &img_out );
+
+//void mapPixelValues0_255( cv::Mat &img, cv::Mat &img_out );
 
 #endif

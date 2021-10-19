@@ -271,13 +271,8 @@ void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<
  * @param img_out: resulting image, with mapped pixel values
  * 
 **/
-void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
+void mapPixelValues0_1( cv::Mat &img, cv::Mat &img_out )
 {
-  // If empty, initialize output image
-  if( img_out.empty() )
-    if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
-    else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32FC3 );
-
   cv::normalize( img, img_out, 0.0f, 1.0f, cv::NORM_MINMAX, img_out.depth(), cv::noArray() );
 }
 
@@ -288,12 +283,29 @@ void mapPixelValues01( cv::Mat &img, cv::Mat &img_out )
  * @param img_out: resulting image, with mapped pixel values
  * 
 **/
-void mapPixelValues0255( cv::Mat &img, cv::Mat &img_out )
+void mapPixelValues0_255( cv::Mat &img, cv::Mat &img_out )
+{
+  cv::normalize( img, img_out, 0.0f, 255.0f, cv::NORM_MINMAX, img_out.depth(), cv::noArray() );
+}
+
+/**
+ * Linearly maps the Matrix values to a interval.
+ * 
+ * @param mat: original image
+ * @param img_out: resulting image, with mapped pixel values
+ * 
+**/
+void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval )
 {
   // If empty, initialize output image
   if( img_out.empty() )
     if( img.channels() == 1 ) img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32F );
     else img_out = cv::Mat::zeros( cv::Size( img.rows, img.cols ), CV_32FC3 );
 
-  cv::normalize( img, img_out, 0.0f, 255.0f, cv::NORM_MINMAX, img_out.depth(), cv::noArray() );
+  if( mapInterval == MAPPING_INTERVAL_FLOAT_0_1 )
+    mapPixelValues0_1( img, img_out ); // maps to [0.0, 1.0] float interval
+  else if( mapInterval == MAPPING_INTERVAL_FLOAT_0_255 )
+    mapPixelValues0_255(img, img_out); // maps to [0.0, 255.0] float interval
+  else
+    mapPixelValues(img, img_out); // if mapInterval does not exist, calls method with default mapping interval
 }
