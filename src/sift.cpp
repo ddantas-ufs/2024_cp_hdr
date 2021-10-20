@@ -105,8 +105,8 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   float dy, dx;
 
   // Extrapolating image borders
-  if( xp > img.cols ) xp = img.cols-(xp - img.cols)-1;
-  if( yp > img.rows ) yp = img.rows-(yp - img.rows)-1;
+  if( xp > img.cols ) xp = img.cols - std::abs(xp-img.cols) - 1;
+  if( yp > img.rows ) yp = img.rows - std::abs(yp-img.rows) - 1;
   if( xm < 0 ) xm = std::abs( xm );
   if( ym < 0 ) ym = std::abs( ym );
 
@@ -120,12 +120,6 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   if( std::isnan( dxb ) ) dxb = 0.0f;
   if( std::isnan( dya ) ) dya = 0.0f;
   if( std::isnan( dyb ) ) dyb = 0.0f;
-
-  //dx = dxa - dxb;
-  //dy = dya - dyb;
-
-  //if( std::isnan( dx ) ) dx = 0.0f;
-  //if( std::isnan( dy ) ) dy = 0.0f;
 
   cartToPolarGradient( dx, dy, mt );
 }

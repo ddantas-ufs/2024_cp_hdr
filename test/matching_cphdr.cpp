@@ -99,8 +99,8 @@ int main(int argv, char** args)
   
   std::cout << "Slicing Keypoint vectors" << std::endl;
   std::cout << " --> Before kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
-  kp1 = vectorSlice( kp1, 0, 10000); // 10k items
-  kp2 = vectorSlice( kp2, 0, 10000); // 10k items
+  kp1 = vectorSlice( kp1, 0, 500); // 1k items
+  kp2 = vectorSlice( kp2, 0, 500); // 1k items
   std::cout << " --> After kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
 
   /*

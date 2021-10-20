@@ -76,7 +76,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
     std::vector<float> distList;
-    std::cout << " ### Calculating distances to description " << i << " ###"  << std::endl;
+    //std::cout << " ### Calculating distances to description " << i << " ###"  << std::endl;
 
     // Calculating all distances to descriptor
     for( int j = 0; j < kpListImg2.size(); j++ )
@@ -87,7 +87,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
                                              calcDistMode ) );
     }
 
-    std::cout << " IMG 2 has " << kpListImg2.size() << " descriptions." << std::endl;
+    //std::cout << " IMG 2 has " << kpListImg2.size() << " descriptions." << std::endl;
 
     // Getting 1st and 2nd smallest distance from kpListImg1 description
     float minVal1 = std::numeric_limits<float>::max();
@@ -145,6 +145,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
       output.push_back( kps );
     }
   }
+  std::cout << " --> Keypoints to match: " << kpListImg1.size() << std::endl;
   std::cout << " --> Matched Keypoints: " << output.size() << std::endl;
 }
 
@@ -163,8 +164,8 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
 
     // A RATIO AROUND BOTH KEYPOINTS IS CALCULATE TO CONSIDER
     // IF IS A MATCH OR NOT. MATCHING_RATIO_MATCH DEFAULTS
-    if( ( std::abs(p1.x-p2.x) < MATCHING_RATIO_MATCH ) && 
-        ( std::abs(p1.y-p2.y) < MATCHING_RATIO_MATCH ) )
+    if( ( std::abs(kp1.x-kp2.x) < MATCHING_RATIO_MATCH ) && 
+        ( std::abs(kp1.y-kp2.y) < MATCHING_RATIO_MATCH ) )
       cv::line( out, p1, p2, (0,255,0), 2 );
     else
       cv::line( out, p1, p2, (0,0,255), 2 );
