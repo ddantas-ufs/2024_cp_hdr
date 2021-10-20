@@ -3,21 +3,15 @@
 
 #include "../detectors/core.h"
 
-void matchDescriptors(std::vector<KeyPoints> kpListImg1,
-                      std::vector<KeyPoints> kpListImg2,
-                      std::map<char, char> output,
-                      float threshold,
-                      int calcDistMode = MATCHING_EUCLIDIAN_DIST_CALC);
-
 float calculateDistance( std::vector<int> vec1, std::vector<int> vec2, 
-                         int distanceMethod = MATCHING_EUCLIDIAN_DIST_CALC );
+                         int distanceMethod = MATCHING_EUCLIDEAN_DIST_CALC );
 
 void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out );
 
 void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<KeyPoints> kpListImg2,
            std::vector<MatchedKeyPoints> &output,
-           float threshold, int calcDistMode );
+           float threshold, int calcDistMode = MATCHING_EUCLIDEAN_DIST_CALC );
 
 void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
                         std::vector<MatchedKeyPoints> matchedDesc );

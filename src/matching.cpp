@@ -2,12 +2,21 @@
 
 float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
 {
-  long sum = 0;
+  float sum = 0;
 
   // the sum of squares of differences between corresponding vector elements
   for( int i = 0; i < vec1.size(); i++ )
-    sum  = sum + std::pow( std::abs(vec1[i] - vec2[i]), 2 );
-
+    sum = sum + std::pow( std::abs(vec1[i] - vec2[i]), 2 );
+  /*
+  std::cout << " --> WARNING! Euclidean sum of squares is zero." << std::endl;
+  std::cout << " --> Vectors:" << std::endl << "Vec1: ";
+  for( int i = 0; i < vec1.size(); i++ )
+    std::cout << vec1[i] << " ";
+  std::cout << std::endl << "Vec2: ";
+  for( int i = 0; i < vec2.size(); i++ )
+    std::cout << vec2[i] << " ";
+  std::cout << std::endl;
+  */
   // Square root or zero
   if( sum == 0 )
     return 0.0f;
@@ -29,15 +38,18 @@ float calculateDistance( std::vector<int> vec1, std::vector<int> vec2,
                          int distanceMethod )
 {
   // Choosing distance calculation method
-  if( distanceMethod == MATCHING_EUCLIDIAN_DIST_CALC )
+  if( distanceMethod == MATCHING_EUCLIDEAN_DIST_CALC )
   {
+    //std::cout << " Euclidean" << std::endl;
     return vectorEuclideadDistance(vec1, vec2);
   }
   else if( distanceMethod == MATCHING_HAMMING_DIST_CALC )
   {
+    //std::cout << " --> Hamming" << std::endl;
     return vectorHammingDistance(vec1, vec2);
   }
 
+  std::cout << " --> Received distanceMethod: " << distanceMethod << ". Returning 0." << std::endl;
   return 0.0f;
 }
 
@@ -61,7 +73,6 @@ void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<MatchedKeyPoints> &output,
            float threshold, int calcDistMode )
 {
-
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
     std::vector<float> distList;
@@ -70,6 +81,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     // Calculating all distances to descriptor
     for( int j = 0; j < kpListImg2.size(); j++ )
     {
+      //std::cout << " --> Calculating between pair kpList1:" << i << " and kpList2: " << j << "." << std::endl;
       distList.push_back( calculateDistance( kpListImg1[i].descriptor,
                                              kpListImg2[j].descriptor,
                                              calcDistMode ) );
@@ -90,6 +102,9 @@ void nndr( std::vector<KeyPoints> kpListImg1,
 
         minVal1 = distList[j];
         minValIdx1 = j;
+
+        //std::cout << " --> Novo valor menor: " << minVal1 << std::endl;
+        //std::cout << " --> Novo indice menor: " << minValIdx1 << std::endl;
       }
     }
 
@@ -123,13 +138,14 @@ void nndr( std::vector<KeyPoints> kpListImg1,
 
     if( ratio < threshold )
     {
-      std::cout << " --> Ratio below threshold. Adding matching description " << minVal1 << std::endl;
+      //std::cout << " --> Ratio below threshold. Adding matching description " << minVal1 << std::endl;
       MatchedKeyPoints kps;
       kps.kp1 = kpListImg1[i];
       kps.kp2 = kpListImg2[minValIdx1];
       output.push_back( kps );
     }
   }
+  std::cout << " --> Matched Keypoints: " << output.size() << std::endl;
 }
 
 void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
@@ -161,7 +177,7 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   cv::Mat imgOut;
   std::vector<MatchedKeyPoints> matchings;
   
-  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_RATIO_MATCH);
+  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
   printLineOnImages(img1, img2, imgOut, matchings);
 }
 
@@ -171,7 +187,7 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
 {
   std::vector<MatchedKeyPoints> matchings;
   
-  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_RATIO_MATCH);
+  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
   printLineOnImages(img1, img2, imgOut, matchings);
 }
 
