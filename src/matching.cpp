@@ -136,12 +136,21 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     // Calculating if ratio respect threshold
     float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
 
+    // 
     if( ratio < threshold )
     {
-      //std::cout << " --> Ratio below threshold. Adding matching description " << minVal1 << std::endl;
       MatchedKeyPoints kps;
       kps.kp1 = kpListImg1[i];
       kps.kp2 = kpListImg2[minValIdx1];
+
+      float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
+
+      // Verifying if the keypoints are in the defined max range from each other
+      if( kpsDistance > MATCHING_RATIO_MATCH )
+        kps.isCorrect = false;
+      else
+        kps.isCorrect = true;
+
       output.push_back( kps );
     }
   }
@@ -156,30 +165,19 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
 
   for( int i = 0; i < matchedDesc.size(); i++ )
   {
-    KeyPoints kp1 = matchedDesc.at(i).kp1;
-    KeyPoints kp2 = matchedDesc.at(i).kp2;
+    MatchedKeyPoints mkps = matchedDesc.at(i);
+    KeyPoints kp1 = mkps.kp1;
+    KeyPoints kp2 = mkps.kp2;
 
     cv::Point p1 = cv::Point(kp1.x, kp1.y);
     cv::Point p2 = cv::Point(kp2.x+img1.cols, kp2.y);
 
-    // A RATIO AROUND BOTH KEYPOINTS IS CALCULATE TO CONSIDER
-    // IF IS A MATCH OR NOT. MATCHING_RATIO_MATCH DEFAULTS
-    if( ( std::abs(kp1.x-kp2.x) < MATCHING_RATIO_MATCH ) && 
-        ( std::abs(kp1.y-kp2.y) < MATCHING_RATIO_MATCH ) )
-      cv::line( out, p1, p2, (0,255,0), 2 );
+    // Correct matchings are blue and incorrect matches are red.
+    if( mkps.isCorrect )
+      cv::line( out, p1, p2, cv::Scalar(255,0,0), 2 );
     else
-      cv::line( out, p1, p2, (0,0,255), 2 );
+      cv::line( out, p1, p2, cv::Scalar(0,0,255), 2 );
   }
-}
-
-void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
-               cv::Mat img2, std::vector<KeyPoints> img2KpList )
-{
-  cv::Mat imgOut;
-  std::vector<MatchedKeyPoints> matchings;
-  
-  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
-  printLineOnImages(img1, img2, imgOut, matchings);
 }
 
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
@@ -188,19 +186,31 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
 {
   std::vector<MatchedKeyPoints> matchings;
   
+  // Compute matching using NNDR algorithm
   nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
+
+  // Creating image with lines indicating the matches founded
   printLineOnImages(img1, img2, imgOut, matchings);
+}
+
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList )
+{
+  cv::Mat imgOut;
+  std::vector<MatchedKeyPoints> matchings;
+
+  matchFPs( img1, img1KpList, img2, img2KpList, imgOut );  
 }
 
 void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
                std::string img2Path, std::vector<KeyPoints> img2KpList )
 {
-  cv::Mat img1, img2, img;
+  cv::Mat img1, img2, aux;
   std::vector<MatchedKeyPoints> matchings;
   std::string str = "";
 
-  readImg(img1Path, img1, img, str);
-  readImg(img2Path, img2, img, str);
+  readImg(img1Path, img1, aux, str);
+  readImg(img2Path, img2, aux, str);
   
   matchFPs( img1, img1KpList, img2, img2KpList );
 }

@@ -140,21 +140,6 @@ void gaussKernel(cv::Mat &kernel, int size, float sigma)
 	cv::GaussianBlur(dirac, kernel, k_size, sigma, sigma, cv::BORDER_REPLICATE);
 }
 
-/*
-void imgNormalize(cv::Mat img, cv::Mat &img_norm)
-{
-  if (img.depth() == 0)
-  {
-    img.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / LDR_MAX_RANGE;
-  }
-  else
-  {
-    img_norm = img / HDR_MAX_RANGE;
-  }
-}
-*/
-
 void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
 {
   octave = kpt.octave & 255;
@@ -307,5 +292,5 @@ void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval )
   else if( mapInterval == MAPPING_INTERVAL_FLOAT_0_255 )
     mapPixelValues0_255(img, img_out); // maps to [0.0, 255.0] float interval
   else
-    mapPixelValues(img, img_out); // if mapInterval does not exist, calls method with default mapping interval
+    mapPixelValues0_255(img, img_out); // if mapInterval does not exist, calls method with default mapping interval
 }

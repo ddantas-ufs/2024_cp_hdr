@@ -9,6 +9,8 @@ void printKeypoint( KeyPoints &kp );
 
 bool outOfBounds(int i, int j, cv::Size size_img);
 
+float distanceBetwenTwoKeyPoints( KeyPoints p1, KeyPoints p2 );
+
 void sortKeypoints( std::vector<KeyPoints> &vec );
 
 std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &v, int m, int n);

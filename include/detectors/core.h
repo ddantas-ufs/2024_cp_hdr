@@ -50,8 +50,11 @@
 #define MATCHING_HAMMING_DIST_CALC 0
 #define MATCHING_EUCLIDEAN_DIST_CALC 1
 
-#define MATCHING_RATIO_MATCH 15
+#define MATCHING_RATIO_MATCH 122.13f // numero obtido calculando 3% de (largura+altura / 2) das imagens de teste.
 #define MATCHING_NNDR_THRESHOLD 0.7f
+
+#define MATCHING_INCORRECT 0
+#define MATCHING_CORRECT 1
 
 struct KeyPoints
 {
@@ -68,6 +71,7 @@ struct KeyPoints
 struct MatchedKeyPoints
 {
   KeyPoints kp1, kp2;
+  bool isCorrect;
 };
 
 #endif
