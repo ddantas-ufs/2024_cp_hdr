@@ -329,7 +329,22 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
+  /*
   if (is_hdr)
+  {
+    cv::Mat img_cv, img_log;
+
+    coefVar(img, img_cv, cv_size);
+    logTransform(img_cv, img_log);
+
+    img_aux = img_log;
+  }
+  else
+  {
+    img_aux = img;
+  }
+  */
+  if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
     cv::Mat img_cv, img_log;
 
@@ -398,9 +413,18 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   //imgNormalize(img, img_norm);
   mapPixelValues(img, img_norm);
 
+  std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);
+  
+  std::cout << " ## SIFT > > Calculating Difference of Gaussians..." << std::endl;
   dogCalc(scales, dog);
+  
+  std::cout << " ## SIFT > > Computing Maxima Suppression and subpixel keypoint coordinates..." << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  
+  std::cout << " ## SIFT > > Contrast Threshold..." << std::endl;
   contrastTh(dog, kp, contrast_th);
+  
+  std::cout << " ## SIFT > > Edge Threshold..." << std::endl;
   edgeTh(dog, kp, curv_th);
 }

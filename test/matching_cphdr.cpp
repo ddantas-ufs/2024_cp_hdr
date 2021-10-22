@@ -1,17 +1,17 @@
 #include "../include/cphdr.h"
 
-/*
-** THIS PROGRAM PERFORM THE MATCHING OF TWO IMAGES,
-** USING ENTIRELY OPENCV2 TOOLS.
-**
-** THIS PROGRAM EXPECTS ARGUMENTS
-** 
-** args[1]: image1
-** args[2]: image2
-** args[3]: matching output
-** 
-** @author arturxz, 01/10/2021 (created)
-*/
+/**
+ ** THIS PROGRAM PERFORM THE MATCHING OF TWO IMAGES,
+ ** USING ENTIRELY OPENCV2 TOOLS.
+ **
+ ** THIS PROGRAM EXPECTS ARGUMENTS
+ ** 
+ ** args[1]: image1
+ ** args[2]: image2
+ ** args[3]: matching output
+ ** 
+ ** @author arturxz, 01/10/2021 (created)
+**/
 int main(int argv, char** args)
 {
   cv::Mat inputImage1, inputImage2, grayInputImage1, grayInputImage2,
@@ -54,44 +54,15 @@ int main(int argv, char** args)
 
   mapPixelValues( inputImage1, inputImage1 );
   mapPixelValues( inputImage2, inputImage2 );
-//  mapPixelValues01( grayInputImage1, grayInputImage1 );
-//  mapPixelValues01( grayInputImage2, grayInputImage2 );
-
-//  concatenateImages(grayInputImage1, grayInputImage2, outputImage);
 
   /*
-  double imgMin = 0.0, imgMax = 0.0;
-  cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
-  std::cout << "----> inputImage1 imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
-  cv::minMaxLoc( inputImage2, &imgMin, &imgMax );
-  std::cout << "----> inputImage2 imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
-  cv::minMaxLoc( outputImage, &imgMin, &imgMax );
-  std::cout << "----> outputImage imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
-
-  std::cout << "Saving concatenated image into: " << outputPath << std::endl;
-  cv::imwrite(outputPath, outputImage);
-  //cv::imwrite(outputPath, outputImage);
-  
-  return 0;
-  */
-  /*////////////////////////////////////
-  imgMin = 0.0, imgMax = 0.0;
-  cv::minMaxLoc( inputImage1, &imgMin, &imgMax );
-  std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
-
-  std::cout << " --> Mapping pixels" << std::endl;
-  mapPixelValues01( inputImage1, outputImage );
-  std::cout << " --> Pixels mapped" << std::endl;
-
-  /////////////////////////////////////
-  imgMin = 0.0, imgMax = 0.0;
-  cv::minMaxLoc( outputImage, &imgMin, &imgMax );
-  std::cout << "----> imgMin: " << imgMin << ", imgMax: " << imgMax << std::endl;
-  */
-
   std::cout << "Detecting Keypoints" << std::endl;
   dogKp(grayInputImage1, kp1);
   dogKp(grayInputImage2, kp2);
+  */
+
+  runSift(grayInputImage1, kp1);
+  runSift(grayInputImage2, kp2);
 
   std::cout << "Sorting Keypoint vectors" << std::endl;
   sortKeypoints( kp1 );
@@ -99,18 +70,11 @@ int main(int argv, char** args)
   
   std::cout << "Slicing Keypoint vectors" << std::endl;
   std::cout << " --> Before kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
-  kp1 = vectorSlice( kp1, 0, 500); // 1k items
-  kp2 = vectorSlice( kp2, 0, 500); // 1k items
+  kp1 = vectorSlice( kp1, 0, 500); // 500 items
+  kp2 = vectorSlice( kp2, 0, 500); // 500 items
   std::cout << " --> After kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
-
-  /*
-  for(int k = 0; k < 1000; k++)
-  {
-    subKp1.push_back( kp1[k] );
-    subKp2.push_back( kp2[k] );
-  }
-  */
   
+  /*
   std::cout << "Describing KP1" << std::endl;
   siftDescriptor(kp1, inputImage1, grayInputImage1);
   std::cout << "KP1 described" << std::endl;
@@ -118,18 +82,7 @@ int main(int argv, char** args)
   std::cout << "Describing KP2" << std::endl;
   siftDescriptor(kp2, inputImage2, grayInputImage2);
   std::cout << "KP2 described" << std::endl;
-
-  /*
-  // Generating images description
-  std::cout << "Detecting and Describing Keypoints Image 1" << std::endl;
-  dogKp(grayInputImage1, kp1);
-  siftDescriptor(kp1, inputImage1, grayInputImage1);
-
-  std::cout << "Detecting and Describing Keypoints Image 2" << std::endl;
-  dogKp(grayInputImage2, kp2);
-  siftDescriptor(kp2, inputImage2, grayInputImage2);
   */
-
   // Saving images description
   if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
   {
@@ -159,7 +112,6 @@ int main(int argv, char** args)
 
   kp1.clear();
   kp2.clear();
-//  subKp1.clear();
-//  subKp2.clear();
+
   return 0;
 }

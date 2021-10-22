@@ -66,8 +66,9 @@ void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size, bool gauss, float sigm
       cv.at<double>(y, x) = coef_var;
     }
   }
-  cv.convertTo(img_cv, CV_32FC1);
-  cv::normalize(img_cv, img_cv, 0.0, 1.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+//  cv.convertTo(img_cv, CV_32FC1);
+//  cv::normalize(img_cv, img_cv, 0.0, 1.0, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+  mapPixelValues(cv, img_cv);
 }
 
 void logTransform(cv::Mat img, cv::Mat &img_log10)

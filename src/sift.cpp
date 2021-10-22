@@ -1,4 +1,5 @@
 #include "../include/descriptors/sift.h"
+#include "../include/detectors/dog.h"
 
 /**
  * Return a flattened array of a cv::Mat object
@@ -273,7 +274,7 @@ void unravelIndex( int index, int rows, int cols, int ret[2] )
  * @param binWidth width of the bin (360/8=45)
  * @param subW width of the subregion (=4)
  * @param hist Matrix where the histogram is being returned
-**/
+**//*
 void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, float refAngle,
                                int binWidth, int subW, cv::Mat& hist )
 {
@@ -323,6 +324,7 @@ void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, flo
   for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
   std::cout << std::endl;
 }
+*/
 
 /**
  * Receive the histogram array and descriptor array, normalize the values and store
@@ -534,7 +536,7 @@ void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 }
 
 /**
- * SIFT MAIN METHOD
+ * SIFT DESCRIPTOR MAIN METHOD
  * 
  * @param kp KeyPoints detected
  * @param name string with image's name
@@ -544,40 +546,43 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
 {
   cv::Mat img_norm;
   mapPixelValues(img_in, img_norm);
-  /*
-  if (img_in.depth() == CV_8U)
-  {
-    std::cout << " ---> LDR, 255 division " << std::endl;
-    img_in.convertTo( img_norm, CV_32FC1, (1.0f/255.0f) );
-  }
-  else
-  {
-    std::cout << " ---> HDR, 256 division " << std::endl;
-    img_in.convertTo( img_norm, CV_32FC1, (1.0f/256.0f) );
-  }
-  */
-  /*
-  double inMax, inMin, grayMax, grayMin, normMin, normMax;
-  cv::minMaxLoc( img_in, &inMin, &inMax );
-  cv::minMaxLoc( img_gray, &grayMin, &grayMax );
-  std::cout << " ######################################## " << std::endl;
-  std::cout << "in_min: " << inMin << ", in_max: " << inMax << std::endl;
-  std::cout << "gray_min: " << grayMin << ", gray_max: " << grayMax << std::endl;
-  std::cout << " -------------------------------------------- " << std::endl;
-  cv::minMaxLoc( img_norm, &normMin, &normMax );
-  std::cout << "norm_min: " << normMin << ", norm_max: " << normMax << std::endl;
-  std::cout << " ######################################## " << std::endl;
-  */
-  // calculating keypoints orientation
-  std::cout << "Calculating orientations" << std::endl;
-  siftKPOrientation( kpl, img_gray, mGauss, sigma );
-  std::cout << " orientations calculated" << std::endl;
 
-  //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, cv::COLOR_BGR2GRAY ); 
+  // calculating keypoints orientation
+  std::cout << " ## SIFT > > Calculating orientations..." << std::endl;
+  siftKPOrientation( kpl, img_gray, mGauss, sigma );
+  std::cout << " ## SIFT > > Keypoints orientations computed." << std::endl;
+
+  //Removing blur applied in siftKPOrientation
+  //cv::cvtColor( img_norm, img_gray, cv::COLOR_BGR2GRAY ); 
+  makeGrayscaleCopy( img_norm, img_gray );
   
-  //calculating keypoints description
-  std::cout << "Calculating description" << std::endl;
+  //Calculating keypoints description
+  std::cout << " ## SIFT > > Calculating description..." << std::endl;
   calcDescriptors( kpl, img_gray );
-  std::cout << " descriptions calculated" << std::endl;
+  std::cout << " ## SIFT > > descriptions computed." << std::endl;
+}
+
+/**
+ * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * 
+ * @param img: image where keypoints will be detected
+ * @param kpList: output vector containing detected keypoints and description.
+**/
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList )
+{
+  cv::Mat imgGray;
+
+  makeGrayscaleCopy( img, imgGray );
+  //if (img.channels() != 1){ cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY); }
+  //else { img.copyTo(imgGray); }
+
+  std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
+  dogKp(imgGray, kpList);
+  std::cout << " ## SIFT > " << kpList.size() << " Keypoints detected." << std::endl;
+
+  std::cout << " ## SIFT > Describing Keypoints..." << std::endl;
+  siftDescriptor(kpList, img, imgGray);
+  std::cout << " ## SIFT > Keypoints described." << std::endl;
+
+  imgGray.release();
 }

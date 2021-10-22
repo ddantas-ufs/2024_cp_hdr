@@ -5,6 +5,8 @@
 
 void printMat( cv::Mat &m, std::string mat_name );
 
+void makeGrayscaleCopy( cv::Mat img, cv::Mat &imgOut );
+
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);
 
 void readImg(std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);

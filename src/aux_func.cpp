@@ -13,6 +13,19 @@ void printMat( cv::Mat &m, std::string mat_name )
 }
 
 /**
+ * If image is grayscale, make a copy;
+ * If image is RGB, parse it to grayscale.
+ * 
+ * @param img: image to be copied to grayscale
+ * @param imgOut: output image
+**/
+void makeGrayscaleCopy( cv::Mat img, cv::Mat &imgOut )
+{
+  if (img.channels() != 1){ cv::cvtColor(img, imgOut, cv::COLOR_BGR2GRAY); }
+  else { img.copyTo(imgOut); }
+}
+
+/**
 * Reads image in img_path and stores a RGB, Grayscale and image name. 
 * In case img_path points to a grayscale image, img_in and img_gray will point to same object 
 * img_name will store the image name according to withExtension parameter 
@@ -28,8 +41,9 @@ void readImg( std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::str
   img_in = cv::imread(img_path, cv::IMREAD_UNCHANGED);
   std::cout << "reading image " << img_path << std::endl;
 
-  if (img_in.channels() != 1){ cv::cvtColor(img_in, img_gray, cv::COLOR_BGR2GRAY); }
-  else { img_gray = img_in; }
+  makeGrayscaleCopy( img_in, img_gray );
+  //if (img_in.channels() != 1){ cv::cvtColor(img_in, img_gray, cv::COLOR_BGR2GRAY); }
+  //else { img_gray = img_in; }
   /*
   double inMax, inMin, grayMax, grayMin, normMin, normMax;
   cv::minMaxLoc( img_in, &inMin, &inMax );
