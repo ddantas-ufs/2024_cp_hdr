@@ -5,6 +5,8 @@
 
 void printMat( cv::Mat &m, std::string mat_name );
 
+void cleanKeyPointVector( std::vector<KeyPoints> &kp );
+
 void makeGrayscaleCopy( cv::Mat img, cv::Mat &imgOut );
 
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);
@@ -24,9 +26,6 @@ void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2);
 void gaussKernel(cv::Mat &kernel, int size = 5, float sigma = 1.0);
 
 void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale);
-
-void importOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
-                            std::vector<KeyPoints> &kpList, bool comDescritor = false );
 
 void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<cv::KeyPoint> &ocv_kp );
 

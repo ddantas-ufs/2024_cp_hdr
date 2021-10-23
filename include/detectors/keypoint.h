@@ -24,4 +24,7 @@ std::vector<KeyPoints> loadKeypoints(std::string arqPath);
 
 std::vector<KeyPoints> loadLoweKeypoints(std::string arqPath);
 
+void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
+                          std::vector<KeyPoints> &kpList, bool withDescription = false );
+
 #endif

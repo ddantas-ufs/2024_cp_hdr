@@ -7,16 +7,7 @@ float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
   // the sum of squares of differences between corresponding vector elements
   for( int i = 0; i < vec1.size(); i++ )
     sum = sum + std::pow( std::abs(vec1[i] - vec2[i]), 2 );
-  /*
-  std::cout << " --> WARNING! Euclidean sum of squares is zero." << std::endl;
-  std::cout << " --> Vectors:" << std::endl << "Vec1: ";
-  for( int i = 0; i < vec1.size(); i++ )
-    std::cout << vec1[i] << " ";
-  std::cout << std::endl << "Vec2: ";
-  for( int i = 0; i < vec2.size(); i++ )
-    std::cout << vec2[i] << " ";
-  std::cout << std::endl;
-  */
+
   // Square root or zero
   if( sum == 0 )
     return 0.0f;
@@ -134,10 +125,11 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     }
     
     // Calculating if ratio respect threshold
-    float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
+    //float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
 
     // 
-    if( ratio < threshold )
+    std::cout << "     minVal1: " << minVal1 << ", minVal2: " << minVal2 << std::endl;
+    if( minVal1 < MATCHING_NNDR_THRESHOLD * minVal2 )
     {
       MatchedKeyPoints kps;
       kps.kp1 = kpListImg1[i];

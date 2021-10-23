@@ -314,3 +314,121 @@ void printKeypoint( KeyPoints &kp )
     std::cout << std::endl;
   }
 }
+
+void unpackOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer, float &scale)
+{
+  octave = kpt.octave & 255;
+  layer = (kpt.octave >> 8) & 255;
+  octave = octave < 128 ? octave : (-128 | octave);
+  scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
+}
+
+/**
+ * Function that reads OpenCV Keypoints and description objects
+ * and transforms it in CP_HDR KeyPoints structure.
+ * 
+ * @param ocv_kp: OpenCV keypoints vector;
+ * @param descriptor: OpenCV descriptor object;
+ * @param kpList: CP_HDR vector in with the Keypoints and description will be returned;
+ * @param withDescription: boolean that indicates if description needs to be transformed.
+**/
+void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
+                          std::vector<KeyPoints> &kpList, bool withDescription )
+{
+  std::cout << "Importing " << ocv_kp.size() << " Keypoints ";
+  if( withDescription ) std::cout << "with description" << std::endl;
+  else std::cout << "without description" << std::endl;
+
+  for(int i=0; i<ocv_kp.size(); i++)
+  {
+    KeyPoints nkp;
+    int uOctave, uLayer;
+    float uScale;
+
+    unpackOpenCVOctave( ocv_kp[i], uOctave, uLayer, uScale );
+
+    nkp.x = (float) ocv_kp[i].pt.x;
+    nkp.y = (float) ocv_kp[i].pt.y;
+    nkp.resp = (float) ocv_kp[i].response;
+    nkp.direction = (float) ocv_kp[i].angle;
+    nkp.octave = (int) uOctave;
+    nkp.scale = (int) uLayer;
+
+    //std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
+    //std::cout << "Resp: " << uLayer << std::endl;
+    //std::cout << "Octv: " << nkp.octave << std::endl;
+    //std::cout << "Angl: " << nkp.direction << std::endl;
+    //std::cout << "Scal: " << nkp.scale << std::endl;
+
+    if( withDescription )
+    {
+      for( int j=0; j < descriptor.cols; j++ )
+      {
+        float d = descriptor.at<float>(j, i);
+        nkp.descriptor.push_back( (int) d );
+      }
+    }
+    kpList.push_back(nkp);
+  }
+
+}
+
+/*
+  Pack info into octave variable
+  Octave integer variable stores 2 informations 
+  that are stored in the first 2 binary octets.
+  + xxxxxxxx xxxxxxxx llllllll oooooooo -
+  Where:
+    x = Unused octets
+    l = Layer information octet
+    o = Octave information octet (less significant octet)
+*/
+void packOpenCVOctave(const cv::KeyPoint &kpt, int &octave, int &layer )
+{
+  int oct = octave;
+  int aux = layer;
+  aux = aux << 8; // pass first octet to second octet
+  aux = aux | ( 15 && oct ); // Octave is the first octet
+
+  octave = oct;
+}
+
+void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<cv::KeyPoint> &ocv_kp )
+{
+  std::cout << "Exporting " << kpList.size() << " Keypoints " << std::endl;
+
+  for(int i=0; i<kpList.size(); i++)
+  {
+    //std::cout << "kp " << i << std::endl;
+    cv::KeyPoint nkp;
+    int oct = kpList[i].octave;
+    int lay = kpList[i].scale;
+
+    packOpenCVOctave( ocv_kp[i], oct, lay );
+
+    nkp.pt.x = kpList[i].x;
+    nkp.pt.y = kpList[i].y;
+    nkp.response = kpList[i].resp;
+    nkp.angle = kpList[i].direction;
+    nkp.octave = (int) oct;
+
+    /*
+    nkp.x = (float) ocv_kp[i].pt.x;
+    nkp.y = (float) ocv_kp[i].pt.y;
+    nkp.resp = (float) ocv_kp[i].response;
+    nkp.direction = (float) ocv_kp[i].angle;
+    nkp.octave = (int) uOctave;
+    nkp.scale = (int) uLayer;
+    */
+
+    //std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
+    //std::cout << "Resp: " << uLayer << std::endl;
+    //std::cout << "Octv: " << nkp.octave << std::endl;
+    //std::cout << "Angl: " << nkp.direction << std::endl;
+    //std::cout << "Scal: " << nkp.scale << std::endl;
+
+    //std::cout << "push_back 1" << std::endl;;
+    ocv_kp.push_back(nkp);
+    //std::cout << "push_back 2" << std::endl;;
+  }
+}
