@@ -212,7 +212,7 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
 **/
 std::vector<KeyPoints> loadLoweKeypoints( std::string arqPath )
 {
-  std::fstream arch; 
+  std::fstream arch;
   std::string line, strY, strX, strOctave, strScale, strOrientation;
   std::vector<KeyPoints> kp;
 

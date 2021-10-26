@@ -73,6 +73,34 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
   readImg(strImgPath, img_in, img_gray, img_name, withExtension);
 }
 
+void readHomographicMatrix( std::string path, cv::Mat H )
+{
+  H = cv::Mat( cv::Size(3,3), CV_32F );
+  std::fstream arch( path, std::ios_base::in );
+
+  float aux;
+  for( int i = 0; i < 3; i++ )
+    for( int j = 0; j < 3; j++ )
+    {
+      arch >> aux;
+      H.at<float>(i,j) = aux;
+    }
+  
+  arch.close();
+  /*
+  std::string ln1, ln2, ln3, h11, h12, h13, h21, h22, h23, h31, h32, h33;
+  arch.open( path, std::ios::in );
+
+  getline( arch, ln1 );
+  getline( arch, ln2 );
+  getline( arch, ln3 );
+
+  ln1.erase( std::remove( ln1.begin(), ln1.end(), ' ' ), ln1.end() );
+  ln2.erase( std::remove( ln2.begin(), ln2.end(), ' ' ), ln2.end() );
+  ln3.erase( std::remove( ln3.begin(), ln3.end(), ' ' ), ln3.end() );
+  */
+}
+
 std::string getFileName(std::string file_path, bool withExtension)
 {
   size_t size = file_path.rfind("/", file_path.length());
@@ -208,4 +236,31 @@ void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval )
     mapPixelValues0_255(img, img_out); // maps to [0.0, 255.0] float interval
   else
     mapPixelValues0_255(img, img_out); // if mapInterval does not exist, calls method with default mapping interval
+}
+
+/**
+ * Gets the p1, from Image 1, mapped in the Image 2 using p2 argument.
+ * 
+ * @param p1: A point in Image 1;
+ * @param p2: Argument where to store the p1 point mapped in image 2;
+ * @param H: Homography matrix.
+**/
+void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, cv::Mat H )
+{
+  cv::warpPerspective( imgIn, imgOut, H, imgIn.size() );
+}
+
+/**
+ * Gets the p1, from Image 1, mapped in the Image 2 using p2 argument.
+ * 
+ * @param p1: A point in Image 1;
+ * @param p2: Argument where to store the p1 point mapped in image 2;
+ * @param pathMatrix: Path to homography matrix archive.
+**/
+void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, std::string pathMatrix )
+{
+  cv::Mat H;
+
+  readHomographicMatrix( pathMatrix, H );
+  getHomographicCorrespondence( imgIn, imgOut, H );
 }
