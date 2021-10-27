@@ -73,7 +73,7 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
   readImg(strImgPath, img_in, img_gray, img_name, withExtension);
 }
 
-void readHomographicMatrix( std::string path, cv::Mat H )
+void readHomographicMatrix( std::string path, cv::Mat &H )
 {
   H = cv::Mat( cv::Size(3,3), CV_32F );
   std::fstream arch( path, std::ios_base::in );
@@ -87,18 +87,6 @@ void readHomographicMatrix( std::string path, cv::Mat H )
     }
   
   arch.close();
-  /*
-  std::string ln1, ln2, ln3, h11, h12, h13, h21, h22, h23, h31, h32, h33;
-  arch.open( path, std::ios::in );
-
-  getline( arch, ln1 );
-  getline( arch, ln2 );
-  getline( arch, ln3 );
-
-  ln1.erase( std::remove( ln1.begin(), ln1.end(), ' ' ), ln1.end() );
-  ln2.erase( std::remove( ln2.begin(), ln2.end(), ' ' ), ln2.end() );
-  ln3.erase( std::remove( ln3.begin(), ln3.end(), ' ' ), ln3.end() );
-  */
 }
 
 std::string getFileName(std::string file_path, bool withExtension)
@@ -239,11 +227,11 @@ void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval )
 }
 
 /**
- * Gets the p1, from Image 1, mapped in the Image 2 using p2 argument.
+ * Gets the Image 1 mapped to image 2 position
  * 
- * @param p1: A point in Image 1;
- * @param p2: Argument where to store the p1 point mapped in image 2;
- * @param H: Homography matrix.
+ * @param imgIn: The reference image;
+ * @param imgOut: Image transformed using homographic matrix;
+ * @param pathMatrix: Path to homography matrix archive.
 **/
 void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, cv::Mat H )
 {
@@ -251,10 +239,10 @@ void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, cv::Mat H )
 }
 
 /**
- * Gets the p1, from Image 1, mapped in the Image 2 using p2 argument.
+ * Gets the Image 1 mapped to image 2 position
  * 
- * @param p1: A point in Image 1;
- * @param p2: Argument where to store the p1 point mapped in image 2;
+ * @param imgIn: The reference image;
+ * @param imgOut: Image transformed using homographic matrix;
  * @param pathMatrix: Path to homography matrix archive.
 **/
 void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, std::string pathMatrix )
@@ -263,4 +251,37 @@ void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, std::string p
 
   readHomographicMatrix( pathMatrix, H );
   getHomographicCorrespondence( imgIn, imgOut, H );
+}
+
+
+/**
+ * Gets the p1, from Image 1, mapped in the Image 2 using p2 argument.
+ * 
+ * @param p1: A point in Image 1;
+ * @param p2: Argument where to store the p1 point mapped in image 2;
+ * @param pathMatrix: Path to homography matrix archive.
+ * 
+ * | x1 |   | x2 |   | h1 h2 h3 |
+ * | y1 | = | y2 | X | h4 h5 h6 | = 1x3 * 3x3 = 3x3
+ * | 01 |   | 01 |   | h7 h8 h9 |
+**/
+void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H )
+{
+  cv::Mat mp1 = cv::Mat( 1, 3, CV_32F );//, mp2;
+
+  mp1.at<float>(0,0) = p1.x;
+  mp1.at<float>(0,1) = p1.y;
+  mp1.at<float>(0,2) = 1.0f;
+
+  std::cout << "---> mp1: " << mp1.size() << std::endl;
+  std::cout << "---> mp1: " << H.size() << std::endl;
+
+  cv::Mat mp2 = mp1 * H;
+  
+  p2.x = mp2.at<float>(0,0);
+  p2.y = mp2.at<float>(0,1);
+
+  printMat(mp1, "Point 1");
+  printMat(mp2, "Point 2");
+  printMat(H, "Homography Matrix");
 }

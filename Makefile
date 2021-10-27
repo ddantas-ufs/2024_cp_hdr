@@ -35,6 +35,9 @@ DEMO_IMG2_MATCH = 04.jpg
 DEMO_HDR1_MATCH = 00.hdr
 DEMO_HDR2_MATCH = 04.hdr
 
+DEMO_HOMOGRAPHY_IMG1_IMG2 = H.00_04.txt
+DEMO_HOMOGRAPHY_IMG2_IMG1 = H.04_00.txt
+
 DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_DOG_HDR = demodog_hdr
@@ -52,6 +55,8 @@ DEMO_LDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_IMG2_MATCH)
 DEMO_HDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_HDR1_MATCH)
 DEMO_HDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_HDR2_MATCH)
 
+DEMO_HOMOGRAPHIC_MATRIX = $(IMG_DIR)/$(DEMO_HOMOGRAPHY_IMG1_IMG2)
+
 LOWE_SIFT = $(OLD_DIR)/sift_lowe_implementation/sift
 SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
@@ -60,6 +65,7 @@ MATCHING_OPENCV = matching_opencv
 MATCHING_CPHDR = matching_cphdr
 
 COMPARE_ALGORITHMS = compare_algorithms
+DEMO_HOMOGRAPHY = demo_homography
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -68,6 +74,9 @@ install:
 
 libcphdr:
 	$(MAKE_LIB)
+
+demohomography:
+	$(CC) -o $(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(TEST_DIR)/$(DEMO_HOMOGRAPHY).cpp $(SRC_FILES) $(CV_LIB)
 
 demoharris:
 	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS) $(TEST_DIR)/$(DEMO_HARRIS).cpp $(SRC_FILES) $(CV_LIB)
@@ -101,6 +110,9 @@ matching_cphdr:
 
 compare_algorithms:
 	$(CC) -o $(BIN_DIR)/$(COMPARE_ALGORITHMS) $(TEST_DIR)/$(COMPARE_ALGORITHMS).cpp $(SRC_FILES) $(CV_LIB)
+
+run_demohomography: demohomography
+	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/

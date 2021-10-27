@@ -13,6 +13,8 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
 
 void readImg(std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension = false);
 
+void readHomographicMatrix( std::string path, cv::Mat &H );
+
 std::string getFileName(std::string file_path, bool withExtension);
 
 int sciToDec(const std::string &str);
@@ -31,8 +33,10 @@ void exportToOpenCVKeyPointsObject( std::vector<KeyPoints> &kpList, std::vector<
 
 void mapPixelValues( cv::Mat &img, cv::Mat &img_out, int mapInterval = MAPPING_INTERVAL_FLOAT_0_255 );
 
-//void mapPixelValues0_1( cv::Mat &img, cv::Mat &img_out );
+void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, std::string pathMatrix );
 
-//void mapPixelValues0_255( cv::Mat &img, cv::Mat &img_out );
+void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, cv::Mat H );
+
+void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H );
 
 #endif
