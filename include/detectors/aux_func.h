@@ -39,4 +39,6 @@ void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, cv::Mat H );
 
 void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H );
 
+void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv::Mat H );
+
 #endif

@@ -3,19 +3,21 @@
 /**
  * Compare CP_HDR with other algorithms
  * 
- * @param arg[1]: Image 1 to matching
- * @param arg[2]: Image 2 to matching
- * @param arg[3]: output directory
+ * @param arg[1]: Image 1 to matching path
+ * @param arg[2]: Image 2 to matching path
+ * @param arg[3]: Homography Matrix path
+ * @param arg[4]: output directory path
 **/
 int main(int argv, char** args)
 {
-  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching;
+  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching, H;
   std::vector<KeyPoints> kp1, kp2; // CP_HDR KeyPoint list
   
   std::string img1OutPath, img2OutPath, imgMatchingOutPath;
   
   std::string imgPath = args[1], hdrSuf = ".hdr";
-  std::string outDir = std::string(args[3]);
+  std::string pathH = std::string(args[3]);
+  std::string outDir = std::string(args[4]);
 
   bool isHDR = false;
 
@@ -28,6 +30,18 @@ int main(int argv, char** args)
   // Reading images and setting output image name
   readImg(args[1], img1, img1Gray, img1OutPath);
   readImg(args[2], img2, img2Gray, img2OutPath);
+
+  // Reading Homography Matrix
+  readHomographicMatrix( pathH, H );
+
+  // Transforming image 1
+  getHomographicCorrespondence(img1, img1Out, H);
+  img1Out.copyTo( img1 );
+  img1Out.release();
+
+  getHomographicCorrespondence(img1Gray, img1Out, H);
+  img1Out.copyTo( img1Gray );
+  img1Out.release();
 
   // Evaluating if image is LDR or HDR
   if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
@@ -68,7 +82,7 @@ int main(int argv, char** args)
 
   // Matching and generating output image with matches
   std::cout << "> Matching CP_HDR FPs and saving resulting image" << std::endl;
-  matchFPs(img1, kp1, img2, kp2, imgMatching);
+  matchFPs(img1, kp1, img2, kp2, H, imgMatching);
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
   // Cleaning objects
@@ -91,6 +105,14 @@ int main(int argv, char** args)
     // Reading images and setting output image name
     readImg(args[1], img1, img1Gray, img1OutPath);
     readImg(args[2], img2, img2Gray, img2OutPath);
+
+    getHomographicCorrespondence(img1, img1Out, H);
+    img1Out.copyTo( img1 );
+    img1Out.release();
+
+    getHomographicCorrespondence(img1Gray, img1Out, H);
+    img1Out.copyTo( img1Gray );
+    img1Out.release();
 
     std::cout << "> Running OpenCV SIFT..." << std::endl;
 
@@ -117,11 +139,10 @@ int main(int argv, char** args)
     plotKeyPoints( img1, kp1, outDir+img1OutPath+"_OpenCV_SIFT_LDR.png", kp1.size() );
     plotKeyPoints( img2, kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.png", kp2.size() );
 
-
     // Matching and generating output image with matches
     std::cout << "> Matching OpenCV FPs and saving resulting image..." << std::endl;
     imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_OpenCV_SIFT.png";
-    matchFPs(img1, kp1, img2, kp2, imgMatching);
+    matchFPs(img1, kp1, img2, kp2, H, imgMatching);
     cv::imwrite(imgMatchingOutPath, imgMatching);
 
     ocvDesc1.release();

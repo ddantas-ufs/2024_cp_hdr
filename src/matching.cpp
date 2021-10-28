@@ -2,6 +2,8 @@
 
 float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
 {
+  return cv::norm(vec1, vec2, cv::NORM_L2);
+  /*
   float sum = 0;
 
   // the sum of squares of differences between corresponding vector elements
@@ -12,7 +14,7 @@ float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
   if( sum == 0 )
     return 0.0f;
   else
-    return std::sqrt( sum );
+    return std::sqrt( sum );*/
 }
 
 float vectorHammingDistance( std::vector<int> vec1, std::vector<int> vec2 )
@@ -62,7 +64,7 @@ void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
 void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<KeyPoints> kpListImg2,
            std::vector<MatchedKeyPoints> &output,
-           float threshold, int calcDistMode )
+           cv::Mat H, float threshold, int calcDistMode )
 {
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
@@ -129,12 +131,18 @@ void nndr( std::vector<KeyPoints> kpListImg1,
 
     // 
     std::cout << "     minVal1: " << minVal1 << ", minVal2: " << minVal2 << std::endl;
+    std::cout << "        minVal2 threshold: " << MATCHING_NNDR_THRESHOLD * minVal2 << std::endl;
     if( minVal1 < MATCHING_NNDR_THRESHOLD * minVal2 )
     {
       MatchedKeyPoints kps;
+      KeyPoints kpAux;
       kps.kp1 = kpListImg1[i];
-      kps.kp2 = kpListImg2[minValIdx1];
+      kps.kp2 = kpListImg2[minValIdx1]; 
 
+      // Maps coordinates of keypoint from img1 to img2
+      getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
+
+      //float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kpAux );
       float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
 
       // Verifying if the keypoints are in the defined max range from each other
@@ -161,8 +169,8 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
     KeyPoints kp1 = mkps.kp1;
     KeyPoints kp2 = mkps.kp2;
 
-    cv::Point p1 = cv::Point(kp1.x, kp1.y);
-    cv::Point p2 = cv::Point(kp2.x+img1.cols, kp2.y);
+    cv::Point2f p1 = cv::Point2f(kp1.x, kp1.y);
+    cv::Point2f p2 = cv::Point2f(kp2.x+img1.cols, kp2.y);
 
     // Correct matchings are blue and incorrect matches are red.
     if( mkps.isCorrect )
@@ -172,37 +180,48 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
   }
 }
 
+/**
+ * Main Method that match FPs.
+ * 
+ * @param img1: Reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: Query image
+ * @param img2KpList: Query image keypoint vector
+ * @param H: homography matrix to map keypoints from reference to query image
+ * @param imgOut: output image
+**/
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,
-               cv::Mat &imgOut )
+               cv::Mat H, cv::Mat &imgOut )
 {
   std::vector<MatchedKeyPoints> matchings;
   
   // Compute matching using NNDR algorithm
-  nndr(img1KpList, img2KpList, matchings, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
+  nndr(img1KpList, img2KpList, matchings, H, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
 
   // Creating image with lines indicating the matches founded
   printLineOnImages(img1, img2, imgOut, matchings);
 }
 
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
-               cv::Mat img2, std::vector<KeyPoints> img2KpList )
+               cv::Mat img2, std::vector<KeyPoints> img2KpList,
+               cv::Mat H )
 {
-  cv::Mat imgOut;
-  std::vector<MatchedKeyPoints> matchings;
-
-  matchFPs( img1, img1KpList, img2, img2KpList, imgOut );  
+  cv::Mat aux;
+  matchFPs( img1, img1KpList, img2, img2KpList, H, aux );  
 }
 
 void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
-               std::string img2Path, std::vector<KeyPoints> img2KpList )
+               std::string img2Path, std::vector<KeyPoints> img2KpList,
+               std::string pathH )
 {
-  cv::Mat img1, img2, aux;
-  std::vector<MatchedKeyPoints> matchings;
+  cv::Mat img1, img2, aux, H;
   std::string str = "";
 
   readImg(img1Path, img1, aux, str);
   readImg(img2Path, img2, aux, str);
+
+  readHomographicMatrix( pathH, H );
   
-  matchFPs( img1, img1KpList, img2, img2KpList );
+  matchFPs( img1, img1KpList, img2, img2KpList, H );
 }

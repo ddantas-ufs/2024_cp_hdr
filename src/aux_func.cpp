@@ -273,15 +273,27 @@ void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H )
   mp1.at<float>(0,1) = p1.y;
   mp1.at<float>(0,2) = 1.0f;
 
-  std::cout << "---> mp1: " << mp1.size() << std::endl;
-  std::cout << "---> mp1: " << H.size() << std::endl;
+//  std::cout << "---> mp1: " << mp1.size() << std::endl;
+//  std::cout << "---> mp1: " << H.size() << std::endl;
 
   cv::Mat mp2 = mp1 * H;
   
   p2.x = mp2.at<float>(0,0);
   p2.y = mp2.at<float>(0,1);
 
-  printMat(mp1, "Point 1");
-  printMat(mp2, "Point 2");
-  printMat(H, "Homography Matrix");
+//  printMat(mp1, "Point 1");
+//  printMat(mp2, "Point 2");
+//  printMat(H, "Homography Matrix");
+}
+
+void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv::Mat H )
+{
+  cv::Point2f p1, p2;
+  p1.x = x1;
+  p1.y = y1;
+
+  getHomographicCorrespondence( p1, p2, H );
+
+  x2 = p2.x;
+  y2 = p2.y;
 }
