@@ -4,52 +4,77 @@
  * Compare CP_HDR with other algorithms
  * 
  * @param arg[1]: Image 1 to matching path
- * @param arg[2]: Image 2 to matching path
- * @param arg[3]: Homography Matrix path
- * @param arg[4]: output directory path
+ * @param arg[2]: Image 1 ROI [optional]
+ * @param arg[3]: Image 2 to matching path
+ * @param arg[4]: Image 2 ROI [optional]
+ * @param arg[5]: Homography Matrix path
+ * @param arg[6]: output directory path
 **/
 int main(int argv, char** args)
 {
-  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching, H;
   std::vector<KeyPoints> kp1, kp2; // CP_HDR KeyPoint list
-  
+  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching, H; 
+
   std::string img1OutPath, img2OutPath, imgMatchingOutPath;
-  
-  std::string imgPath = args[1], hdrSuf = ".hdr";
-  std::string pathH = std::string(args[3]);
-  std::string outDir = std::string(args[4]);
+  std::string img1Path, img2Path, pathH, outDir, img1ROIPath, img2ROIPath, hdrSuf = ".hdr";
 
   bool isHDR = false;
+  bool considerROI = false;
 
   // Showing inputs
   std::cout << "----------------------------------" << std::endl;
   std::cout << "> Received " << argv << " arguments:" << std::endl;
   for( int i = 0; i < argv; i++ )
     std::cout << "  > args[" << i << "]: " << args[i] << std::endl;
-  
+
+  img1Path = std::string(args[1]);
+
+  // Evaluating if image is LDR or HDR
+  if( 0 == img1Path.compare(img1Path.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
+    isHDR = true;
+
+  if( argv > 5 )
+  {
+    considerROI = true;
+    img1Path    = std::string(args[1]);
+    img1ROIPath = std::string(args[2]);
+    img2Path    = std::string(args[3]);
+    img2ROIPath = std::string(args[4]);
+    pathH       = std::string(args[5]);
+    outDir      = std::string(args[6]);
+    std::cout << "  > ### Considering ROI" << std::endl;
+  }
+  else
+  {
+    img1Path = std::string(args[1]);
+    img2Path = std::string(args[2]);
+    pathH    = std::string(args[3]);
+    outDir   = std::string(args[4]);
+  }
+    
   // Reading images and setting output image name
-  readImg(args[1], img1, img1Gray, img1OutPath);
-  readImg(args[2], img2, img2Gray, img2OutPath);
+  readImg(img1Path, img1, img1Gray, img1OutPath);
+  readImg(img2Path, img2, img2Gray, img2OutPath);
 
   // Reading Homography Matrix
   readHomographicMatrix( pathH, H );
 
-  // Transforming image 1
-  getHomographicCorrespondence(img1, img1Out, H);
-  img1Out.copyTo( img1 );
-  img1Out.release();
-
-  getHomographicCorrespondence(img1Gray, img1Out, H);
-  img1Out.copyTo( img1Gray );
-  img1Out.release();
-
-  // Evaluating if image is LDR or HDR
-  if( 0 == imgPath.compare(imgPath.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )
-    isHDR = true;
-
   // Normalizing images (mandatory to HDR images). 
   mapPixelValues( img1, img1 );
   mapPixelValues( img2, img2 );
+
+  if( considerROI )
+  {
+    applyROI( img1, img1ROIPath );
+    applyROI( img2, img2ROIPath );
+    applyROI( img1Gray, img1ROIPath );
+    applyROI( img2Gray, img2ROIPath );
+
+    cv::imwrite( "out/img1.png", img1);
+    cv::imwrite( "out/img2.png", img2);
+    cv::imwrite( "out/img1Gray.png", img1Gray);
+    cv::imwrite( "out/img2Gray.png", img2Gray);
+  }
 
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
 
@@ -103,9 +128,17 @@ int main(int argv, char** args)
     std::vector<cv::KeyPoint> ocvKPs1, ocvKPs2;
 
     // Reading images and setting output image name
-    readImg(args[1], img1, img1Gray, img1OutPath);
-    readImg(args[2], img2, img2Gray, img2OutPath);
+    readImg(img1Path, img1, img1Gray, img1OutPath);
+    readImg(img2Path, img2, img2Gray, img2OutPath);
 
+    if( considerROI )
+    {
+      applyROI( img1, img1ROIPath );
+      applyROI( img2, img2ROIPath );
+      applyROI( img1Gray, img1ROIPath );
+      applyROI( img2Gray, img2ROIPath );
+    }
+    /*
     getHomographicCorrespondence(img1, img1Out, H);
     img1Out.copyTo( img1 );
     img1Out.release();
@@ -113,7 +146,7 @@ int main(int argv, char** args)
     getHomographicCorrespondence(img1Gray, img1Out, H);
     img1Out.copyTo( img1Gray );
     img1Out.release();
-
+    */
     std::cout << "> Running OpenCV SIFT..." << std::endl;
 
     // COMPUTING KEYPOINTS USING SIFT

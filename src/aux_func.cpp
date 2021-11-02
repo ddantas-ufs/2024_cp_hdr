@@ -67,6 +67,14 @@ void readImg( std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::str
   img_name = getFileName(img_path, withExtension);
 }
 
+void readImg( std::string img_path, cv::Mat &img_in )
+{
+  cv::Mat gray;
+  std::string imgName;
+
+  readImg(img_path, img_in, gray, imgName);
+}
+
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
 {
   std::string strImgPath = std::string(img_path);
@@ -85,7 +93,7 @@ void readHomographicMatrix( std::string path, cv::Mat &H )
       arch >> aux;
       H.at<float>(i,j) = aux;
     }
-  
+
   arch.close();
 }
 
@@ -147,21 +155,54 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 
 void readROI(std::string roi_path, std::vector<cv::Point> &verts)
 {
-	std::fstream file;
-	std::string line;
-	std::vector<std::string> tokens;
-	int x, y;
+  std::fstream arch( roi_path, std::ios_base::in );
+  double aux, m[6][2];
 
-	file.open(roi_path, std::ios::in);
+  std::cout << "    >  reading " << roi_path << std::endl;
+  
+  // Populating matrix
+  for( int i = 0; i < 6; i++ )
+    for( int j = 0; j < 2; j++ )
+    {
+      arch >> aux;
+      m[i][j] = aux;
+    }
 
-	while (std::getline(file, line))
-	{
-		tokens = split(line, '\t');
-		x = sciToDec(tokens[0]);
-		y = sciToDec(tokens[1]);
-		verts.push_back(cv::Point(x, y));
-	}
-	file.close();
+  for(int i=0; i<6; i++)
+  {
+    cv::Point p;
+    p.x = std::floor( m[i][0] );
+    p.y = std::floor( m[i][1] );
+    verts.push_back( p );
+
+    std::cout << "    >  x: " << p.x << " y: " << p.y << std::endl;
+  }
+
+  arch.close();
+}
+
+void applyROI( cv::Mat &img, std::string pathROI )
+{
+  cv::Mat imgROI, aux;
+  std::vector<cv::Point> vecROI, ROIPolygon;
+
+  readROI( pathROI, vecROI );
+
+  imgROI = cv::Mat::zeros( img.size(), img.type() );
+
+  std::cout << "  > ### img size: " << img.size() << std::endl;
+  std::cout << "  > ### imgROI size: " << imgROI.size() << std::endl;
+
+  cv::approxPolyDP( vecROI, ROIPolygon, 1.0, true );
+  cv::fillConvexPoly( imgROI, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
+  //cv::fillPoly( imgROI, vecROI, cv::Scalar::all(255) );
+  std::cout << "  > ### imgROI filled up" << std::endl;
+
+  img.copyTo( aux, imgROI );
+  aux.copyTo( img );
+  std::cout << "  > ### Images masked out." << std::endl;
+
+  aux.release();
 }
 
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)

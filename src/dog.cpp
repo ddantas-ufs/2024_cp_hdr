@@ -364,7 +364,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     for (int j = 0; j < NUM_SCALES; j++)
     {
       cv::GaussianBlur(img_aux, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
-      ko = ko * 1.414214;
+      ko = ko * SQRT_2;
     }
     cv::resize(img_aux, img_aux, cv::Size(img_aux.cols / 2, img_aux.rows / 2));
   }

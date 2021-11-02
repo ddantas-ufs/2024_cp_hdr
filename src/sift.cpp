@@ -573,8 +573,6 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList )
   cv::Mat imgGray;
 
   makeGrayscaleCopy( img, imgGray );
-  //if (img.channels() != 1){ cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY); }
-  //else { img.copyTo(imgGray); }
 
   std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
   dogKp(imgGray, kpList);

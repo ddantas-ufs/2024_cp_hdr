@@ -10,6 +10,8 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
+#define SQRT_2 1.41421356237; // Square root of two [sqrt(2)]
+
 #define NUM_OCTAVES 4 // number of octaves
 #define NUM_SCALES 5 // number of scales
 #define MAX_INTERP_STEPS 5 // interpolation max steps before failure (OpenSIFT, OpenCV)
