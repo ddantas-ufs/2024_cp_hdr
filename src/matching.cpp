@@ -42,7 +42,7 @@ float calculateDistance( std::vector<int> vec1, std::vector<int> vec2,
     return vectorHammingDistance(vec1, vec2);
   }
 
-  std::cout << " --> Received distanceMethod: " << distanceMethod << ". Returning 0." << std::endl;
+  //std::cout << " --> Received distanceMethod: " << distanceMethod << ". Returning 0." << std::endl;
   return 0.0f;
 }
 
@@ -130,8 +130,8 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     //float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
 
     // 
-    std::cout << "     minVal1: " << minVal1 << ", minVal2: " << minVal2 << std::endl;
-    std::cout << "        minVal2 threshold: " << MATCHING_NNDR_THRESHOLD * minVal2 << std::endl;
+    //std::cout << "     minVal1: " << minVal1 << ", minVal2: " << minVal2 << std::endl;
+    //std::cout << "        minVal2 threshold: " << MATCHING_NNDR_THRESHOLD * minVal2 << std::endl;
     if( minVal1 < MATCHING_NNDR_THRESHOLD * minVal2 )
     {
       MatchedKeyPoints kps;

@@ -158,7 +158,7 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts)
   std::fstream arch( roi_path, std::ios_base::in );
   double aux, m[6][2];
 
-  std::cout << "    >  reading " << roi_path << std::endl;
+  //std::cout << "    >  reading " << roi_path << std::endl;
   
   // Populating matrix
   for( int i = 0; i < 6; i++ )
@@ -175,28 +175,23 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts)
     p.y = std::floor( m[i][1] );
     verts.push_back( p );
 
-    std::cout << "    >  x: " << p.x << " y: " << p.y << std::endl;
+    //std::cout << "    >  x: " << p.x << " y: " << p.y << std::endl;
   }
 
   arch.close();
 }
 
-void applyROI( cv::Mat &img, std::string pathROI )
+void applyROI( cv::Mat &img, std::string pathROI, bool isHDR )
 {
   cv::Mat imgROI, aux;
   std::vector<cv::Point> vecROI, ROIPolygon;
 
   readROI( pathROI, vecROI );
-
-  imgROI = cv::Mat::zeros( img.size(), img.type() );
-
-  std::cout << "  > ### img size: " << img.size() << std::endl;
-  std::cout << "  > ### imgROI size: " << imgROI.size() << std::endl;
+  imgROI = cv::Mat::zeros( img.size(), CV_8U );
 
   cv::approxPolyDP( vecROI, ROIPolygon, 1.0, true );
   cv::fillConvexPoly( imgROI, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
   //cv::fillPoly( imgROI, vecROI, cv::Scalar::all(255) );
-  std::cout << "  > ### imgROI filled up" << std::endl;
 
   img.copyTo( aux, imgROI );
   aux.copyTo( img );

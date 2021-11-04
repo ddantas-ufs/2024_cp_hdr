@@ -56,31 +56,40 @@ int main(int argv, char** args)
   readImg(img1Path, img1, img1Gray, img1OutPath);
   readImg(img2Path, img2, img2Gray, img2OutPath);
 
+  cv::Mat imgLog1, imgLog2;
+  coefVar(img1Gray, img1Out, 5);
+  coefVar(img2Gray, img2Out, 5);
+  logTransform(img1Out, imgLog1);
+  logTransform(img2Out, imgLog2);
+  cv::imwrite("out/img1_gray.png", img1Gray);
+  cv::imwrite("out/img2_gray.png", img2Gray);
+  cv::imwrite("out/img1_log.png", imgLog1);
+  cv::imwrite("out/img2_log.png", imgLog2);
+  cv::imwrite("out/img1_cv.png", img1Out);
+  cv::imwrite("out/img2_cv.png", img2Out);
+  return 0;
+
+
   // Reading Homography Matrix
   readHomographicMatrix( pathH, H );
 
   // Normalizing images (mandatory to HDR images). 
-  mapPixelValues( img1, img1 );
-  mapPixelValues( img2, img2 );
+  //mapPixelValues( img1, img1 );
+  //mapPixelValues( img2, img2 );
 
   if( considerROI )
   {
-    applyROI( img1, img1ROIPath );
-    applyROI( img2, img2ROIPath );
-    applyROI( img1Gray, img1ROIPath );
-    applyROI( img2Gray, img2ROIPath );
-
-    cv::imwrite( "out/img1.png", img1);
-    cv::imwrite( "out/img2.png", img2);
-    cv::imwrite( "out/img1Gray.png", img1Gray);
-    cv::imwrite( "out/img2Gray.png", img2Gray);
+    //applyROI( img1, img1ROIPath, isHDR );
+    //applyROI( img2, img2ROIPath, isHDR );
+    applyROI( img1Gray, img1ROIPath, isHDR );
+    applyROI( img2Gray, img2ROIPath, isHDR );
   }
 
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
 
   // Running CP_HDR
-  runSift(img1Gray, kp1);
-  runSift(img2Gray, kp2);
+  runSift(img1Gray, kp1, MAX_KP);
+  runSift(img2Gray, kp2, MAX_KP);
 
   // Getting only the 500 strongest keypoints
   sortKeypoints( kp1 );
@@ -133,10 +142,10 @@ int main(int argv, char** args)
 
     if( considerROI )
     {
-      applyROI( img1, img1ROIPath );
-      applyROI( img2, img2ROIPath );
-      applyROI( img1Gray, img1ROIPath );
-      applyROI( img2Gray, img2ROIPath );
+      //applyROI( img1, img1ROIPath, isHDR );
+      //applyROI( img2, img2ROIPath, isHDR );
+      applyROI( img1Gray, img1ROIPath, isHDR );
+      applyROI( img2Gray, img2ROIPath, isHDR );
     }
     /*
     getHomographicCorrespondence(img1, img1Out, H);
@@ -182,17 +191,20 @@ int main(int argv, char** args)
     ocvDesc2.release();
     ocvKPs1.clear();
     ocvKPs2.clear();
+
+
+    // Cleaning objects
+    cleanKeyPointVector( kp1 );
+    cleanKeyPointVector( kp2 );
+    H.release();
+    img1.release();
+    img2.release();
+    img1Out.release();
+    img2Out.release();
+    img1Gray.release();
+    img2Gray.release();
+    imgMatching.release();
   }
 
-  // Cleaning objects
-  cleanKeyPointVector( kp1 );
-  cleanKeyPointVector( kp2 );
-  img1.release();
-  img2.release();
-  img1Out.release();
-  img2Out.release();
-  img1Gray.release();
-  img2Gray.release();
-  imgMatching.release();
   return 0;
 }

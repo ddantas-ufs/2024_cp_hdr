@@ -568,7 +568,7 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
  * @param img: image where keypoints will be detected
  * @param kpList: output vector containing detected keypoints and description.
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList )
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
 {
   cv::Mat imgGray;
 
@@ -577,6 +577,14 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList )
   std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
   dogKp(imgGray, kpList);
   std::cout << " ## SIFT > " << kpList.size() << " Keypoints detected." << std::endl;
+
+  // If there's a keypoint amount limit, it is applied now using constant MAX_KP as parameter.
+  if( kpMax == MAX_KP )
+  {
+    // Getting only the 500 strongest keypoints
+    sortKeypoints( kpList );
+    kpList = vectorSlice( kpList, 0, MAX_KP);
+  }
 
   std::cout << " ## SIFT > Describing Keypoints..." << std::endl;
   siftDescriptor(kpList, img, imgGray);

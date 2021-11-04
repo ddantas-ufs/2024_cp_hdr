@@ -30,7 +30,7 @@ void transformCoord(std::vector<KeyPoints> &kp)
 float distanceBetwenTwoKeyPoints( KeyPoints p1, KeyPoints p2 )
 {
   float distance = std::sqrt( std::pow( std::abs( p1.x-p2.x ), 2 ) + std::pow( p1.y-p2.y, 2 ) );
-  std::cout << "Calculated distance between P1(" << p1.x << "," << p1.y << ") and P2(" << p2.x << "," << p2.y << "): " << distance << std::endl;
+  //std::cout << "Calculated distance between P1(" << p1.x << "," << p1.y << ") and P2(" << p2.x << "," << p2.y << "): " << distance << std::endl;
   return distance;
 }
 
