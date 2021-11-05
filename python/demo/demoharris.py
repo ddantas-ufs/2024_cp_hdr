@@ -12,8 +12,8 @@ import Core
 import Harris
 from Keypoint import PlotKp
 
-img = Core.cv2.imread(IMGS_PATH + '/lena.png', Core.cv2.IMREAD_GRAYSCALE)
-kp_list = Harris.HarrisKp(img)
-img_kp = PlotKp(img, kp_list)
-plt.imshow(Core.cv2.cvtColor(img_kp, Core.cv2.COLOR_GRAY2RGB))
+img = Core.cv2.imread(filename=IMGS_PATH + '/lena.png', flags=Core.cv2.IMREAD_GRAYSCALE)
+kp_list = Harris.HarrisKp(img=img)
+img_kp = PlotKp(img=img, kp=kp_list)
+plt.imshow(Core.cv2.cvtColor(src=img_kp, code=Core.cv2.COLOR_GRAY2RGB))
 plt.show()

@@ -9,6 +9,7 @@ class Keypoint():
 def PlotKp(img, kp_list):
   img_aux = img.copy()
   for kp in kp_list:
-    Core.cv2.circle(img_aux, (kp.x, kp.y), 4, (255, 255, 255))
+    Core.cv2.circle(img=img_aux, center=(kp.x, kp.y), radius=4, color=(255, 255, 255))
 
   return img_aux
+  
