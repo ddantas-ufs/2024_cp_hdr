@@ -25,7 +25,9 @@ std::vector<std::string> split(const std::string& s, char delimiter = '\t');
 
 void readROI(std::string roi_path, std::vector<cv::Point> &verts);
 
-void applyROI( cv::Mat &img, std::string pathROI, bool isHDR );
+void applyROI( cv::Mat &img, std::string pathROI );
+
+void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi );
 
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2);
 

@@ -135,12 +135,12 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     if( minVal1 < MATCHING_NNDR_THRESHOLD * minVal2 )
     {
       MatchedKeyPoints kps;
-      KeyPoints kpAux;
+      //KeyPoints kpAux;
       kps.kp1 = kpListImg1[i];
       kps.kp2 = kpListImg2[minValIdx1]; 
 
       // Maps coordinates of keypoint from img1 to img2
-      getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
+      //getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
 
       //float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kpAux );
       float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );

@@ -564,19 +564,61 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
 
 /**
  * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * If ROI is used, than the Keypoints will lie in ROI area.
  * 
  * @param img: image where keypoints will be detected
  * @param kpList: output vector containing detected keypoints and description.
+ * @param kpMax: max amount of keypoints that sould be returned
+ * @param roi: ROI image, mandatory to be CV_8UC1. White in the region of interest.
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat roi )
 {
   cv::Mat imgGray;
+  std::vector<KeyPoints> aux;
 
   makeGrayscaleCopy( img, imgGray );
 
   std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
-  dogKp(imgGray, kpList);
-  std::cout << " ## SIFT > " << kpList.size() << " Keypoints detected." << std::endl;
+  dogKp(imgGray, aux);
+  std::cout << " ## SIFT > " << aux.size() << " Keypoints detected." << std::endl;
+
+  if( !roi.empty() )
+  {
+    std::cout << " ## SIFT > Removing keypoints outside ROI..." << std::endl;
+    if( roi.type() == CV_8UC1 )
+    {
+      // If ROI is sent as argument, use it to filter founded arguments
+      for( int i = 0; i < aux.size(); i++ )
+      {
+        KeyPoints kp = aux[i];
+        int x = (int) std::floor(kp.x);
+        int y = (int) std::floor(kp.y);
+        
+        //std::cout << " ## SIFT > roi[" << x << "," << y << "], " << roi.size() << std::endl;
+        uchar pixelValue = roi.at<uchar>(y, x);
+        if( pixelValue > 0 )
+        {
+          kpList.push_back( kp );
+          //std::cout << " ## SIFT > roi[" << x << "," << y << "] = " << (int) pixelValue << std::endl;
+        }
+      }
+
+      std::cout << " ## SIFT > " << kpList.size() << " Keypoints detected after ROI." << std::endl;
+    }
+    else
+    {
+      std::cout << " ## SIFT > #### WARNING!! ROI is not CV_8UC1 type." << std::endl;
+    }
+  }
+  else
+  {
+    while( !aux.empty() )
+    {
+      KeyPoints kp = aux.back();
+      kpList.push_back( kp );
+      aux.pop_back();
+    }
+  }
 
   // If there's a keypoint amount limit, it is applied now using constant MAX_KP as parameter.
   if( kpMax == MAX_KP )
@@ -591,4 +633,19 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
   std::cout << " ## SIFT > Keypoints described." << std::endl;
 
   imgGray.release();
+}
+
+/**
+ * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * If ROI is used, than the Keypoints will lie in ROI area.
+ * 
+ * @param img: image where keypoints will be detected
+ * @param kpList: output vector containing detected keypoints and description.
+ * @param kpMax: max amount of keypoints that sould be returned
+**/
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
+{
+  std::cout << " ## SIFT > Run without ROI." << std::endl;
+  cv::Mat roi;
+  runSift( img, kpList, kpMax, roi );
 }

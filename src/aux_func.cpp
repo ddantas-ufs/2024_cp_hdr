@@ -181,13 +181,13 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts)
   arch.close();
 }
 
-void applyROI( cv::Mat &img, std::string pathROI, bool isHDR )
+void applyROI( cv::Mat &img, std::string pathROI )
 {
   cv::Mat imgROI, aux;
   std::vector<cv::Point> vecROI, ROIPolygon;
 
   readROI( pathROI, vecROI );
-  imgROI = cv::Mat::zeros( img.size(), CV_8U );
+  imgROI = cv::Mat::zeros( img.size(), CV_8UC1 );
 
   cv::approxPolyDP( vecROI, ROIPolygon, 1.0, true );
   cv::fillConvexPoly( imgROI, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
@@ -198,6 +198,17 @@ void applyROI( cv::Mat &img, std::string pathROI, bool isHDR )
   std::cout << "  > ### Images masked out." << std::endl;
 
   aux.release();
+}
+
+void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi )
+{
+  std::vector<cv::Point> vecROI, ROIPolygon;
+
+  readROI( pathROI, vecROI );
+  roi = cv::Mat::zeros( img.size(), CV_8UC1 );
+
+  cv::approxPolyDP( vecROI, ROIPolygon, 1.0, true );
+  cv::fillConvexPoly( roi, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
 }
 
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)
