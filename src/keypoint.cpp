@@ -34,10 +34,13 @@ float distanceBetwenTwoKeyPoints( KeyPoints p1, KeyPoints p2 )
   return distance;
 }
 
-std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &v, int m, int n)
+std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &vtr, int beg, int end)
 {
-  auto first = v.cbegin() + m;
-  auto last = v.cbegin() + n;
+  if( vtr.size() <= end )
+    return vtr;
+
+  auto first = vtr.cbegin() + beg;
+  auto last = vtr.cbegin() + end;
 
   std::vector<KeyPoints> vec(first, last);
   return vec;
