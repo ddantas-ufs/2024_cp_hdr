@@ -67,9 +67,12 @@ int main(int argv, char** args)
   // Reading Homography Matrix
   readHomographicMatrix( pathH, H );
 
-  // Normalizing images (mandatory to HDR images). 
-  mapPixelValues( img1, img1 );
-  mapPixelValues( img2, img2 );
+  // Normalizing images (mandatory to HDR images).
+  if( isHDR )
+  {
+    mapPixelValues( img1, img1 );
+    mapPixelValues( img2, img2 );
+  }
 
   // Running CP_HDR
   std::cout << "> Running CP_HDR SIFT..." << std::endl;

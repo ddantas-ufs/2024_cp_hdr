@@ -82,3 +82,88 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
   img_log10 = img_ln / ln10;
   img_log10 = img_log10 / std::log10(rmax + 1);
 }
+
+/**
+ * Reimplementação da convolução do filtro de
+ * coeficiente de variação
+ * 
+ * @param aux 
+ * 
+**/
+void applyCVMask( cv::Mat img, cv::Mat &res )
+{
+  // Initial validations
+  if( img.empty() )
+    return;
+  else if( img.depth() != CV_32F )
+    img.convertTo(img, CV_32F);
+  
+  float mediaGeral = 0.0f;
+  cv::Mat response = img;
+  
+  cv::Mat auxResponse = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_32F);
+  
+  int n = 5;//maskSize impar, isac usa 5
+  int N = n*n, cont = 0;//quantidade de pixels visitados
+  
+  cv::Mat response2 = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_64F);
+  //response * response 
+  for(int y = 0; y < response.rows; y++)
+    for(int x = 0; x < response.cols; x++)
+      response2.at<float>(y, x) = (response.at<float>(y, x) * response.at<float>(y, x));
+  
+  float sum1 = 0, sum2 = 0;
+  
+  for(int y = 1; y < n; y++)
+    for(int x = 0; x <= n; x++)
+    {
+      sum1 += response.at<float>(y, x);
+      sum2 += response2.at<float>(y, x);
+    }
+  
+  //"Convolution"
+  for(int i = (n/2)+1; i < response.rows - (n/2); i++)
+  {
+    int yBeg = i-(n/2), yEnd = i+(n/2);
+    for(int j = (n/2); j < response.cols - (n/2); j++)
+    {
+      //passando mascara 
+      float sumVal = 0, sumVal2 = 0, maior = 0;
+      int xBeg = j-(n/2), xEnd = j+(n/2);
+      
+      for(int y = yBeg; y <= yEnd; y++)
+        for(int x = xBeg; x <= xEnd; x++)
+        {
+          sumVal += response.at<float>(y, x);
+          sumVal2 += response2.at<float>(y, x);
+          maior = std::max(maior, response.at<float>(y, x));
+        }
+            
+      float media = sumVal/N;
+      
+      float variancia = (sumVal2/N) - (media*media);
+
+      float S = sqrt(variancia); // desvio padrao
+      float CV = media == 0? 0 : S/media; // Coef de Variacao
+      auxResponse.at<float>(i, j) = CV * 100;
+      mediaGeral += CV;  
+    }
+  }
+
+  mediaGeral = mediaGeral/((response.cols-n)*(response.rows-n));
+  printf("Media do Coefv = %.10f\n", mediaGeral);//
+  
+  //Response recebe o valor de coef salvo em aux
+  response = auxResponse;
+  
+  //normalize(response, res, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
+  mapPixelValues( response, res );
+}
+
+
+void applyCVMask( cv::Mat &img )
+{
+  cv::Mat res;
+  applyCVMask(img, res);
+  res.copyTo( img );
+}

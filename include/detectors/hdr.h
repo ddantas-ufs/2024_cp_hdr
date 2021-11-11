@@ -8,4 +8,8 @@ void coefVar(cv::Mat img, cv::Mat &img_cv, int mask_size = CV_SIZE, bool gauss =
 
 void logTransform(cv::Mat img, cv::Mat &img_log);
 
+void applyCVMask( cv::Mat img, cv::Mat &res );
+
+void applyCVMask( cv::Mat &img );
+
 #endif

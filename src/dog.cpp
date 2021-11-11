@@ -348,7 +348,8 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   {
     cv::Mat img_cv, img_log;
 
-    coefVar(img, img_cv, cv_size);
+    applyCVMask( img, img_cv );
+    //coefVar(img, img_cv, cv_size);
     logTransform(img_cv, img_log);
 
     img_aux = img_log;
