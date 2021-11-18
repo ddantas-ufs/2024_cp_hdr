@@ -12,5 +12,5 @@ void logTransform(cv::Mat img, cv::Mat &img_log);
 void applyCVMask( cv::Mat img, cv::Mat &res );
 
 void applyCVMask( cv::Mat &img );
-
+ 
 #endif
