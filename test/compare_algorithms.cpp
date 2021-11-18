@@ -79,19 +79,19 @@ int main(int argv, char** args)
   if( considerROI )
   {
     runSift(img1Gray, kp1, MAX_KP, img1ROI);
-    runSift(img2Gray, kp2, MAX_KP, img2ROI); 
+    runSift(img2Gray, kp2, MAX_KP, img2ROI);
   }
   else
   {
     runSift(img1Gray, kp1, MAX_KP);
-    runSift(img2Gray, kp2, MAX_KP);     
+    runSift(img2Gray, kp2, MAX_KP);
   }
 
-  // Getting only the 500 strongest keypoints
+  // Getting only the MAX_KP strongest keypoints
   sortKeypoints( kp1 );
   sortKeypoints( kp2 );
-  kp1 = vectorSlice( kp1, 0, 500);
-  kp2 = vectorSlice( kp2, 0, 500);
+  kp1 = vectorSlice( kp1, 0, MAX_KP);
+  kp2 = vectorSlice( kp2, 0, MAX_KP);
 
   if( isHDR )
   {
@@ -169,8 +169,8 @@ int main(int argv, char** args)
     // Getting only the 500 strongest keypoints
     sortKeypoints( kp1 );
     sortKeypoints( kp2 );
-    kp1 = vectorSlice( kp1, 0, 500);
-    kp2 = vectorSlice( kp2, 0, 500);
+    kp1 = vectorSlice( kp1, 0, MAX_KP);
+    kp2 = vectorSlice( kp2, 0, MAX_KP);
 
     saveKeypoints( kp1, outDir+img1OutPath+"_OpenCV_SIFT_LDR.txt", kp1.size() );
     saveKeypoints( kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.txt", kp2.size() );

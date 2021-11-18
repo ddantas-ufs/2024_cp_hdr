@@ -25,7 +25,7 @@
 #define SOBEL_SIZE 5 // mask size of sobel operator
 #define K 0.04 // harris constant
 #define MIN_QUALITY 0.01 // quality percentual for the kp response
-#define MAX_KP 500 // if zero, it is not used
+#define MAX_KP 1000 // if zero, it is not used
 #define ALL_KP -1  // when all keypoints should be used
 #define CV_SIZE 5 // mask size to compute coefficient of variation
 #define LDR_MAX_RANGE 255.0
@@ -35,7 +35,7 @@
 #define USE_CV_FILTER_FALSE 0
 #define USE_CV_FILTER_TRUE 1
 
-#define USE_CV_FILTER USE_CV_FILTER_FALSE
+#define USE_CV_FILTER USE_CV_FILTER_TRUE
 
 // MAPPING INTERVALS
 #define MAPPING_INTERVAL_FLOAT_0_1 0
