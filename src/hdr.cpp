@@ -86,10 +86,10 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
 }
 
 /**
- * Reimplementação da convolução do filtro de
- * coeficiente de variação
+ * Implementation of the Coefficient of Variation 
  * 
- * @param aux 
+ * @param img: input image that will be convoluted
+ * @param res: output image, where result will be stored
  * 
 **/
 void applyCVMask( cv::Mat img, cv::Mat &res )
