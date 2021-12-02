@@ -118,7 +118,12 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   {
     cv::Mat img_cv, img_log;
 
-    coefVar(img_blur, img_cv, cv_size);
+    /*
+    ** Edited by @arturxz 14/10/2021
+    ** changed CoV filter method
+    */
+    //coefVar(img_blur, img_cv, cv_size);
+    applyCVMask( img_blur, img_cv );
     logTransform(img_cv, img_log);
 
     img_aux = img_log;

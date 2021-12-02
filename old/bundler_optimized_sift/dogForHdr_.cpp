@@ -80,14 +80,21 @@ void read(char *name, char *argv2){
 			path.pop_back();
 		}
 		reverse(num.begin(), num.end());
-		
+		std::cout << path << "ROI." << num << ".png" << std::endl;
+		std::cout << path << "ROIh." << num << ".png" << std::endl;
+		std::cout << path << "ROIm." << num << ".png" << std::endl;
+		std::cout << path << "ROIs." << num << ".png" << std::endl;
 		roi[0] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
-		//roi[1] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
-		//roi[2] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
-		//roi[3] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
-		roi[1] = imread(path+"ROIh."+num+".png", IMREAD_UNCHANGED);
-		roi[2] = imread(path+"ROIm."+num+".png", IMREAD_UNCHANGED);
-		roi[3] = imread(path+"ROIs."+num+".png", IMREAD_UNCHANGED);
+		roi[1] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		roi[2] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		roi[3] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		//roi[1] = imread(path+"ROIh."+num+".png", IMREAD_UNCHANGED);
+		//roi[2] = imread(path+"ROIm."+num+".png", IMREAD_UNCHANGED);
+		//roi[3] = imread(path+"ROIs."+num+".png", IMREAD_UNCHANGED);
+		//imwrite("./ROI."+num+".png", roi[0]);
+		//imwrite("./ROIh."+num+".png", roi[1]);
+		//imwrite("./ROIm."+num+".png", roi[2]);
+		//imwrite("./ROIs."+num+".png", roi[3]);
 		
 	}else{
 		roi[0] = Mat::zeros(cv::Size(input.cols, input.rows), CV_8U);
@@ -114,7 +121,7 @@ Mat logTranformUchar(Mat src, int c){
 }
 
 //Coeficiente de Variacao
-Mat coefficienceOfVariationMask(Mat aux){
+Mat coefficienceOfVariationMask_old(Mat aux){
 	
 	if(aux.depth() != CV_32F)
 		aux.convertTo(aux, CV_32F);
@@ -184,6 +191,77 @@ Mat coefficienceOfVariationMask(Mat aux){
 	return aux2;
 }
 
+cv::Mat coefficienceOfVariationMask( cv::Mat img )
+{
+  // Initial validations
+  if( img.empty() )
+    return img;
+  else if( img.depth() != CV_32F )
+    img.convertTo(img, CV_32F);
+  
+  float mediaGeral = 0.0f;
+  int n = 5; // maskSize is odd, cp_hdp defaults to 5 
+  int N = n*n, cont = 0; // total amount of pixels being analised
+
+  cv::Mat aux = img;
+  cv::Mat resp1 = cv::Mat::zeros( cv::Size( aux.cols, aux.rows ), CV_32F ); // convoluted image
+  
+  float sum1 = 0, sum2 = 0;
+  
+  for(int y = 1; y < n; y++)
+    for(int x = 0; x <= n; x++)
+      sum1 += aux.at<float>(y, x);
+  
+  // Convoluting
+  for(int i = (n/2)+1; i < aux.rows - (n/2); i++)
+  {
+    int yBeg = i-(n/2), yEnd = i+(n/2);
+    for(int j = (n/2); j < aux.cols - (n/2); j++)
+    {
+      float mean = 0.0f, variation = 0.0f;
+      float sum = 0.0f;
+      int xBeg = j-(n/2), xEnd = j+(n/2);
+      
+      // Calculating mean
+      for(int y = yBeg; y <= yEnd; y++)
+        for(int x = xBeg; x <= xEnd; x++)
+          sum += aux.at<float>(y, x);
+         
+      mean = sum / N;
+
+      // Calculating variation
+      for(int y = yBeg; y <= yEnd; y++)
+        for(int x = xBeg; x <= xEnd; x++)
+          variation += std::pow( std::abs( aux.at<float>(y, x) - mean ), 2.0f); 
+      
+      // if mean is 0, variation is 0.
+      if( std::abs( mean ) < 0.0001f ) variation = 0.0f;
+      else variation = variation / mean;
+
+      float SD = sqrt( variation ); // standard deviation
+      float CV = std::abs(mean) < 0.0001 ? 0.0f : SD/mean; // coefficient of variation
+
+      if( std::isnan( SD ) || std::isnan( CV ) )
+        printf("          -----: media=%.10f, variancia=%.10f, DP=%.10f, CV=%.10f\n", mean, variation, SD, CV);
+
+      resp1.at<float>(i, j) = CV * 100;
+      mediaGeral += CV;
+    }
+  }
+
+  int denominador = ((aux.cols-n)*(aux.rows-n));
+  float mediaGeral2 = mediaGeral/denominador;
+  printf("Media do Coefv = %.10f / %d = %.10f\n", mediaGeral, ((aux.cols-n)*(aux.rows-n)), mediaGeral2);
+  
+  // Auxiliar matrix gets the "convoluted" image
+  aux = resp1;
+
+  // normalizing image and copying data to output matrix
+  cv::Mat res;
+  normalize(aux, res, 0, 255, NORM_MINMAX, CV_8UC1, Mat());
+  return res;
+}
+
 //Criando kernel para o filtro Gaussian
 void createFilter(double sigma){
     double r, s = 2.0 * sigma * sigma;
@@ -233,9 +311,9 @@ Mat gaussianBlurHDR(Mat input, int siz){
 void initOctaves(){		
 	//Parte adicional para o HDR 
 	GaussianBlur(inputGray, inputGray, Size(5, 5), 0, 0, BORDER_DEFAULT);
-	inputGray = coefficienceOfVariationMask(inputGray);	
+	inputGray = coefficienceOfVariationMask_old(inputGray);	
 	
-	//imwrite("in.jpg", inputGray);
+	imwrite("in.jpg", inputGray);
 	
 	inputGray = logTranformUchar(inputGray, 2);//Tranformaçao logarítimica com constante c = 
 	
@@ -432,17 +510,17 @@ void saveKeypoints(){
 	//Salvando pontos ROI 1
 	fprintf(out1, "%d\n", (int)aux1.size());
 	for(int i = 0; i < (int)aux1.size(); i++)
-		fprintf(out1, "%d %d %.4f\n", aux1[i].second.first, aux1[i].second.second, -aux1[i].first);
+		fprintf(out1, "%d;%d;%.4f\n", aux1[i].second.first, aux1[i].second.second, -aux1[i].first);
 	fclose(out1);
 	//Salvando pontos ROI 2
 	fprintf(out2, "%d\n", (int)aux2.size());
 	for(int i = 0; i < (int)aux2.size(); i++)
-		fprintf(out2, "%d %d %.4f\n", aux2[i].second.first, aux2[i].second.second, -aux2[i].first);
+		fprintf(out2, "%d;%d;%.4f\n", aux2[i].second.first, aux2[i].second.second, -aux2[i].first);
 	fclose(out2);
 	//Salvando pontos ROI 3
 	fprintf(out3, "%d\n", (int)aux3.size());
 	for(int i = 0; i < (int)aux3.size(); i++)
-		fprintf(out3, "%d %d %.4f\n", aux3[i].second.first, aux3[i].second.second, -aux3[i].first);
+		fprintf(out3, "%d;%d;%.4f\n", aux3[i].second.first, aux3[i].second.second, -aux3[i].first);
 	fclose(out3);
 }
 
@@ -542,7 +620,7 @@ void edgeThreshold(){
 		}
 		keyPoint = auxKp;
 		
-		cout<<"edgeThr end\n";			
+		cout<<"edgeThr end\n";
 	}
 
 }
@@ -560,10 +638,10 @@ int main(int, char** argv ){
 	string saida3 = saida2;
 	string saida4 = saida3;
 	
-	saida1 += ".dogForHdr.distribution.txt";
-	saida2 += ".dogForHdr1.txt";
-	saida3 += ".dogForHdr2.txt";
-	saida4 += ".dogForHdr3.txt";
+	saida1 += ".dogForHDR.distribution.txt";
+	saida2 += ".dogForHDR1.txt";
+	saida3 += ".dogForHDR2.txt";
+	saida4 += ".dogForHDR3.txt";
 	
 	out0 = fopen(saida1.c_str(), "w+");
 	out1 = fopen(saida2.c_str(), "w+");
@@ -579,19 +657,25 @@ int main(int, char** argv ){
 	calcDoG();
 	
 	cout<<"dog\n";
+	cout << "QTD of Keypoints:" << keyPoint.size() << "\n";
 	
 	//Fazendo NonMaximaSupression na imagem DoG
 	nonMaximaSupression();
 	
 	cout<<"nomMax\n";
+	cout << "QTD of Keypoints:" << keyPoint.size() << "\n";
 	
 	//Limiar na imagem de Response
 	threshold();
 	
 	cout<<"threshold\n";
+	cout << "QTD of Keypoints:" << keyPoint.size() << "\n";
 		
 	//Limiar p/ edges response
-	edgeThreshold(); 
+	edgeThreshold();
+	
+	cout<<"edgeThreshold\n";
+	cout << "QTD of Keypoints:" << keyPoint.size() << "\n";
 
 	/*
 	//Armengue para ver imagem hdr	---------------------------------------------------------
@@ -605,8 +689,8 @@ int main(int, char** argv ){
 	*/
 	
 	//Salvando quantidade de Keypoints e para cada KP as coordenadas (x, y) e o response
-	//saveKeypoints();
-	saveKeypoints2ROIs();
+	saveKeypoints();
+	//saveKeypoints2ROIs();
 	
 	showKeyPoints();
 	

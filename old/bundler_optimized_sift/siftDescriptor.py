@@ -76,16 +76,17 @@ def isOut(img, x, y):
     return (x <= 0 or x >= w-1 or y <= 0 or y >= h-1)
 
 def formatOut(vec):
-	out = ""
-	out += str(vec[0:20]) + "\n"
-	out += " " + str(vec[20:40]) + "\n"
-	out += " " + str(vec[40:60]) + "\n"
-	out += " " + str(vec[60:80]) + "\n"
-	out += " " + str(vec[80:100]) + "\n"
-	out += " " + str(vec[100:120]) + "\n"
-	out += " " + str(vec[120:128]) + "\n"
+	#out = ""
+	#out += str(vec[0:20]) + "\n"
+	#out += " " + str(vec[20:40]) + "\n"
+	#out += " " + str(vec[40:60]) + "\n"
+	#out += " " + str(vec[60:80]) + "\n"
+	#out += " " + str(vec[80:100]) + "\n"
+	#out += " " + str(vec[100:120]) + "\n"
+	#out += " " + str(vec[120:128]) + "\n"
 	
-	return out
+	#return out
+    return str(vec[0:128]) + "\n"
 	
 
 ##### main #####
