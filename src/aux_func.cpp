@@ -97,6 +97,22 @@ void readHomographicMatrix( std::string path, cv::Mat &H )
   arch.close();
 }
 
+void readCameraMatrix( std::string path, cv::Mat &cam )
+{
+  cam = cv::Mat( cv::Size(3,3), CV_32F );
+  std::fstream arch( path, std::ios_base::in );
+
+  float aux;
+  for( int i = 0; i < 3; i++ )
+    for( int j = 0; j < 3; j++ )
+    {
+      arch >> aux;
+      cam.at<float>(i,j) = aux;
+    }
+
+  arch.close();
+}
+
 std::string getFileName(std::string file_path, bool withExtension)
 {
   size_t size = file_path.rfind("/", file_path.length());
@@ -211,6 +227,11 @@ void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi )
   cv::fillConvexPoly( roi, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
 }
 
+void readROIFromImage( std::string pathROI, cv::Mat &img )
+{
+  readImg( pathROI, img );
+}
+
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)
 {
 	cv::Rect roi = cv::Rect(v1, v2);
@@ -314,22 +335,23 @@ void getHomographicCorrespondence( cv::Mat imgIn, cv::Mat &imgOut, std::string p
 **/
 void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H )
 {
-  cv::Mat mp1 = cv::Mat( 1, 3, CV_32F );//, mp2;
+  cv::Mat pta = cv::Mat( 3, 1, CV_32F );//, mp2;
 
-  mp1.at<float>(0,0) = p1.x;
-  mp1.at<float>(0,1) = p1.y;
-  mp1.at<float>(0,2) = 1.0f;
+  pta.at<float>(0,0) = p1.x;
+  pta.at<float>(1,0) = p1.y;
+  pta.at<float>(2,0) = 1.0f;
 
-//  std::cout << "---> mp1: " << mp1.size() << std::endl;
-//  std::cout << "---> mp1: " << H.size() << std::endl;
-
-  cv::Mat mp2 = mp1 * H;
+  cv::Mat ptb = H * pta;
   
-  p2.x = mp2.at<float>(0,0);
-  p2.y = mp2.at<float>(0,1);
+  p2.x  = ptb.at<float>(0,0) / ptb.at<float>(2,0);
+  p2.y  = ptb.at<float>(1,0) / ptb.at<float>(2,0);
 
-//  printMat(mp1, "Point 1");
-//  printMat(mp2, "Point 2");
+  std::cout << "Xa: " << p1.x << ", Ya: " << p1.y << std::endl;
+  std::cout << "Xb: " << p2.x << ", Yb: " << p2.y << std::endl;
+  std::cout << "Scale: " << ptb.at<float>(2,0) << std::endl;
+
+  printMat(pta, "Point 1");
+  printMat(ptb, "Point 2");
 //  printMat(H, "Homography Matrix");
 }
 

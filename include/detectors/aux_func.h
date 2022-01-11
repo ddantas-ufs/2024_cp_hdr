@@ -17,6 +17,8 @@ void readImg( std::string img_path, cv::Mat &img_in );
 
 void readHomographicMatrix( std::string path, cv::Mat &H );
 
+void readCameraMatrix( std::string path, cv::Mat &cam );
+
 std::string getFileName(std::string file_path, bool withExtension);
 
 int sciToDec(const std::string &str);
@@ -28,6 +30,8 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts);
 void applyROI( cv::Mat &img, std::string pathROI );
 
 void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi );
+
+void readROIFromImage( std::string pathROI, cv::Mat &img );
 
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2);
 

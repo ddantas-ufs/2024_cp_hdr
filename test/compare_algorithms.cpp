@@ -52,14 +52,16 @@ int main(int argv, char** args)
     pathH    = std::string(args[3]);
     outDir   = std::string(args[4]);
   }
-    
+  
   // Reading images and setting output image name
   readImg(img1Path, img1, img1Gray, img1OutPath);
   readImg(img2Path, img2, img2Gray, img2OutPath);
 
   // Reading ROI as image mask
-  readROIAsImage( img1ROIPath, img1Gray, img1ROI );
-  readROIAsImage( img2ROIPath, img2Gray, img2ROI );
+  //readROIAsImage( img1ROIPath, img1Gray, img1ROI );
+  //readROIAsImage( img2ROIPath, img2Gray, img2ROI );
+  readROIFromImage( img1ROIPath, img1ROI );
+  readROIFromImage( img2ROIPath, img2ROI );
 
   cv::imwrite("out/img1ROI.png", img1ROI);
   cv::imwrite("out/img2ROI.png", img2ROI);
@@ -103,6 +105,22 @@ int main(int argv, char** args)
   }
   else
   {
+    cv::Mat teste;
+    img2.copyTo( teste );
+    for (int i = 0; i < kp1.size(); i++)
+      cv::circle(teste, cv::Point(kp2[i].x, kp2[i].y), 4, cv::Scalar(0, 255, 0));
+
+    printMat(H, "Readed Homography Matrix");
+
+    for (int i = 0; i < kp2.size(); i++)
+    {
+      KeyPoints k;
+      getHomographicCorrespondence( kp1[i].x, kp1[i].y, k.x, k.y, H );
+      cv::circle(teste, cv::Point( k.x, k.y ), 4, cv::Scalar(255, 0, 0));
+    }
+    
+    cv::imwrite( "_teste.png", teste );
+
     saveKeypoints( kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.txt", kp1.size() );
     saveKeypoints( kp2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.txt", kp2.size() );
     plotKeyPoints( img1, kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.png", kp1.size() );
@@ -166,7 +184,7 @@ int main(int argv, char** args)
     loadOpenCVKeyPoints( ocvKPs1, ocvDesc1, kp1, true);
     loadOpenCVKeyPoints( ocvKPs2, ocvDesc2, kp2, true);
 
-    // Getting only the 500 strongest keypoints
+    // Getting only the strongest keypoints
     sortKeypoints( kp1 );
     sortKeypoints( kp2 );
     kp1 = vectorSlice( kp1, 0, MAX_KP);
