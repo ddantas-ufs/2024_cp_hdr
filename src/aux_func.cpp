@@ -346,12 +346,12 @@ void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H )
   p2.x  = ptb.at<float>(0,0) / ptb.at<float>(2,0);
   p2.y  = ptb.at<float>(1,0) / ptb.at<float>(2,0);
 
-  std::cout << "Xa: " << p1.x << ", Ya: " << p1.y << std::endl;
-  std::cout << "Xb: " << p2.x << ", Yb: " << p2.y << std::endl;
-  std::cout << "Scale: " << ptb.at<float>(2,0) << std::endl;
+//  std::cout << "Xa: " << p1.x << ", Ya: " << p1.y << std::endl;
+//  std::cout << "Xb: " << p2.x << ", Yb: " << p2.y << std::endl;
+//  std::cout << "Scale: " << ptb.at<float>(2,0) << std::endl;
 
-  printMat(pta, "Point 1");
-  printMat(ptb, "Point 2");
+//  printMat(pta, "Point 1");
+//  printMat(ptb, "Point 2");
 //  printMat(H, "Homography Matrix");
 }
 
