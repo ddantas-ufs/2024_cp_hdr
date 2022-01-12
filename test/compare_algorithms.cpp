@@ -105,6 +105,7 @@ int main(int argv, char** args)
   }
   else
   {
+    /*
     cv::Mat teste;
     img2.copyTo( teste );
     for (int i = 0; i < kp1.size(); i++)
@@ -120,7 +121,7 @@ int main(int argv, char** args)
     }
     
     cv::imwrite( "_teste.png", teste );
-
+    */
     saveKeypoints( kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.txt", kp1.size() );
     saveKeypoints( kp2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.txt", kp2.size() );
     plotKeyPoints( img1, kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.png", kp1.size() );

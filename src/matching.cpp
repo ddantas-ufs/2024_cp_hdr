@@ -66,6 +66,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<MatchedKeyPoints> &output,
            cv::Mat H, float threshold, int calcDistMode )
 {
+  int countCorrect = 0, countIncorrect = 0;
   for( int i = 0; i < kpListImg1.size(); i++ )
   {
     std::vector<float> distList;
@@ -141,21 +142,28 @@ void nndr( std::vector<KeyPoints> kpListImg1,
 
       // Maps coordinates of keypoint from img1 to img2
       getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
-      float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kpAux );
+      float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp2, kpAux );
 
       //float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
 
       // Verifying if the keypoints are in the defined max range from each other
       if( kpsDistance > MATCHING_RATIO_MATCH )
+      {
         kps.isCorrect = false;
+        countIncorrect++;
+      }
       else
+      {
         kps.isCorrect = true;
+        countCorrect++;
+      }
 
       output.push_back( kps );
     }
   }
   std::cout << " --> Keypoints to match: " << kpListImg1.size() << std::endl;
-  std::cout << " --> Matched Keypoints: " << output.size() << std::endl;
+  std::cout << " --> Correct matches:   " << countCorrect << std::endl;
+  std::cout << " --> Incorrect matches: " << countIncorrect << std::endl;
 }
 
 void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
