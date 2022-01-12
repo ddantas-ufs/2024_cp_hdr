@@ -158,6 +158,11 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         countCorrect++;
       }
 
+      std::cout << " --> Matched? " << kps.isCorrect << " -- Distance: " << kpsDistance << std::endl;
+      std::cout << " --> Tried match: Xa: " << kps.kp1.x << ", Ya:" << kps.kp1.y << std::endl;
+      std::cout << " --> Tried match: Xb: " << kps.kp2.x << ", Yb:" << kps.kp2.y << std::endl;
+      std::cout << " --> Tried match: aux x: " << kpAux.x << ", aux y:" << kpAux.y << std::endl;
+
       output.push_back( kps );
     }
   }

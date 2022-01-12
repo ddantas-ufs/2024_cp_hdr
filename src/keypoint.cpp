@@ -376,6 +376,18 @@ void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor
 
 }
 
+void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor,
+                          std::vector<KeyPoints> &kpList )
+{
+  loadOpenCVKeyPoints( ocv_kp, descriptor, kpList, true );
+}
+
+void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, std::vector<KeyPoints> &kpList )
+{
+  cv::Mat descriptor;
+  loadOpenCVKeyPoints( ocv_kp, descriptor, kpList, false );
+}
+
 /*
   Pack info into octave variable
   Octave integer variable stores 2 informations 

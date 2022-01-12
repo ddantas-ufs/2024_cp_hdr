@@ -182,8 +182,8 @@ int main(int argv, char** args)
       siftImage2->compute( img2Gray, ocvKPs2, ocvDesc2);      
     }
  
-    loadOpenCVKeyPoints( ocvKPs1, ocvDesc1, kp1, true);
-    loadOpenCVKeyPoints( ocvKPs2, ocvDesc2, kp2, true);
+    loadOpenCVKeyPoints( ocvKPs1, ocvDesc1, kp1 );
+    loadOpenCVKeyPoints( ocvKPs2, ocvDesc2, kp2 );
 
     // Getting only the strongest keypoints
     sortKeypoints( kp1 );
