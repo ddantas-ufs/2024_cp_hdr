@@ -32,5 +32,15 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
 void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
                std::string img2Path, std::vector<KeyPoints> img2KpList,
                std::string H );
+
+// matching without Homography
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList );
+
+void matchFPs( cv::Mat img1, cv::Mat img2, 
+               std::vector<KeyPoints> img1KpList,
+               std::vector<KeyPoints> img2KpList,
+               cv::Mat &imgOut );
+
 #endif
 

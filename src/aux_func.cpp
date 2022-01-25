@@ -22,6 +22,29 @@ void cleanKeyPointVector( std::vector<KeyPoints> &kp )
   kp.clear();
 }
 
+std::string returnOpenCVArrayType(int type) {
+  std::string r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  r += "C";
+  r += (chans+'0');
+
+  return r;
+}
+
 /**
  * If image is grayscale, make a copy;
  * If image is RGB, parse it to grayscale.
@@ -83,18 +106,21 @@ void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &im
 
 void readHomographicMatrix( std::string path, cv::Mat &H )
 {
-  H = cv::Mat( cv::Size(3,3), CV_32F );
-  std::fstream arch( path, std::ios_base::in );
+  if( !path.empty() )
+  {
+    H = cv::Mat( cv::Size(3,3), CV_32F );
+    std::fstream arch( path, std::ios_base::in );
 
-  float aux;
-  for( int i = 0; i < 3; i++ )
-    for( int j = 0; j < 3; j++ )
-    {
-      arch >> aux;
-      H.at<float>(i,j) = aux;
-    }
+    float aux;
+    for( int i = 0; i < 3; i++ )
+      for( int j = 0; j < 3; j++ )
+      {
+        arch >> aux;
+        H.at<float>(i,j) = aux;
+      }
 
-  arch.close();
+    arch.close();
+  }
 }
 
 void readCameraMatrix( std::string path, cv::Mat &cam )

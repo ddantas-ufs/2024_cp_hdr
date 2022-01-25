@@ -138,11 +138,17 @@ void nndr( std::vector<KeyPoints> kpListImg1,
       MatchedKeyPoints kps;
       KeyPoints kpAux;
       kps.kp1 = kpListImg1[i];
-      kps.kp2 = kpListImg2[minValIdx1]; 
+      kps.kp2 = kpListImg2[minValIdx1];
+      float kpsDistance = 0.0f;
 
-      // Maps coordinates of keypoint from img1 to img2
-      getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
-      float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp2, kpAux );
+      // If there's a homography matrix, mapping is made. 
+      // If there's not, calculate distance from kp1 to kp2.
+      if( H.empty() ) kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
+      else
+      {
+        getHomographicCorrespondence( kps.kp1.x, kps.kp1.y, kpAux.x, kpAux.y, H );
+        kpsDistance = distanceBetwenTwoKeyPoints( kps.kp2, kpAux );
+      }
 
       //float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
 
@@ -158,10 +164,10 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         countCorrect++;
       }
 
-      std::cout << " --> Matched? " << kps.isCorrect << " -- Distance: " << kpsDistance << std::endl;
-      std::cout << " --> Tried match: Xa: " << kps.kp1.x << ", Ya:" << kps.kp1.y << std::endl;
-      std::cout << " --> Tried match: Xb: " << kps.kp2.x << ", Yb:" << kps.kp2.y << std::endl;
-      std::cout << " --> Tried match: aux x: " << kpAux.x << ", aux y:" << kpAux.y << std::endl;
+//      std::cout << " --> Matched? " << kps.isCorrect << " -- Distance: " << kpsDistance << std::endl;
+//      std::cout << " --> Tried match: Xa: " << kps.kp1.x << ", Ya:" << kps.kp1.y << std::endl;
+//      std::cout << " --> Tried match: Xb: " << kps.kp2.x << ", Yb:" << kps.kp2.y << std::endl;
+//      std::cout << " --> Tried match: aux x: " << kpAux.x << ", aux y:" << kpAux.y << std::endl;
 
       output.push_back( kps );
     }
@@ -191,6 +197,7 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
     else
       cv::line( out, p1, p2, cv::Scalar(0,0,255), 2 );
   }
+  std::cout << " --> Finishing drawing lines..." << std::endl;
 }
 
 /**
@@ -221,7 +228,7 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat H )
 {
   cv::Mat aux;
-  matchFPs( img1, img1KpList, img2, img2KpList, H, aux );  
+  matchFPs( img1, img1KpList, img2, img2KpList, H, aux );
 }
 
 void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
@@ -237,4 +244,20 @@ void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
   readHomographicMatrix( pathH, H );
   
   matchFPs( img1, img1KpList, img2, img2KpList, H );
+}
+
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList )
+{
+  cv::Mat aux, H;
+  matchFPs( img1, img1KpList, img2, img2KpList, H, aux );
+}
+
+void matchFPs( cv::Mat img1, cv::Mat img2, 
+               std::vector<KeyPoints> img1KpList,
+               std::vector<KeyPoints> img2KpList,
+               cv::Mat &imgOut )
+{
+  cv::Mat H;
+  matchFPs( img1, img1KpList, img2, img2KpList, H, imgOut );
 }

@@ -350,12 +350,15 @@ void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor
 
     unpackOpenCVOctave( ocv_kp[i], uOctave, uLayer, uScale );
 
-    nkp.x = (float) ocv_kp[i].pt.x;
-    nkp.y = (float) ocv_kp[i].pt.y;
-    nkp.resp = (float) ocv_kp[i].response;
-    nkp.direction = (float) ocv_kp[i].angle;
-    nkp.octave = (int) uOctave;
-    nkp.scale = (int) uLayer;
+    nkp.x = float(ocv_kp[i].pt.x);
+    nkp.y = float(ocv_kp[i].pt.y);
+    nkp.resp = float(ocv_kp[i].response);
+    nkp.direction = float(ocv_kp[i].angle);
+    nkp.octave = int(uOctave);
+    nkp.scale = int(uLayer);
+
+    //std::cout << "Coord. OpenCV: X:" << ocv_kp[i].pt.x << ", Y:" << ocv_kp[i].pt.y << std::endl;
+    //std::cout << "Coord. CP_HDR: X:" << nkp.x          << ", Y:" << nkp.y          << std::endl;
 
     //std::cout << "X, Y: " << nkp.x << ", " << nkp.y << std::endl;
     //std::cout << "Resp: " << uLayer << std::endl;
@@ -369,6 +372,9 @@ void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor
       {
         float d = descriptor.at<float>(j, i);
         nkp.descriptor.push_back( (int) d );
+        
+        std::cout << "OpenCV Desc: " << descriptor.at<float>(j, i) << ". Type: " << returnOpenCVArrayType( descriptor.type() ) << std::endl;
+        std::cout << "CP_HDR Desc: " << d << ", Convertido: " << uint(d) << std::endl;
       }
     }
     kpList.push_back(nkp);

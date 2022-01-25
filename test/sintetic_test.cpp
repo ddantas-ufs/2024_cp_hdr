@@ -13,11 +13,11 @@
 int main(int argv, char** args)
 {
   std::vector<KeyPoints> kp1, kp2; // CP_HDR KeyPoint list
-  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching, H;
+  cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching;
   cv::Mat img1ROI, img2ROI;
 
   std::string img1OutPath, img2OutPath, imgMatchingOutPath;
-  std::string img1Path, img2Path, pathH, outDir, img1ROIPath, img2ROIPath, hdrSuf = ".hdr";
+  std::string img1Path, img2Path, outDir, img1ROIPath, img2ROIPath, hdrSuf = ".hdr";
 
   bool isHDR = false;
   bool considerROI = false;
@@ -41,14 +41,6 @@ int main(int argv, char** args)
     img2Path = std::string(args[2]);
     outDir   = std::string(args[3]);
   } 
-  else if( argv == 5 )
-  {
-    // 2 Images, Homography and output
-    img1Path = std::string(args[1]);
-    img2Path = std::string(args[2]);
-    pathH    = std::string(args[3]);
-    outDir   = std::string(args[4]);
-  } 
   else if( argv == 6 )
   {
     // 2 Images, 2 ROIs and output
@@ -58,17 +50,6 @@ int main(int argv, char** args)
     img2Path    = std::string(args[3]);
     img2ROIPath = std::string(args[4]);
     outDir      = std::string(args[5]);
-  }
-  else if( argv == 7 )
-  {
-    // 2 Images, 2 ROIs, Homography and output
-    considerROI = true;
-    img1Path    = std::string(args[1]);
-    img1ROIPath = std::string(args[2]);
-    img2Path    = std::string(args[3]);
-    img2ROIPath = std::string(args[4]);
-    pathH       = std::string(args[5]);
-    outDir      = std::string(args[6]);
     std::cout << "  > ### Considering ROI" << std::endl;
   }
   
@@ -78,19 +59,12 @@ int main(int argv, char** args)
 
   if( considerROI )
   {
-    // Reading ROI as image mask
-    //readROIAsImage( img1ROIPath, img1Gray, img1ROI );
-    //readROIAsImage( img2ROIPath, img2Gray, img2ROI );
     readROIFromImage( img1ROIPath, img1ROI );
     readROIFromImage( img2ROIPath, img2ROI );
 
     cv::imwrite("out/img1ROI.png", img1ROI);
     cv::imwrite("out/img2ROI.png", img2ROI);
   }
-
-
-  // Reading Homography Matrix
-  readHomographicMatrix( pathH, H );
 
   // Normalizing images (mandatory to HDR images).
   if( isHDR )
@@ -128,23 +102,6 @@ int main(int argv, char** args)
   }
   else
   {
-    /*
-    cv::Mat teste;
-    img2.copyTo( teste );
-    for (int i = 0; i < kp1.size(); i++)
-      cv::circle(teste, cv::Point(kp2[i].x, kp2[i].y), 4, cv::Scalar(0, 255, 0));
-
-    printMat(H, "Readed Homography Matrix");
-
-    for (int i = 0; i < kp2.size(); i++)
-    {
-      KeyPoints k;
-      getHomographicCorrespondence( kp1[i].x, kp1[i].y, k.x, k.y, H );
-      cv::circle(teste, cv::Point( k.x, k.y ), 4, cv::Scalar(255, 0, 0));
-    }
-    
-    cv::imwrite( "_teste.png", teste );
-    */
     saveKeypoints( kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.txt", kp1.size() );
     saveKeypoints( kp2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.txt", kp2.size() );
     plotKeyPoints( img1, kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.png", kp1.size() );
@@ -152,12 +109,10 @@ int main(int argv, char** args)
     imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_CPHDR_SIFT.png";
   }
   
+  matchFPs(img1, img2, kp1, kp2, imgMatching);
+
   // Matching and generating output image with matches
   std::cout << "> Matching CP_HDR FPs and saving resulting image" << std::endl;
-
-  // matchFPs with Homography Matrix?
-  if( pathH.empty() ) matchFPs(img1, img2, kp1, kp2, imgMatching);
-  else matchFPs(img1, kp1, img2, kp2, H, imgMatching);
 
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
@@ -171,7 +126,7 @@ int main(int argv, char** args)
   img1Gray.release();
   img2Gray.release();
   imgMatching.release();
-
+  
   // Algorithms that doesn't support HDR images
   if(!isHDR)
   {
@@ -222,14 +177,13 @@ int main(int argv, char** args)
     saveKeypoints( kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.txt", kp2.size() );
     plotKeyPoints( img1, kp1, outDir+img1OutPath+"_OpenCV_SIFT_LDR.png", kp1.size() );
     plotKeyPoints( img2, kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.png", kp2.size() );
+  
+    matchFPs(img1, img2, kp1, kp2, imgMatching);
 
     // Matching and generating output image with matches
     std::cout << "> Matching OpenCV FPs and saving resulting image..." << std::endl;
     imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_OpenCV_SIFT.png";
 
-    // matchFPs with Homography Matrix?
-    if( pathH.empty() ) matchFPs(img1, img2, kp1, kp2, imgMatching);
-    else matchFPs(img1, kp1, img2, kp2, H, imgMatching);
     cv::imwrite(imgMatchingOutPath, imgMatching);
 
     ocvDesc1.release();
@@ -240,7 +194,6 @@ int main(int argv, char** args)
     // Cleaning objects
     cleanKeyPointVector( kp1 );
     cleanKeyPointVector( kp2 );
-    H.release();
     img1.release();
     img2.release();
     img1Out.release();

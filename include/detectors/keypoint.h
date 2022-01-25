@@ -2,6 +2,7 @@
 #define KEYPOINT_H
 
 #include "core.h"
+#include "aux_func.h"
 
 std::string keypointToString( KeyPoints &kp );
 
