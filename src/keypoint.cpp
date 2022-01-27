@@ -46,6 +46,50 @@ std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &vtr, int beg, i
   return vec;
 }
 
+/**
+ * Receive the histogram array and descriptor array, normalize the values and store
+ * the normalized values into descriptor array.
+ * 
+ * @param hist histogram array with calculated bins
+ * @param descriptor descriptor array where normalized values will be stored
+ * @param qtdSW the amount of subWindows calculated (default = 4)
+ * @param binsPerSW the amount of bins calculated per each subWindow (default = 8)
+**/
+void normalizeDescriptor( cv::Mat hist, cv::Mat &descriptor  )
+{
+  int k = 0;
+
+  int qtdSW = 4;
+  int binsPerSW = 8;
+
+  hist.copyTo( descriptor );
+  
+  // Preparing to normalize histogram
+  float nrm2 = 0.0f;
+  int len = qtdSW*qtdSW*binsPerSW;
+  for( k = 0; k < len; k++ )
+    nrm2 += descriptor.at<float>(k)*descriptor.at<float>(k);
+//  nrm2 += descriptor[k]*descriptor[k];
+
+  float thr = std::sqrt(nrm2)*SIFT_DESC_MAG_THR;
+  nrm2 = 0.0f;
+
+  for( int i = 0; i < k; i++ )
+  {
+//  float val = std::min(descriptor[i], thr);
+//  descriptor[i] = val;
+    float val = std::min(descriptor.at<float>(i), thr);
+    descriptor.at<float>(i) = val;
+    nrm2 += val*val;
+  }
+
+  nrm2 = SIFT_DESC_INT_FTR/std::max(std::sqrt(nrm2), FLT_EPSILON);
+
+  // Copying normalized data to descriptor
+  for( k = 0; k < len; k++ )
+    descriptor.at<float>(k) = uchar( descriptor.at<float>(k)*nrm2 );
+}
+
 void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
   int num_kp = 0;
@@ -368,13 +412,15 @@ void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor
 
     if( withDescription )
     {
+//      cv::Mat normDescriptor;
+//      normalizeDescriptor( descriptor, normDescriptor );
       for( int j=0; j < descriptor.cols; j++ )
       {
         float d = descriptor.at<float>(j, i);
-        nkp.descriptor.push_back( (int) d );
+        nkp.descriptor.push_back( uint( std::abs( d ) ) );
         
         std::cout << "OpenCV Desc: " << descriptor.at<float>(j, i) << ". Type: " << returnOpenCVArrayType( descriptor.type() ) << std::endl;
-        std::cout << "CP_HDR Desc: " << d << ", Convertido: " << uint(d) << std::endl;
+        std::cout << "CP_HDR Desc: " << std::round( d ) << ", Convertido: " << uint( std::abs( d ) ) << std::endl;
       }
     }
     kpList.push_back(nkp);

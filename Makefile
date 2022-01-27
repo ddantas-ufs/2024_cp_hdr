@@ -172,14 +172,14 @@ run_compare_algorithms: compare_algorithms
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 
 run_sintetic_test: sintetic_test
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.jpg img/teste_sintetico/escada_branco_step2.jpg $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.hdr img/teste_sintetico/escada_branco_step2.hdr $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.jpg  img/teste_sintetico/escada_preto_step2.jpg $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.hdr  img/teste_sintetico/escada_preto_step2.hdr $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.jpg img/teste_sintetico/escada_branco_step10.jpg $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.hdr img/teste_sintetico/escada_branco_step10.hdr $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.jpg  img/teste_sintetico/escada_preto_step10.jpg $(OUT_DIR)/
-#	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.hdr  img/teste_sintetico/escada_preto_step10.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.jpg img/teste_sintetico/escada_branco_step2.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.hdr img/teste_sintetico/escada_branco_step2.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.jpg  img/teste_sintetico/escada_preto_step2.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.hdr  img/teste_sintetico/escada_preto_step2.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.jpg img/teste_sintetico/escada_branco_step10.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.hdr img/teste_sintetico/escada_branco_step10.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.jpg  img/teste_sintetico/escada_preto_step10.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.hdr  img/teste_sintetico/escada_preto_step10.hdr $(OUT_DIR)/
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.jpg img/teste_sintetico/escada_branco_step20.jpg $(OUT_DIR)/
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.hdr img/teste_sintetico/escada_branco_step20.hdr $(OUT_DIR)/
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.jpg  img/teste_sintetico/escada_preto_step20.jpg $(OUT_DIR)/
