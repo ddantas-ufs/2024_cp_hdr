@@ -94,7 +94,6 @@ void read(char *name, char *argv2){
 		for(int x = 0; x < input.cols; x++)
 			for(int y = 0; y < input.rows; y++)
 				roi[0].at<uchar>(y, x) = 1;
-		roi[1] = roi[0];
 	}
 }
 
@@ -243,7 +242,6 @@ void saveKeypoints(){
     sort(aux.begin(), aux.end());
     
     int quantMaxKP = 500;
-    //int quantMaxKP = 5400;
     
     for(int i = 0; i < quantMaxKP && i < aux.size(); i++){
 	 	int y = aux[i].second.first, x = aux[i].second.second;
@@ -278,17 +276,17 @@ void saveKeypoints(){
 	//Salvando pontos ROI 1
 	fprintf(out1, "%d\n", (int)aux1.size());
 	for(int i = 0; i < (int)aux1.size(); i++)
-		fprintf(out1, "%d %d %.4f\n", aux1[i].second.first, aux1[i].second.second, -aux1[i].first);
+		fprintf(out1, "%d;%d;%.4f\n", aux1[i].second.first, aux1[i].second.second, -aux1[i].first);
 	fclose(out1);
 	//Salvando pontos ROI 2
 	fprintf(out2, "%d\n", (int)aux2.size());
 	for(int i = 0; i < (int)aux2.size(); i++)
-		fprintf(out2, "%d %d %.4f\n", aux2[i].second.first, aux2[i].second.second, -aux2[i].first);
+		fprintf(out2, "%d;%d;%.4f\n", aux2[i].second.first, aux2[i].second.second, -aux2[i].first);
 	fclose(out2);
 	//Salvando pontos ROI 3
 	fprintf(out3, "%d\n", (int)aux3.size());
 	for(int i = 0; i < (int)aux3.size(); i++)
-		fprintf(out3, "%d %d %.4f\n", aux3[i].second.first, aux3[i].second.second, -aux3[i].first);
+		fprintf(out3, "%d;%d;%.4f\n", aux3[i].second.first, aux3[i].second.second, -aux3[i].first);
 	fclose(out3);
 }
 void saveKeypoints2ROIs(){

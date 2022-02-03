@@ -8,7 +8,7 @@ def runDoG(dogFileName, imagePath, imageName, imageExtension):
 	
 	#run file
 	image = f"{imagePath}{imageName}.{imageExtension}"
-	os.system(f"./{dogFileName} {image}")
+	os.system(f"./{dogFileName} {image} {imagePath}{imageName}")
 	#os.system(f"cp ./*{dogFileName}*.txt {actual_filepath}/temp"  )
 
 def runSift(dogFile, imagePath, imageName, imageExtension):

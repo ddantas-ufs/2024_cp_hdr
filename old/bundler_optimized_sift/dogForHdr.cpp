@@ -5,12 +5,12 @@
 #include "opencv2/imgproc.hpp"
 //Incluindo todas as bibliotecas std do c/c++
 #include <bits/stdc++.h>
-#include "dog.hpp"
 
 using namespace cv;
 using namespace std;
 
 const int INF = (int) 1e9;
+
 
 //Criando imagens do tipo Mat
 FILE *in, *out0, *out1, *out2, *out3;
@@ -25,6 +25,11 @@ double gKernel[5][5];
 float mediaGeral = 0; //Media geral dos coefV
 
 int gaussianSize = 11;
+
+struct KeyPoints{
+	int x, y, scale, z;//posicao (x, y) e o octave ou escalada da imagem
+	float response;
+};
 
 vector<KeyPoints> keyPoint;
 
@@ -77,6 +82,9 @@ void read(char *name, char *argv2){
 		reverse(num.begin(), num.end());
 		
 		roi[0] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		//roi[1] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		//roi[2] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
+		//roi[3] = imread(path+"ROI."+num+".png", IMREAD_UNCHANGED);
 		roi[1] = imread(path+"ROIh."+num+".png", IMREAD_UNCHANGED);
 		roi[2] = imread(path+"ROIm."+num+".png", IMREAD_UNCHANGED);
 		roi[3] = imread(path+"ROIs."+num+".png", IMREAD_UNCHANGED);
@@ -391,7 +399,7 @@ void saveKeypoints(){
 	}
     sort(aux.begin(), aux.end());
     
-    int quantMaxKP = 15000;
+    int quantMaxKP = 500;
     
     for(int i = 0; i < quantMaxKP && i < aux.size(); i++){
 	 	int y = aux[i].second.first, x = aux[i].second.second;
@@ -545,25 +553,17 @@ void edgeThreshold(){
 int main(int, char** argv ){
 	char saida[255];
 	strcpy(saida, argv[1]);
-	
-	std::string s = std::string( saida );
-	if( s.substr(s.size() - 4, 4) == "tiff" ) {
-		saida[strlen(saida)-5] = '\0';
-	} else {
-		saida[strlen(saida)-4] = '\0';
-	}
-	
-	//saida[strlen(saida)-4] = '\0';
+	saida[strlen(saida)-4] = '\0';
 	string saida2(saida);
 	
 	string saida1 = saida2;
 	string saida3 = saida2;
 	string saida4 = saida3;
 	
-	saida1 += ".dogForHDR.distribution.txt";
-	saida2 += ".dogForHDR1.txt";
-	saida3 += ".dogForHDR2.txt";
-	saida4 += ".dogForHDR3.txt";
+	saida1 += ".dogForHdr.distribution.txt";
+	saida2 += ".dogForHdr1.txt";
+	saida3 += ".dogForHdr2.txt";
+	saida4 += ".dogForHdr3.txt";
 	
 	out0 = fopen(saida1.c_str(), "w+");
 	out1 = fopen(saida2.c_str(), "w+");

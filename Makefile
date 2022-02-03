@@ -5,6 +5,7 @@ CPP_FLAGS = -fPIC -g
 LD_FLAGS = -shared
 
 BIN_DIR = bin
+OLD_DIR = old
 TEST_DIR = test
 SRC_DIR = src
 INC_DIR = include
@@ -23,6 +24,27 @@ GET_URL = wget -r -np -R "index.html*" -e robots=off
 PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
 RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Scenes.zip
 
+DEMO_IMG_LOWE = lena.pgm
+#DEMO_IMG = lena.png
+DEMO_IMG = 00.jpg
+DEMO_HDR = 00.hdr
+
+DEMO_IMG1_MATCH = 00.LDR.jpg
+DEMO_IMG2_MATCH = 04.LDR.jpg
+
+DEMO_HDR1_MATCH = 00.hdr
+DEMO_HDR2_MATCH = 04.hdr
+
+DEMO_ROI_IMG1_TXT = ROI.00.txt
+DEMO_ROI_IMG2_TXT = ROI.04.txt
+DEMO_ROI_IMG1_PNG = ROI.00.png
+DEMO_ROI_IMG2_PNG = ROI.04.png
+
+DEMO_HOMOGRAPHY_IMG1_IMG2 = H.00_04.txt
+DEMO_HOMOGRAPHY_IMG2_IMG1 = H.04_00.txt
+
+DEMO_CAMERA_MATRIX_FILE = K.txt
+
 DEF_DOG = defaultdog
 DEMO_DOG = demodog
 DEMO_DOG_HDR = demodog_hdr
@@ -30,11 +52,34 @@ DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
-DEMO_HDR_IMG = $(IMG_DIR)/lena.png
-DEMO_LDR_IMG = $(IMG_DIR)/lena.png
+DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_HDR)
+DEMO_LDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
+DEMO_LDR_IMG_LOWE = $(IMG_DIR)/$(DEMO_IMG_LOWE)
 
+DEMO_ROI_IMG1 = $(IMG_DIR)/$(DEMO_ROI_IMG1_PNG)
+DEMO_ROI_IMG2 = $(IMG_DIR)/$(DEMO_ROI_IMG2_PNG)
+
+DEMO_LDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_IMG1_MATCH)
+DEMO_LDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_IMG2_MATCH)
+
+DEMO_HDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_HDR1_MATCH)
+DEMO_HDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_HDR2_MATCH)
+
+DEMO_HOMOGRAPHIC_MATRIX = $(IMG_DIR)/$(DEMO_HOMOGRAPHY_IMG1_IMG2)
+
+DEMO_CAMERA_MATRIX = $(IMG_DIR)/$(DEMO_CAMERA_MATRIX_FILE)
+
+LOWE_SIFT = $(OLD_DIR)/sift_lowe_implementation/sift
 SIFT_DESCRIPTOR = demosift
 SIFT_OPENCV = demosift_opencv
+
+MATCHING_OPENCV = matching_opencv
+MATCHING_CPHDR = matching_cphdr
+
+COMPARE_ALGORITHMS = compare_algorithms
+SINTETIC_TEST = sintetic_test
+
+DEMO_HOMOGRAPHY = demo_homography
 
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
@@ -43,6 +88,9 @@ install:
 
 libcphdr:
 	$(MAKE_LIB)
+
+demohomography:
+	$(CC) -o $(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(TEST_DIR)/$(DEMO_HOMOGRAPHY).cpp $(SRC_FILES) $(CV_LIB)
 
 demoharris:
 	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS) $(TEST_DIR)/$(DEMO_HARRIS).cpp $(SRC_FILES) $(CV_LIB)
@@ -68,6 +116,21 @@ descriptor_sift:
 demosift_opencv:
 	$(CC) -o $(BIN_DIR)/$(SIFT_OPENCV) $(TEST_DIR)/$(SIFT_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
 
+matching_opencv:
+	$(CC) -o $(BIN_DIR)/$(MATCHING_OPENCV) $(TEST_DIR)/$(MATCHING_OPENCV).cpp $(SRC_FILES) $(CV_LIB)
+
+matching_cphdr:
+	$(CC) -o $(BIN_DIR)/$(MATCHING_CPHDR) $(TEST_DIR)/$(MATCHING_CPHDR).cpp $(SRC_FILES) $(CV_LIB)
+
+compare_algorithms:
+	$(CC) -o $(BIN_DIR)/$(COMPARE_ALGORITHMS) $(TEST_DIR)/$(COMPARE_ALGORITHMS).cpp $(SRC_FILES) $(CV_LIB)
+
+sintetic_test:
+	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
+
+run_demohomography: demohomography
+	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+
 run_demoharris: demoharris
 	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
@@ -88,10 +151,40 @@ run_defaultdog: defaultdog
 
 run_descriptor_sift: descriptor_sift
 	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(SIFT_DESCRIPTOR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
 run_demosift_opencv: demosift_opencv
-	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/
-	
+	./$(LOWE_SIFT) <./$(DEMO_LDR_IMG_LOWE) >./$(OUT_DIR)/$(DEMO_IMG_LOWE).key
+	./$(BIN_DIR)/$(SIFT_OPENCV) $(DEMO_LDR_IMG) $(OUT_DIR)/ $(OUT_DIR)/$(DEMO_IMG_LOWE).key
+
+run_matching_opencv: matching_opencv
+	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
+	./$(BIN_DIR)/$(MATCHING_OPENCV) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
+
+run_matching_cphdr: matching_cphdr
+	./$(BIN_DIR)/$(MATCHING_CPHDR) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(OUT_DIR)/
+	./$(BIN_DIR)/$(MATCHING_CPHDR) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
+
+run_compare_algorithms: compare_algorithms
+	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_LDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+#	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+#	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+
+run_sintetic_test: sintetic_test
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.jpg img/teste_sintetico/escada_branco_step2.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.hdr img/teste_sintetico/escada_branco_step2.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.jpg  img/teste_sintetico/escada_preto_step2.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.hdr  img/teste_sintetico/escada_preto_step2.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.jpg img/teste_sintetico/escada_branco_step10.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.hdr img/teste_sintetico/escada_branco_step10.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.jpg  img/teste_sintetico/escada_preto_step10.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.hdr  img/teste_sintetico/escada_preto_step10.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.jpg img/teste_sintetico/escada_branco_step20.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.hdr img/teste_sintetico/escada_branco_step20.hdr $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.jpg  img/teste_sintetico/escada_preto_step20.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.hdr  img/teste_sintetico/escada_preto_step20.hdr $(OUT_DIR)/
+
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 

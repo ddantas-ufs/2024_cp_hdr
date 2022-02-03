@@ -1,6 +1,5 @@
 #include "../include/detectors/dog.h"
 #include "../include/detectors/hdr.h"
-#include "../include/detectors/aux_func.h"
 
 /**
  * Computes the partial derivatives in \a y, \a x, and \a s (scale of a pixel in the DoG scale space pyramid)
@@ -330,11 +329,27 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
+  /*
   if (is_hdr)
   {
     cv::Mat img_cv, img_log;
 
     coefVar(img, img_cv, cv_size);
+    logTransform(img_cv, img_log);
+
+    img_aux = img_log;
+  }
+  else
+  {
+    img_aux = img;
+  }
+  */
+  if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
+  {
+    cv::Mat img_cv, img_log;
+
+    applyCVMask( img, img_cv );
+    //coefVar(img, img_cv, cv_size);
     logTransform(img_cv, img_log);
 
     img_aux = img_log;
@@ -350,7 +365,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     for (int j = 0; j < NUM_SCALES; j++)
     {
       cv::GaussianBlur(img_aux, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
-      ko = ko * 1.414214;
+      ko = ko * SQRT_2;
     }
     cv::resize(img_aux, img_aux, cv::Size(img_aux.cols / 2, img_aux.rows / 2));
   }
@@ -392,20 +407,25 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
   cv::Mat img_norm;
 
-//  if (img.depth() == 0)
-//  {
-//    img.convertTo(img_norm, CV_32FC1);
-//    img_norm = img_norm / 255.0;
-//  }
-//  else
-//  {
-//    img_norm = img_norm / 256.0;
-//  }
-  imgNormalize(img, img_norm);
+  /*
+  ** Edited by @arturxz 14/10/2021
+  ** changed normalization method
+  */
+  //imgNormalize(img, img_norm);
+  mapPixelValues(img, img_norm);
 
+  std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);
+  
+  std::cout << " ## SIFT > > Calculating Difference of Gaussians..." << std::endl;
   dogCalc(scales, dog);
+  
+  std::cout << " ## SIFT > > Computing Maxima Suppression and subpixel keypoint coordinates..." << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  
+  std::cout << " ## SIFT > > Contrast Threshold..." << std::endl;
   contrastTh(dog, kp, contrast_th);
+  
+  std::cout << " ## SIFT > > Edge Threshold..." << std::endl;
   edgeTh(dog, kp, curv_th);
 }

@@ -104,7 +104,12 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
 {
   cv::Mat resp_map, img_norm, img_blur, img_aux;
 
-  imgNormalize(img, img_norm);
+  /*
+  ** Edited by @arturxz 14/10/2021
+  ** changed normalization method
+  */
+  //imgNormalize(img, img_norm);
+  mapPixelValues(img, img_norm);
 
   cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
                    cv::BORDER_REPLICATE);
@@ -113,7 +118,12 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   {
     cv::Mat img_cv, img_log;
 
-    coefVar(img_blur, img_cv, cv_size);
+    /*
+    ** Edited by @arturxz 14/10/2021
+    ** changed CoV filter method
+    */
+    //coefVar(img_blur, img_cv, cv_size);
+    applyCVMask( img_blur, img_cv );
     logTransform(img_cv, img_log);
 
     img_aux = img_log;

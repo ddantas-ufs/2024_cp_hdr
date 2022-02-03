@@ -2,6 +2,7 @@
 #define DOG_H
 
 #include "core.h"
+#include "aux_func.h"
 
 void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr = false,
            bool refine_px = true, int mgauss = GAUSS_SIZE,

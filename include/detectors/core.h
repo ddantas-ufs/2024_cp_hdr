@@ -10,6 +10,8 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
+#define SQRT_2 1.41421356237; // Square root of two [sqrt(2)]
+
 #define NUM_OCTAVES 4 // number of octaves
 #define NUM_SCALES 5 // number of scales
 #define MAX_INTERP_STEPS 5 // interpolation max steps before failure (OpenSIFT, OpenCV)
@@ -23,10 +25,21 @@
 #define SOBEL_SIZE 5 // mask size of sobel operator
 #define K 0.04 // harris constant
 #define MIN_QUALITY 0.01 // quality percentual for the kp response
-#define MAX_KP 500 // if zero, it is not used
+#define MAX_KP 1000 // if zero, it is not used
+#define ALL_KP -1  // when all keypoints should be used
 #define CV_SIZE 5 // mask size to compute coefficient of variation
 #define LDR_MAX_RANGE 255.0
 #define HDR_MAX_RANGE 256.0
+
+// DEFINES IF DOG WILL USE CV FILTER
+#define USE_CV_FILTER_FALSE 0
+#define USE_CV_FILTER_TRUE 1
+
+#define USE_CV_FILTER USE_CV_FILTER_FALSE
+
+// MAPPING INTERVALS
+#define MAPPING_INTERVAL_FLOAT_0_1 0
+#define MAPPING_INTERVAL_FLOAT_0_255 1
 
 // SIFT CONSTANTS
 #define SIFT_DESC_ORIENT_SIGMA 1.5f
@@ -42,6 +55,17 @@
 #define SIFT_DESC_INT_FTR 512.0f // factor used to convert float descriptor to int
 #define SIFT_DESC_SCL_FTR 3.0f // to determine size of a single descriptor orientation histogram
 
+// MATCHING CONSTANTS
+#define MATCHING_HAMMING_DIST_CALC 0
+#define MATCHING_EUCLIDEAN_DIST_CALC 1
+
+//#define MATCHING_RATIO_MATCH 122.13f // numero obtido calculando 3% de (largura+altura / 2) das imagens de teste.
+#define MATCHING_RATIO_MATCH 15
+#define MATCHING_NNDR_THRESHOLD 0.7f
+
+#define MATCHING_INCORRECT 0
+#define MATCHING_CORRECT 1
+
 struct KeyPoints
 {
   float y;
@@ -52,6 +76,12 @@ struct KeyPoints
   float direction;
 
   std::vector<int> descriptor;
+};
+
+struct MatchedKeyPoints
+{
+  KeyPoints kp1, kp2;
+  bool isCorrect;
 };
 
 #endif

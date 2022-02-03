@@ -1,17 +1,5 @@
 #include "../include/descriptors/sift.h"
-
-
-void printMat( cv::Mat &m, std::string nm )
-{
-    std::cout << nm << std::endl;
-    for(int i=0; i<m.rows; i++)
-    {
-      for(int j=0; j<m.cols; j++)
-        std::cout << m.at<float>(i,j) << " ";
-        
-      std::cout << std::endl;
-    }
-}
+#include "../include/detectors/dog.h"
 
 /**
  * Return a flattened array of a cv::Mat object
@@ -117,14 +105,22 @@ void getGradient( cv::Mat& img, int x, int y, float mt[2] )
   int ym = y-1, yp = y+1;
   float dy, dx;
 
-  // Extrapolating image borders        
-  if( xp > img.cols ) xp = img.cols-(xp - img.cols)-1;
-  if( yp > img.rows ) yp = img.rows-(yp - img.rows)-1;
+  // Extrapolating image borders
+  if( xp > img.cols ) xp = img.cols - std::abs(xp-img.cols) - 1;
+  if( yp > img.rows ) yp = img.rows - std::abs(yp-img.rows) - 1;
   if( xm < 0 ) xm = std::abs( xm );
   if( ym < 0 ) ym = std::abs( ym );
 
-  dx = (img.at<float>( y, xp )) - (img.at<float>( y, xm ));
-  dy = (img.at<float>( yp, x )) - (img.at<float>( ym, x ));
+  float dxa = 0.0f, dxb = 0.0f, dya = 0.0f, dyb = 0.0f;
+  dxa = img.at<float>( y, xp );
+  dxb = img.at<float>( y, xm );
+  dya = img.at<float>( yp, x );
+  dyb = img.at<float>( ym, x );
+
+  if( std::isnan( dxa ) ) dxa = 0.0f;
+  if( std::isnan( dxb ) ) dxb = 0.0f;
+  if( std::isnan( dya ) ) dya = 0.0f;
+  if( std::isnan( dyb ) ) dyb = 0.0f;
 
   cartToPolarGradient( dx, dy, mt );
 }
@@ -225,13 +221,14 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
 void siftKPOrientation( std::vector<KeyPoints> &kp, cv::Mat &img, int mGauss,
                         float sigma )
 {
+//  cv::Mat auxImg;
+//  img.copyTo( auxImg ); // Allocating auxImg to be equal to img
+
   cv::GaussianBlur( img, img, cv::Size(mGauss, mGauss), sigma, sigma, 
                     cv::BORDER_REPLICATE );
 
   for( int i = 0; i < kp.size(); i++ )
     calcOrientation( img, kp[i] );
-  
-  std::cout << " fim siftKPOrientation " << std::endl;
 }
 
 /**
@@ -277,7 +274,7 @@ void unravelIndex( int index, int rows, int cols, int ret[2] )
  * @param binWidth width of the bin (360/8=45)
  * @param subW width of the subregion (=4)
  * @param hist Matrix where the histogram is being returned
-**/
+**//*
 void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, float refAngle,
                                int binWidth, int subW, cv::Mat& hist )
 {
@@ -327,6 +324,7 @@ void getHistogramForSubregion_old( cv::Mat &mag, cv::Mat &theta, int numBin, flo
   for(int k = 0; k<numBin; k++) std::cout << hist.at<float>(k) << " ";
   std::cout << std::endl;
 }
+*/
 
 /**
  * Receive the histogram array and descriptor array, normalize the values and store
@@ -504,22 +502,11 @@ void calcKeypointDescriptor( cv::Mat &img, KeyPoints &kp, float angle, float sca
       hist[idx+1] += hist[idx+binsPerSW+1];
       for( k = 0; k < binsPerSW; k++ )
         descriptor[(i*qtdSW + j)*binsPerSW + k] = hist[idx+k];
-      }
+    }
   
   normalizeHistToDescriptor( hist, descriptor, qtdSW, binsPerSW );
 }
 
-void unpackOpenCVOctave( cv::KeyPoint &kp, int &octave, int &layer, float &scale)
-{
-  octave = kp.octave & 255;
-  layer = (kp.octave >> 8) & 255;
-  octave = octave < 128 ? octave : (-128 | octave);
-  scale = octave >= 0 ? 1.f/(1 << octave) : (float)(1 << -octave);
-}
-
-/**
- * 
-**/
 void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 {
   // FOR EACH KP IN LIST...
@@ -538,18 +525,18 @@ void calcDescriptors(std::vector<KeyPoints> &kpl, cv::Mat &img )
 
     calcKeypointDescriptor( img, kpl[i], angle, size*0.5f, descriptor);
 
-    std::cout << "Keypoint: " << i << std::endl;
+    //std::cout << "Keypoint: " << i << std::endl;
     for( int k = 0; k < SIFT_DESC_SIZE; k++ )
     {
       kpl[i].descriptor[k] = descriptor[k];
       //std::cout << descriptor[k] << " ";
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
   }
 }
 
 /**
- * SIFT MAIN METHOD
+ * SIFT DESCRIPTOR MAIN METHOD
  * 
  * @param kp KeyPoints detected
  * @param name string with image's name
@@ -558,38 +545,107 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
                      int mGauss, float sigma )
 {
   cv::Mat img_norm;
-  if (img_in.depth() == 0)
+  mapPixelValues(img_in, img_norm);
+
+  // calculating keypoints orientation
+  std::cout << " ## SIFT > > Calculating orientations..." << std::endl;
+  siftKPOrientation( kpl, img_gray, mGauss, sigma );
+  std::cout << " ## SIFT > > Keypoints orientations computed." << std::endl;
+
+  //Removing blur applied in siftKPOrientation
+  //cv::cvtColor( img_norm, img_gray, cv::COLOR_BGR2GRAY ); 
+  makeGrayscaleCopy( img_norm, img_gray );
+  
+  //Calculating keypoints description
+  std::cout << " ## SIFT > > Calculating description..." << std::endl;
+  calcDescriptors( kpl, img_gray );
+  std::cout << " ## SIFT > > descriptions computed." << std::endl;
+}
+
+/**
+ * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * If ROI is used, than the Keypoints will lie in ROI area.
+ * 
+ * @param img: image where keypoints will be detected
+ * @param kpList: output vector containing detected keypoints and description.
+ * @param kpMax: max amount of keypoints that sould be returned
+ * @param roi: ROI image, mandatory to be CV_8UC1. White in the region of interest.
+**/
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat roi )
+{
+  cv::Mat imgGray;
+  std::vector<KeyPoints> aux;
+
+  makeGrayscaleCopy( img, imgGray );
+
+  std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
+  dogKp(imgGray, aux);
+  std::cout << " ## SIFT > " << aux.size() << " Keypoints detected." << std::endl;
+
+  if( !roi.empty() )
   {
-    img_in.convertTo(img_norm, CV_32FC1);
-    img_norm = img_norm / 255.0f;
+    std::cout << " ## SIFT > Removing keypoints outside ROI..." << std::endl;
+    if( roi.type() == CV_8UC1 )
+    {
+      // If ROI is sent as argument, use it to filter founded arguments
+      for( int i = 0; i < aux.size(); i++ )
+      {
+        KeyPoints kp = aux[i];
+        int x = (int) std::floor(kp.x);
+        int y = (int) std::floor(kp.y);
+        
+        //std::cout << " ## SIFT > roi[" << x << "," << y << "], " << roi.size() << std::endl;
+        uchar pixelValue = roi.at<uchar>(y, x);
+        if( pixelValue > 0 )
+        {
+          kpList.push_back( kp );
+          //std::cout << " ## SIFT > roi[" << x << "," << y << "] = " << (int) pixelValue << std::endl;
+        }
+      }
+
+      std::cout << " ## SIFT > " << kpList.size() << " Keypoints detected after ROI." << std::endl;
+    }
+    else
+    {
+      std::cout << " ## SIFT > #### WARNING!! ROI is not CV_8UC1 type." << std::endl;
+    }
   }
   else
   {
-    img_in = img_norm / 256.0f;
+    while( !aux.empty() )
+    {
+      KeyPoints kp = aux.back();
+      kpList.push_back( kp );
+      aux.pop_back();
+    }
   }
 
-  //removing blur applied in siftKPOrientation
-  cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  // If there's a keypoint amount limit, it is applied now using constant MAX_KP as parameter.
+  if( kpMax == MAX_KP )
+  {
+    // Getting only the 500 strongest keypoints
+    sortKeypoints( kpList );
+    kpList = vectorSlice( kpList, 0, MAX_KP);
+  }
 
-  std::cout << "Calculando orientações" << std::endl;
-  siftKPOrientation( kpl, img_gray, mGauss, sigma );
-  
-  //std::cout << "KeyPoints com calculo de orientação:" << kpl.size() << std::endl;
-  //for( int i = 0; i < kpl.size(); i++ )
-  //{
-  //  std::cout << "kpl[" << i << "].direction: " << kpl[i].direction << std::endl;
-  //}
+  std::cout << " ## SIFT > Describing Keypoints..." << std::endl;
+  siftDescriptor(kpList, img, imgGray);
+  std::cout << " ## SIFT > Keypoints described." << std::endl;
 
-  //removing blur applied in siftKPOrientation
-  //cv::cvtColor( img_norm, img_gray, CV_BGR2GRAY ); 
+  imgGray.release();
+}
 
-  //calculating keypoints description
-  std::cout << "Executando calculo da descrição" << std::endl;
-  //siftExecuteDescription( kpl, img_gray );
-  calcDescriptors( kpl, img_gray );
-  std::cout << "Size da lista de Keypoints  :" << kpl.size() << std::endl;
-
-  //printing keypoints and descriptions
-  //for( int i = 0; i < kpl.size(); i++ )
-  //  printKeypoint( kpl[i] );
+/**
+ * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * If ROI is used, than the Keypoints will lie in ROI area.
+ * 
+ * @param img: image where keypoints will be detected
+ * @param kpList: output vector containing detected keypoints and description.
+ * @param kpMax: max amount of keypoints that sould be returned
+**/
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
+{
+  std::cout << " ## SIFT > Run without ROI." << std::endl;
+  cv::Mat roi;
+  runSift( img, kpList, kpMax, roi );
 }
