@@ -416,11 +416,15 @@ void loadOpenCVKeyPoints( std::vector<cv::KeyPoint> &ocv_kp, cv::Mat &descriptor
 //      normalizeDescriptor( descriptor, normDescriptor );
       for( int j=0; j < descriptor.cols; j++ )
       {
-        float d = descriptor.at<float>(j, i);
-        nkp.descriptor.push_back( uint( std::abs( d ) ) );
+        float dValue = descriptor.at<float>(j, i);
+        unsigned int iValue = static_cast< unsigned int >( static_cast<int>( dValue ) );
+        if( iValue > 255 ) iValue = 255;
+        if( iValue < 0 ) iValue = 0;
+
+        nkp.descriptor.push_back( iValue );
         
-        std::cout << "OpenCV Desc: " << descriptor.at<float>(j, i) << ". Type: " << returnOpenCVArrayType( descriptor.type() ) << std::endl;
-        std::cout << "CP_HDR Desc: " << std::round( d ) << ", Convertido: " << uint( std::abs( d ) ) << std::endl;
+        //std::cout << "OpenCV Desc: " << descriptor.at<float>(j, i) << ". Type: " << returnOpenCVArrayType( descriptor.type() ) << std::endl;
+        //std::cout << "CP_HDR Desc: " << dValue << ", Convertido: " << iValue << std::endl;
       }
     }
     kpList.push_back(nkp);
