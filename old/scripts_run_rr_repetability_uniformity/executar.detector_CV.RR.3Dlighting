@@ -1,0 +1,11 @@
+clear
+echo "detectorCV RR/lighting/BX.SX"
+
+
+./repeatability ../dataset/3D/lighting/H.BX.SX.txt ../dataset/3D/lighting/BX/BX.HDR.detectorCV1.txt ../dataset/3D/lighting/SX/SX.HDR.detectorCV1.txt 5 > ../dataset/3D/lighting/RR/RR.HDR.detectorCV1.txt
+
+./repeatability ../dataset/3D/lighting/H.BX.SX.txt ../dataset/3D/lighting/BX/BX.LDR.detectorCV1.txt ../dataset/3D/lighting/SX/SX.LDR.detectorCV1.txt 5 > ../dataset/3D/lighting/RR/RR.LDR.detectorCV1.txt
+
+./repeatability ../dataset/3D/lighting/H.BX.SX.txt ../dataset/3D/lighting/BX/BX.logHDR.detectorCV1.txt ../dataset/3D/lighting/SX/SX.logHDR.detectorCV1.txt 5 > ../dataset/3D/lighting/RR/RR.logHDR.detectorCV1.txt
+
+
