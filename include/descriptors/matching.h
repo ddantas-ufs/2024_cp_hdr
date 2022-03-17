@@ -2,6 +2,7 @@
 #define MATCHING_H
 
 #include "../detectors/core.h"
+#include "../detectors/keypoint.h"
 
 float calculateDistance( std::vector<int> vec1, std::vector<int> vec2, 
                          int distanceMethod = MATCHING_EUCLIDEAN_DIST_CALC );
@@ -20,6 +21,10 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
 /**
  * All overloads on method matchFPs
 **/
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList,
+               cv::Mat H, std::vector<MatchedKeyPoints> &kpsOut,
+               cv::Mat &imgOut );
 
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,

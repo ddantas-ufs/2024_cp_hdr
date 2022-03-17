@@ -1,4 +1,4 @@
-#include "../include/cphdr.h"
+#include "../include/descriptors/matching.h"
 
 float vectorEuclideadDistance( std::vector<int> vec1, std::vector<int> vec2 )
 {
@@ -209,18 +209,26 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
  * @param img2KpList: Query image keypoint vector
  * @param H: homography matrix to map keypoints from reference to query image
  * @param imgOut: output image
+ * @param kpsOut: matched keypoints
 **/
+void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
+               cv::Mat img2, std::vector<KeyPoints> img2KpList,
+               cv::Mat H, std::vector<MatchedKeyPoints> &matchings,
+               cv::Mat &imgOut )
+{  
+  // Compute matching using NNDR algorithm 
+  nndr(img1KpList, img2KpList, matchings, H, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
+
+  // Creating image with lines indicating the matches founded
+  printLineOnImages(img1, img2, imgOut, matchings);
+}
+
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,
                cv::Mat H, cv::Mat &imgOut )
 {
   std::vector<MatchedKeyPoints> matchings;
-  
-  // Compute matching using NNDR algorithm
-  nndr(img1KpList, img2KpList, matchings, H, MATCHING_NNDR_THRESHOLD, MATCHING_EUCLIDEAN_DIST_CALC);
-
-  // Creating image with lines indicating the matches founded
-  printLineOnImages(img1, img2, imgOut, matchings);
+  matchFPs(img1, img1KpList, img2, img2KpList, H, matchings, imgOut );
 }
 
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,

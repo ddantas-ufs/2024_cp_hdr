@@ -88,7 +88,6 @@ int main(int argv, char** args)
     cv::imwrite("out/img2ROI.png", img2ROI);
   }
 
-
   // Reading Homography Matrix
   readHomographicMatrix( pathH, H );
 
@@ -156,8 +155,18 @@ int main(int argv, char** args)
   std::cout << "> Matching CP_HDR FPs and saving resulting image" << std::endl;
 
   // matchFPs with Homography Matrix?
+  std::vector<MatchedKeyPoints> mkps;
   if( pathH.empty() ) matchFPs(img1, img2, kp1, kp2, imgMatching);
-  else matchFPs(img1, kp1, img2, kp2, H, imgMatching);
+  else matchFPs(img1, kp1, img2, kp2, H, mkps, imgMatching);
+
+  float rr;
+  int cc;
+//  calculateRR(H, mkps, rr);
+  calculateRR(H, kp1, kp2, cc, rr);
+  std::cout << "> ##############################" << std::endl;
+  std::cout << "> Repeatability Rate: " << rr << std::endl;
+  std::cout << "> Correspondence total: " << cc << std::endl;
+  std::cout << "> ##############################" << std::endl;
 
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
