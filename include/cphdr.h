@@ -18,4 +18,6 @@
 #include "descriptors/sift.h"
 #include "descriptors/matching.h"
 
+#include "evaluation/metrics.h"
+
 #endif

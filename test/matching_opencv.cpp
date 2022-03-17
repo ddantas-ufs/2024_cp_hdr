@@ -8,7 +8,8 @@
 ** 
 ** args[1]: image1
 ** args[2]: image2
-** args[3]: matching output
+** args[3]: Homographic matrix
+** args[4]: matching output
 ** 
 ** @author arturxz, 01/10/2021 (created)
 */
@@ -16,7 +17,7 @@ int main(int argv, char** args)
 {
   // CREATING OBJECTS
   cv::Mat inputImage1, inputImage2, grayInputImage1, grayInputImage2,
-          descriptor1, descriptor2, outputImage;
+          descriptor1, descriptor2, outputImage, H, Hg;
   std::string outImageName1, outImageName2, outputPath;
   std::vector<cv::KeyPoint> kpsImage1, kpsImage2;
 
@@ -29,10 +30,13 @@ int main(int argv, char** args)
   // READING IMAGES AND SETTING OUTPUT IMAGE NAME
   std::cout << "Reading images..." << std::endl;
   readImg(args[1], inputImage1, grayInputImage1, outImageName1);
-  outputPath = std::string(args[3]) + "match_" +outImageName1;
+  outputPath = std::string(args[4]) + "match_" +outImageName1;
 
   readImg(args[2], inputImage2, grayInputImage2, outImageName2);
   outputPath = outputPath + "_"+ outImageName2 +".png";
+
+  // READING HOMOGRAPHIC MATRIX
+  readHomographicMatrix( args[3], H );
 
   if ( inputImage1.empty() || inputImage2.empty() || grayInputImage1.empty() || grayInputImage2.empty() )
   {
@@ -78,6 +82,23 @@ int main(int argv, char** args)
   cv::drawMatches(inputImage1, kpsImage1, inputImage2, kpsImage2,
                   goodMatches, outputImage, cv::Scalar::all(-1), cv::Scalar::all(-1), 
                   std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+
+  float rr = 0.0f;
+  int cc = 0;
+  calculateRRUsingOpenCV( inputImage1, inputImage2, H, rr, cc, kpsImage1, kpsImage2 );
+
+  std::cout << "##########################" << std::endl;
+  std::cout << "rr1 = " << rr << std::endl;
+  std::cout << "cc1 = " << cc << std::endl;
+  std::cout << "##########################" << std::endl;
+
+  rr = 0.0f, cc = 0;
+  cv::evaluateFeatureDetector( inputImage1, inputImage2, H, &kpsImage1, &kpsImage2, rr, cc );
+
+  std::cout << "##########################" << std::endl;
+  std::cout << "rr2 = " << rr << std::endl;
+  std::cout << "cc2 = " << cc << std::endl;
+  std::cout << "##########################" << std::endl;
 
   // SAVING OUTPUT IMAGE
   std::cout << "Saving output image..." << std::endl;

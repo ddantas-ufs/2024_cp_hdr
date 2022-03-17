@@ -35,7 +35,8 @@ int main(int argv, char** args)
   std::cout << "descriptor size      : " << descriptor.size() << std::endl;
   std::cout << "########################################" << std::endl;
 
-  importOpenCVKeyPoints(ocv_kp, descriptor, kpListOcv, true);
+//  importOpenCVKeyPoints(ocv_kp, descriptor, kpListOcv, true);
+  loadOpenCVKeyPoints( ocv_kp, descriptor, kpListOcv );
 
   std::cout << " Saving OpenCV Keypoints... " << std::endl;
   // Saving results with OpenCV Descriptor
@@ -46,7 +47,8 @@ int main(int argv, char** args)
 
   //for(int k=0; k < kpList.size(); k++ ) kpList[k].descriptor.clear();
   readImg(args[1], img_in, img_gray, img_name);
-  importOpenCVKeyPoints(ocv_kp, descriptor, kpList2, false);
+//  importOpenCVKeyPoints(ocv_kp, descriptor, kpList2, false);
+  loadOpenCVKeyPoints( ocv_kp, kpList2 );
 
   std::cout << " Computing with our descriptor and OpenCV detector... " << std::endl;
   // Calculating description and saving it with our algorithm
@@ -69,7 +71,8 @@ int main(int argv, char** args)
   siftObj->compute( img_gray, ocv_kp2, descriptor2);
 
   // SAVING RESULTS
-  importOpenCVKeyPoints(ocv_kp2, descriptor2, kpList3, true);
+//  importOpenCVKeyPoints(ocv_kp2, descriptor2, kpList3, true);
+  loadOpenCVKeyPoints( ocv_kp2, descriptor2, kpList3 );
   saveKeypoints(kpList3, out_path+".dog_loweDetector_ocvDesc", false);
   
   return 0;
