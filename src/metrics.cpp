@@ -34,18 +34,17 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
   {
     for( int j = 0; j < kp2_size; j++ )
     {
-      int d = 0;
-      float overlap = 0.0f;
+      float distance = 0.0f;
 
-      if( H.empty() ) d = distanceBetwenTwoKeyPoints( kp1[i], kp2[j] );
+      if( H.empty() ) distance = distanceBetwenTwoKeyPoints( kp1[i], kp2[j] );
       else
       {
         KeyPoints kpAux;
         getHomographicCorrespondence( kp1[i].x, kp1[i].y, kpAux.x, kpAux.y, H );
-        d = distanceBetwenTwoKeyPoints( kp2[j], kpAux );
+        distance = distanceBetwenTwoKeyPoints( kp2[j], kpAux );
       }
 
-      if( d < REPEATABILITY_RATIO )
+      if( distance < REPEATABILITY_RATIO * REPEATABILITY_MIN_OVERLAP )
       {
         total += 1;
         j = kp2_size+1; // to end 'j for loop'
@@ -59,27 +58,5 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
 
   std::cout << "## METRIC (RR) > Correspondence: " << cc << std::endl;
   std::cout << "## METRIC (RR) > Repeatability: " << rr << std::endl;
-  /*
-  int kpListSize = kpList.size();
-  int qtdKpsMatched = 0;
 
-  for( int i = 0; i < kpListSize; i++ )
-  {
-    int kpsDistance = 0;
-    float overlap = 0.0f;
-
-    if( H.empty() ) kpsDistance = distanceBetwenTwoKeyPoints( kpList[i].kp1, kpList[i].kp2 );
-    else
-    {
-      KeyPoints kpAux;
-      getHomographicCorrespondence( kpList[i].kp1.x, kpList[i].kp1.y, kpAux.x, kpAux.y, H );
-      kpsDistance = distanceBetwenTwoKeyPoints( kpList[i].kp2, kpAux );
-    }
-  
-    overlap = kpsDistance / REPEATABILITY_RATIO;
-    if( overlap < REPEATABILITY_RATIO ) qtdKpsMatched += 1;
-  }
-
-  rr = kpListSize / qtdKpsMatched;
-  */
 }

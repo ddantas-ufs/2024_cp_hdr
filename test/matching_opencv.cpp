@@ -100,6 +100,19 @@ int main(int argv, char** args)
   std::cout << "cc2 = " << cc << std::endl;
   std::cout << "##########################" << std::endl;
 
+  rr = 0.0f, cc = 0;
+  std::vector<KeyPoints> kp1, kp2;
+  loadOpenCVKeyPoints(kpsImage1, descriptor1, kp1);
+  loadOpenCVKeyPoints(kpsImage2, descriptor2, kp2);
+//  loadOpenCVKeyPoints(kpsImage1, kp1);
+//  loadOpenCVKeyPoints(kpsImage2, kp2);
+
+  calculateRR(H, kp1, kp2, cc, rr);
+  std::cout << "> ##############################" << std::endl;
+  std::cout << "> Repeatability Rate: " << rr << std::endl;
+  std::cout << "> Correspondence total: " << cc << std::endl;
+  std::cout << "> ##############################" << std::endl;
+
   // SAVING OUTPUT IMAGE
   std::cout << "Saving output image..." << std::endl;
   cv::imwrite(outputPath, outputImage);
