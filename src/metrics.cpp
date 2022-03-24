@@ -17,7 +17,6 @@ void calculateRRUsingOpenCV( cv::Mat img1, cv::Mat img2, cv::Mat H, float &rr, i
   cv::evaluateFeatureDetector( img1, img2, H, &kp1, &kp2, rr, cc );
 }
 
-//void calculateRR( cv::Mat H, std::vector<MatchedKeyPoints> kpList, float &rr )
 void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> kp2,
                   int &cc, float &rr )
 {
@@ -58,5 +57,35 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
 
   std::cout << "## METRIC (RR) > Correspondence: " << cc << std::endl;
   std::cout << "## METRIC (RR) > Repeatability: " << rr << std::endl;
+}
 
+/**
+ * @brief
+ * 
+ * T = s + m + h
+ * 
+ * minFP = min(s/T; m/T; h/T) 
+ * maxFP = max(s/T; m/T; h/T)
+ * 
+ * U = 1 − (maxFP − minFP)
+ * 
+ * @param qtdKps 
+ */
+void calculateUniformity( std::vector<int> qtdKps )
+{
+  float minFP = std::numeric_limits<float>::max();
+  float maxFP = std::numeric_limits<float>::min();
+  int totalAreas = qtdKps.size();
+  int T = 0;
+
+  for( int i = 0; i < totalAreas; i++ )
+    T = T + qtdKps[i];
+
+  for( int i = 0; i < totalAreas; i++ )
+  {
+    minFP = std::fmin( float(qtdKps[i]/T), minFP );
+    maxFP = std::fmax( float(qtdKps[i]/T), maxFP );
+  }
+  
+  return float( 1.0f - (maxFP - minFP) );
 }
