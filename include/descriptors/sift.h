@@ -14,4 +14,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax,
 
 void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax );
 
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, 
+              std::vector<cv::Mat> lRoi );
+
 #endif

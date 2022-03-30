@@ -71,7 +71,7 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
  * 
  * @param qtdKps 
  */
-void calculateUniformity( std::vector<int> qtdKps )
+float calculateUniformity( std::vector<int> qtdKps )
 {
   float minFP = std::numeric_limits<float>::max();
   float maxFP = std::numeric_limits<float>::min();

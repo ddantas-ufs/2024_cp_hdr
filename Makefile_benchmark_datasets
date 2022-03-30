@@ -1,0 +1,70 @@
+CC = g++
+
+CV_LIB = `pkg-config opencv --cflags --libs` -g
+CPP_FLAGS = -fPIC -g
+LD_FLAGS = -shared
+
+BIN_DIR = bin
+OLD_DIR = old
+TEST_DIR = test
+SRC_DIR = src
+INC_DIR = include
+INC_SUBDIR = include/detectors
+LIB_DIR = lib
+IMG_DIR = img
+OUT_DIR = out
+INSTALL_DIR = ${HOME}
+
+NAME_LIB = cphdr
+SRC_FILES = $(shell echo $(SRC_DIR)/*.cpp)
+TARGET_LIB = $(LIB_DIR)/$(NAME_LIB).so
+MAKE_LIB = $(CC) $(CPP_FLAGS) $(LD_FLAGS) -o $(TARGET_LIB) $(SRC_FILES)
+
+DEMO_CAMERA_MATRIX_FILE = K.txt
+
+DEF_DOG = defaultdog
+DEMO_DOG = demodog
+DEMO_DOG_HDR = demodog_hdr
+DEMO_HARRIS = demoharris
+DEMO_HARRIS_HDR = demoharris_hdr
+DEMO_SURF = demosurf
+DEMO_SURF_HDR = demosurf_hdr
+DEMO_HDR_IMG = $(IMG_DIR)/$(DEMO_HDR)
+DEMO_LDR_IMG = $(IMG_DIR)/$(DEMO_IMG)
+DEMO_LDR_IMG_LOWE = $(IMG_DIR)/$(DEMO_IMG_LOWE)
+
+DEMO_ROI_IMG1 = $(IMG_DIR)/$(DEMO_ROI_IMG1_PNG)
+DEMO_ROI_IMG2 = $(IMG_DIR)/$(DEMO_ROI_IMG2_PNG)
+
+DEMO_LDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_IMG1_MATCH)
+DEMO_LDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_IMG2_MATCH)
+
+DEMO_HDR_IMG1_MATCH = $(IMG_DIR)/$(DEMO_HDR1_MATCH)
+DEMO_HDR_IMG2_MATCH = $(IMG_DIR)/$(DEMO_HDR2_MATCH)
+
+DEMO_HOMOGRAPHIC_MATRIX = $(IMG_DIR)/$(DEMO_HOMOGRAPHY_IMG1_IMG2)
+
+DEMO_CAMERA_MATRIX = $(IMG_DIR)/$(DEMO_CAMERA_MATRIX_FILE)
+
+# PATH TO PRYBIL DATASET
+PATH_PRYBIL = ../dataset
+
+MATCHING_OPENCV = matching_opencv
+MATCHING_CPHDR = matching_cphdr
+
+BENCHMARK_PRYBIL = benchmark_prybil
+BENCHMARK_RANA = sintetic_test
+
+
+benchmark_prybil:
+	$(CC) -o $(BIN_DIR)/$(BENCHMARK_PRYBIL) $(TEST_DIR)/$(BENCHMARK_PRYBIL).cpp $(SRC_FILES) $(CV_LIB)
+
+run_benchmark_prybil: benchmark_prybil
+	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/distance/100/100.hdr $(PATH_PRYBIL)/2D/distance/100/ROIs.100.png $(PATH_PRYBIL)/2D/distance/100/ROIm.100.png $(PATH_PRYBIL)/2D/distance/100/ROIh.100.png $(PATH_PRYBIL)/2D/distance/297/297.hdr $(PATH_PRYBIL)/2D/distance/297/ROIs.297.png $(PATH_PRYBIL)/2D/distance/297/ROIm.297.png $(PATH_PRYBIL)/2D/distance/297/ROIh.297.png $(PATH_PRYBIL)/2D/distance/H.103.297.txt $(OUT_DIR)/
+	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/lighting/001/001.hdr $(PATH_PRYBIL)/2D/lighting/001/ROIs.001.png $(PATH_PRYBIL)/2D/lighting/001/ROIm.001.png $(PATH_PRYBIL)/2D/lighting/001/ROIh.001.png $(PATH_PRYBIL)/2D/lighting/111/111.hdr $(PATH_PRYBIL)/2D/lighting/111/ROIs.111.png $(PATH_PRYBIL)/2D/lighting/111/ROIm.111.png $(PATH_PRYBIL)/2D/lighting/111/ROIh.111.png $(PATH_PRYBIL)/2D/lighting/H.001.111.txt $(OUT_DIR)/
+	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/viewpoint/00/00.hdr $(PATH_PRYBIL)/2D/viewpoint/00/ROIs.00.png $(PATH_PRYBIL)/2D/viewpoint/00/ROIm.00.png $(PATH_PRYBIL)/2D/viewpoint/00/ROIh.00.png $(PATH_PRYBIL)/2D/viewpoint/04/04.hdr $(PATH_PRYBIL)/2D/viewpoint/04/ROIs.04.png $(PATH_PRYBIL)/2D/viewpoint/04/ROIm.04.png $(PATH_PRYBIL)/2D/viewpoint/04/ROIh.04.png $(PATH_PRYBIL)/2D/viewpoint/H.00.04.txt $(OUT_DIR)/
+	
+#	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/distance/100/100.hdr $(PATH_PRYBIL)/2D/distance/100/ROIs.100.png $(PATH_PRYBIL)/2D/distance/100/ROIm.100.png $(PATH_PRYBIL)/2D/distance/100/ROIh.100.png $(PATH_PRYBIL)/2D/distance/297/297.hdr $(PATH_PRYBIL)/2D/distance/297/ROIs.297.png $(PATH_PRYBIL)/2D/distance/297/ROIm.297.png $(PATH_PRYBIL)/2D/distance/297/ROIh.297.png $(PATH_PRYBIL)/2D/distance/H.103.297.txt
+#	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/lighting/001/001.hdr $(PATH_PRYBIL)/2D/lighting/001/ROIs.001.png $(PATH_PRYBIL)/2D/lighting/001/ROIm.001.png $(PATH_PRYBIL)/2D/lighting/001/ROIh.001.png $(PATH_PRYBIL)/2D/lighting/111/111.hdr $(PATH_PRYBIL)/2D/lighting/111/ROIs.111.png $(PATH_PRYBIL)/2D/lighting/111/ROIm.111.png $(PATH_PRYBIL)/2D/lighting/111/ROIh.111.png $(PATH_PRYBIL)/2D/lighting/H.001.111.txt
+#	./$(BIN_DIR)/$(BENCHMARK_PRYBIL) $(PATH_PRYBIL)/2D/viewpoint/00/00.hdr $(PATH_PRYBIL)/2D/viewpoint/00/ROIs.00.png $(PATH_PRYBIL)/2D/viewpoint/00/ROIm.00.png $(PATH_PRYBIL)/2D/viewpoint/00/ROIh.00.png $(PATH_PRYBIL)/2D/viewpoint/04/04.hdr $(PATH_PRYBIL)/2D/viewpoint/04/ROIs.04.png $(PATH_PRYBIL)/2D/viewpoint/04/ROIm.04.png $(PATH_PRYBIL)/2D/viewpoint/04/ROIh.04.png $(PATH_PRYBIL)/2D/viewpoint/H.00.04.txt
+

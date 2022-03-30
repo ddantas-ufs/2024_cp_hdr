@@ -649,3 +649,20 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
   cv::Mat roi;
   runSift( img, kpList, kpMax, roi );
 }
+
+/**
+ * This method runs complete sift pipeline, executing dog and sift descriptor.
+ * If ROI is used, than the Keypoints will lie in ROI area.
+ * 
+ * @param img: image where keypoints will be detected
+ * @param kpList: output vector containing detected keypoints and description.
+ * @param kpMax: max amount of keypoints that sould be returned
+ * @param 
+**/
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, std::vector<cv::Mat> lRoi )
+{
+  std::cout << " ## SIFT > Run without ROI." << std::endl;
+  std::vector< std::vector<KeyPoints> >
+
+  runSift( img, kpList, kpMax, roi );
+}
