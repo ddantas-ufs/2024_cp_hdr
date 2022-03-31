@@ -652,17 +652,54 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
 
 /**
  * This method runs complete sift pipeline, executing dog and sift descriptor.
- * If ROI is used, than the Keypoints will lie in ROI area.
+ * It takes a vector of ROIs, returning a vector of vectors of KeyPoints. All ROIs must have same size.
+ * Each index of kpList corresponds to the ROI in lROI.
+ * For example, kpList[0] returns the Keypoints inside lROI[0] ROI.
  * 
  * @param img: image where keypoints will be detected
- * @param kpList: output vector containing detected keypoints and description.
+ * @param kpList: output vector containing vectors of the detected keypoints inside correspondent ROI and description.
  * @param kpMax: max amount of keypoints that sould be returned
- * @param 
+ * @param lRoi: vector of ROIs 
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, std::vector<cv::Mat> lRoi )
+void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kpMax, std::vector<cv::Mat> lRoi )
 {
   std::cout << " ## SIFT > Run without ROI." << std::endl;
-  std::vector< std::vector<KeyPoints> >
+  cv::Mat sumROI = cv::Mat::zeros( lRoi[0].size(), lRoi[0].type() );
+  std::vector<KeyPoints> sumKps;
 
-  runSift( img, kpList, kpMax, roi );
+  for( int i = 0; i < lRoi.size(); i++ )
+    cv::add( sumROI, lRoi[i], sumROI );
+
+  // Running SIFT with all ROIs
+  runSift( img, sumKps, kpMax, sumROI );
+
+  // Separing Keypoints found in each ROI
+  for( int i = 0; i < lRoi.size(); i++ )
+  {
+    std::vector<KeyPoints> kps;
+
+    for( int j = 0; j < sumKps.size(); j++ )
+    {
+      KeyPoints kp = sumKps[j];
+      int x = (int) std::floor( kp.x );
+      int y = (int) std::floor( kp.y );
+
+      uchar pixelValue = lRoi[i].at<uchar>(y, x);
+      if( pixelValue > 0 )
+        kps.push_back( kp );
+    }
+    
+    // Saving position i ROI keypoints
+    kpList.push_back( kps );
+  }
 }
+
+/*
+KeyPoints kp = aux[i];
+int x = (int) std::floor(kp.x);
+int y = (int) std::floor(kp.y);
+
+//std::cout << " ## SIFT > roi[" << x << "," << y << "], " << roi.size() << std::endl;
+uchar pixelValue = roi.at<uchar>(y, x);
+
+*/

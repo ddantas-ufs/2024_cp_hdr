@@ -53,4 +53,6 @@ void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H );
 
 void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv::Mat H );
 
+void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyPoints> &kps );
+
 #endif

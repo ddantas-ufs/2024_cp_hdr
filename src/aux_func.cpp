@@ -392,3 +392,20 @@ void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv:
   x2 = p2.x;
   y2 = p2.y;
 }
+
+void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyPoints> &kps )
+{
+  std::cout << "## Joining Vectors of Keypoints into single vector of KeyPoints" << std::endl;
+
+  for(int i = 0; i < lKps.size(); i++)
+  {
+    std::vector<KeyPoints> kpVec = lKps[i];
+    for(int j = 0; j < kpVec.size(); j++)
+    {
+      KeyPoints kp = kpVec[j];
+      kps.push_back( kp );
+
+      //std::cout << "X: " << kp.x << ", " << "Y: " << kp.y << std::endl;
+    }
+  }
+}

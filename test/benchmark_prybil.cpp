@@ -16,7 +16,8 @@
 **/
 int main(int argv, char** args)
 {
-  std::vector<KeyPoints> kp1, kp2; // CP_HDR KeyPoint list
+  std::vector< std::vector<KeyPoints> > lKp1, lKp2; // CP_HDR KeyPoint list
+  std::vector<KeyPoints> kps1, kps2; // CP_HDR KeyPoint list
   std::vector<cv::Mat> img1AllROIs, img2AllROIs; // ROI lists
 
   cv::Mat img1, img2, img1Gray, img2Gray, img1Out, img2Out, imgMatching; // Images
@@ -72,9 +73,22 @@ int main(int argv, char** args)
   img2AllROIs.push_back(img2ROIm);
   img2AllROIs.push_back(img2ROIh);
 
-/*  cv::imwrite("out/img1ROIs.png", img1ROIs);
+  /*
+  cv::Mat sumROI1 = cv::Mat::zeros( img1ROIs.size(), img1ROIs.type() );
+  cv::Mat sumROI2 = cv::Mat::zeros( img2ROIs.size(), img2ROIs.type() );
+
+  cv::add( sumROI1, img1ROIs, sumROI1 );
+  cv::add( sumROI1, img1ROIm, sumROI1 );
+  cv::add( sumROI1, img1ROIh, sumROI1 );
+  cv::add( sumROI2, img2ROIs, sumROI2 );
+  cv::add( sumROI2, img2ROIm, sumROI2 );
+  cv::add( sumROI2, img2ROIh, sumROI2 );
+
+  cv::imwrite("out/sumROI1.png", sumROI1);
+  cv::imwrite("out/img1ROIs.png", img1ROIs);
   cv::imwrite("out/img1ROIm.png", img1ROIm);
   cv::imwrite("out/img1ROIh.png", img1ROIh);
+  cv::imwrite("out/sumROI2.png", sumROI2);
   cv::imwrite("out/img2ROIs.png", img2ROIs);
   cv::imwrite("out/img2ROIm.png", img2ROIm);
   cv::imwrite("out/img2ROIh.png", img2ROIh);
@@ -83,7 +97,9 @@ int main(int argv, char** args)
   std::cout << H << std::endl;
   std::cout << "Output Directory: " << std::endl;
   std::cout << outDir << std::endl;
-*/
+  */
+//  return 0;/*
+
   // Normalizing images (mandatory to HDR images).
   if( isHDR )
   {
@@ -93,33 +109,36 @@ int main(int argv, char** args)
 
   // Running CP_HDR
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
-  runSift(img1Gray, kp1, MAX_KP, img1AllROIs);
-  runSift(img2Gray, kp2, MAX_KP, img2AllROIs);
+  runSift(img1Gray, lKp1, MAX_KP, img1AllROIs);
+  runSift(img2Gray, lKp2, MAX_KP, img2AllROIs);
+
+  joinKeypoints( lKp1, kps1 );
+  joinKeypoints( lKp2, kps2 );
 
   // Getting only the MAX_KP strongest keypoints
-  sortKeypoints( kp1 );
-  sortKeypoints( kp2 );
-  kp1 = vectorSlice( kp1, 0, MAX_KP);
-  kp2 = vectorSlice( kp2, 0, MAX_KP);
+  sortKeypoints( kps1 );
+  sortKeypoints( kps2 );
+  kps1 = vectorSlice( kps1, 0, MAX_KP);
+  kps2 = vectorSlice( kps2, 0, MAX_KP);
 
   if( isHDR )
   {
-    saveKeypoints( kp1, outDir+img1OutPath+"_CPHDR_SIFT_HDR.txt", kp1.size() );
-    saveKeypoints( kp2, outDir+img2OutPath+"_CPHDR_SIFT_HDR.txt", kp2.size() );
-    plotKeyPoints( img1, kp1, outDir+img1OutPath+"_CPHDR_SIFT_HDR.hdr", kp1.size() );
-    plotKeyPoints( img2, kp2, outDir+img2OutPath+"_CPHDR_SIFT_HDR.hdr", kp2.size() );
+    saveKeypoints( kps1, outDir+img1OutPath+"_CPHDR_SIFT_HDR.txt", kps1.size() );
+    saveKeypoints( kps2, outDir+img2OutPath+"_CPHDR_SIFT_HDR.txt", kps2.size() );
+    plotKeyPoints( img1, kps1, outDir+img1OutPath+"_CPHDR_SIFT_HDR.hdr", kps1.size() );
+    plotKeyPoints( img2, kps2, outDir+img2OutPath+"_CPHDR_SIFT_HDR.hdr", kps2.size() );
     imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_CPHDR_SIFT.hdr";
   }
   else
   {
-    saveKeypoints( kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.txt", kp1.size() );
-    saveKeypoints( kp2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.txt", kp2.size() );
-    plotKeyPoints( img1, kp1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.png", kp1.size() );
-    plotKeyPoints( img2, kp2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.png", kp2.size() );
+    saveKeypoints( kps1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.txt", kps1.size() );
+    saveKeypoints( kps2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.txt", kps2.size() );
+    plotKeyPoints( img1, kps1, outDir+img1OutPath+"_CPHDR_SIFT_LDR.png", kps1.size() );
+    plotKeyPoints( img2, kps2, outDir+img2OutPath+"_CPHDR_SIFT_LDR.png", kps2.size() );
     imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_CPHDR_SIFT.png";
   }
   
-  matchFPs(img1, img2, kp1, kp2, imgMatching);
+  matchFPs(img1, img2, kps1, kps2, imgMatching);
 
   // Matching and generating output image with matches
   std::cout << "> Matching CP_HDR FPs and saving resulting image" << std::endl;
@@ -127,16 +146,26 @@ int main(int argv, char** args)
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
   // Cleaning objects
-  cleanKeyPointVector( kp1 );
-  cleanKeyPointVector( kp2 );
+  cleanKeyPointVector( kps1 );
+  cleanKeyPointVector( kps2 );
   img1.release();
   img2.release();
   img1Out.release();
   img2Out.release();
   img1Gray.release();
   img2Gray.release();
+  img1Out.release();
+  img2Out.release();
   imgMatching.release();
-  
+  img1ROIs.release();
+  img1ROIm.release();
+  img1ROIh.release();
+  img2ROIs.release();
+  img2ROIm.release();
+  img2ROIh.release();
+  H.release();
+
+  /* OPENCV PART
   // Algorithms that doesn't support HDR images
   if(!isHDR)
   {
@@ -211,7 +240,7 @@ int main(int argv, char** args)
     img1Gray.release();
     img2Gray.release();
     imgMatching.release();
-  }
+  }*/
 
-  return 0;*/
+  return 0;
 }
