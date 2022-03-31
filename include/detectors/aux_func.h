@@ -55,4 +55,6 @@ void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv:
 
 void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyPoints> &kps );
 
+void sumListOfMats( std::vector< cv::Mat > matList, cv::Mat &result );
+
 #endif

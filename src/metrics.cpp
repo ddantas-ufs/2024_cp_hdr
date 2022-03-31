@@ -73,6 +73,8 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
  */
 float calculateUniformity( std::vector<int> qtdKps )
 {
+  std::cout << "Calculating Uniformity..." << std::endl;
+
   float minFP = std::numeric_limits<float>::max();
   float maxFP = std::numeric_limits<float>::min();
   int totalAreas = qtdKps.size();
@@ -83,9 +85,31 @@ float calculateUniformity( std::vector<int> qtdKps )
 
   for( int i = 0; i < totalAreas; i++ )
   {
-    minFP = std::fmin( float(qtdKps[i]/T), minFP );
-    maxFP = std::fmax( float(qtdKps[i]/T), maxFP );
+    float parcial = float(qtdKps[i])/T;
+
+    std::cout << "parcial = " << qtdKps[i] << "/" << T << "=" << parcial << std::endl;
+
+    minFP = std::fmin( parcial, minFP );
+    maxFP = std::fmax( parcial, maxFP );
+
+//    std::cout << "Min parcial: " << minFP << std::endl;
+//    std::cout << "Max parcial: " << maxFP << std::endl;
   }
+
+ // std::cout << "Total areas: " << totalAreas << std::endl;
+ // std::cout << "T: "   << T << std::endl;
+ // std::cout << "Min: " << minFP << std::endl;
+ // std::cout << "Max: " << maxFP << std::endl;
   
-  return float( 1.0f - (maxFP - minFP) );
+  return float( 1.0f - float(maxFP - minFP) );
+}
+
+float calculateUniformity( std::vector< std::vector<KeyPoints> > lKps )
+{
+  std::vector<int> qtdKps;
+
+  for(int i = 0; i < lKps.size(); i++)
+    qtdKps.push_back( lKps[i].size() );
+  
+  return calculateUniformity( qtdKps );
 }

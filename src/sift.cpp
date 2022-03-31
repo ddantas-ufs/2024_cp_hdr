@@ -664,11 +664,13 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
 void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kpMax, std::vector<cv::Mat> lRoi )
 {
   std::cout << " ## SIFT > Run without ROI." << std::endl;
-  cv::Mat sumROI = cv::Mat::zeros( lRoi[0].size(), lRoi[0].type() );
+  cv::Mat sumROI;// = cv::Mat::zeros( lRoi[0].size(), lRoi[0].type() );
   std::vector<KeyPoints> sumKps;
 
-  for( int i = 0; i < lRoi.size(); i++ )
-    cv::add( sumROI, lRoi[i], sumROI );
+  sumListOfMats( lRoi, sumROI );
+
+//  for( int i = 0; i < lRoi.size(); i++ )
+//    cv::add( sumROI, lRoi[i], sumROI );
 
   // Running SIFT with all ROIs
   runSift( img, sumKps, kpMax, sumROI );

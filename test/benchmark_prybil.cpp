@@ -140,6 +140,24 @@ int main(int argv, char** args)
   
   matchFPs(img1, img2, kps1, kps2, imgMatching);
 
+  std::cout << "> ## Calculating metrics" << std::endl;
+  float rr = 0.0f;
+  int cc = 0;
+  calculateRR(H, kps1, kps2, cc, rr);
+  std::cout << "> ##############################" << std::endl;
+  std::cout << "> Repeatability Rate: " << rr << std::endl;
+  std::cout << "> Correspondence total: " << cc << std::endl;
+  std::cout << "> ##############################" << std::endl;
+
+  float U1 = 0.0f, U2 = 0.0f; 
+  
+  U1 = calculateUniformity( lKp1 );
+  U2 = calculateUniformity( lKp2 );
+
+  std::cout << "> Uniformity img1: " << U1 << std::endl;
+  std::cout << "> Uniformity img2: " << U2 << std::endl;
+  std::cout << "> ##############################" << std::endl;
+
   // Matching and generating output image with matches
   std::cout << "> Matching CP_HDR FPs and saving resulting image" << std::endl;
 

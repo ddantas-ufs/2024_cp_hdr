@@ -409,3 +409,11 @@ void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyP
     }
   }
 }
+
+void sumListOfMats( std::vector< cv::Mat > matList, cv::Mat &result )
+{
+  result = cv::Mat::zeros( matList[0].size(), matList[0].type() );
+
+  for( int i = 0; i < matList.size(); i++ )
+    cv::add( result, matList[i], result );
+}
