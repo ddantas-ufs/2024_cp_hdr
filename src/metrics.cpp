@@ -113,3 +113,49 @@ float calculateUniformity( std::vector< std::vector<KeyPoints> > lKps )
   
   return calculateUniformity( qtdKps );
 }
+
+/**
+ * @param A: KeyPoint A
+ * @param B: KeyPoint B
+ * @return float area of intersection between KeyPoint A and B
+ * 
+ * Calculing intersection between KeyPoint bubles A and B.
+ * References: 
+ * https://www.xarg.org/2016/07/calculate-the-intersection-area-of-two-circles/
+ * https://www.mathopenref.com/segmentarea.html
+ *  
+ */
+float areaOfIntersection( KeyPoints A, KeyPoints B )
+{
+  float d = distanceBetwenTwoKeyPoints( A, B );
+  float ratioSquare = AP_BUBBLE_RATIO * AP_BUBBLE_RATIO;
+  float AoI = 0.0f;
+
+  // SE FOR O CASO, VERIFICAR AQUI SE A e B TEM INTERSEÇÃO
+  if( true )
+  {
+    float x = float(d * d) / float(2.0f * d);
+    float z = x * x;
+    float y = cv::sqrt(ratioSquare-z);
+
+    AoI = float( ratioSquare * std::asin( y / AP_BUBBLE_RATIO )
+        + AP_BUBBLE_RATIO * std::asin( y / AP_BUBBLE_RATIO )
+        - y * ( x - cv::sqrt(z) ) );
+
+    return AoI;
+  }
+
+  return AoI;
+}
+
+/**
+ * @brief 
+ * 
+ * AP = IoU = AO/AU
+ * AO = Area of Overlap = Area of Intersection of Circles A and B.
+ * AU = Area of Union = Area of Circla A + Area of Circle B - Area of Intersection
+ */
+void calculateAP()
+{
+
+}

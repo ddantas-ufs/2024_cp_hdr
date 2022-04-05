@@ -72,6 +72,9 @@
 #define MATCHING_INCORRECT 0
 #define MATCHING_CORRECT 1
 
+// BUBBLE SIZE
+#define AP_BUBBLE_RATIO 5
+
 struct KeyPoints
 {
   float y;
