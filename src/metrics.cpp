@@ -125,22 +125,26 @@ float calculateUniformity( std::vector< std::vector<KeyPoints> > lKps )
  * https://www.mathopenref.com/segmentarea.html
  *  
  */
-float areaOfIntersection( KeyPoints A, KeyPoints B )
+float calculateAreaOfIntersection( KeyPoints A, KeyPoints B )
 {
   float d = distanceBetwenTwoKeyPoints( A, B );
+  //std::cout << "--------Distance : " << d << std::endl;
   float ratioSquare = AP_BUBBLE_RATIO * AP_BUBBLE_RATIO;
   float AoI = 0.0f;
 
   // SE FOR O CASO, VERIFICAR AQUI SE A e B TEM INTERSEÇÃO
-  if( true )
+  if( d < (AP_BUBBLE_RATIO * 2) )
   {
     float x = float(d * d) / float(2.0f * d);
     float z = x * x;
     float y = cv::sqrt(ratioSquare-z);
 
-    AoI = float( ratioSquare * std::asin( y / AP_BUBBLE_RATIO )
-        + AP_BUBBLE_RATIO * std::asin( y / AP_BUBBLE_RATIO )
-        - y * ( x - cv::sqrt(z) ) );
+    if( d <= 0.0f )
+      return CV_PI * ratioSquare;
+    
+    AoI = float( ratioSquare * std::asin( y / AP_BUBBLE_RATIO ) 
+        + ratioSquare * std::asin( y / AP_BUBBLE_RATIO ) 
+        - y * ( x + cv::sqrt(z) ) );
 
     return AoI;
   }
@@ -155,7 +159,49 @@ float areaOfIntersection( KeyPoints A, KeyPoints B )
  * AO = Area of Overlap = Area of Intersection of Circles A and B.
  * AU = Area of Union = Area of Circla A + Area of Circle B - Area of Intersection
  */
-void calculateAP()
+float calculateIoU( KeyPoints kp1, KeyPoints kp2 )
 {
+  float AoI = calculateAreaOfIntersection( kp1, kp2 );
+  float sumOfAreas = 2.0f * float( CV_PI * AP_BUBBLE_RATIO * AP_BUBBLE_RATIO );
+  float AoU = float( sumOfAreas - AoI );
+  float IoU = float( AoI / AoU );
 
+  /*
+  std::cout << "#####################################" << std::endl;
+  std::cout << "Area of Intersection ----: " << AoI << std::endl;
+  std::cout << "Sum of Areas ------------: " << sumOfAreas << std::endl;
+  std::cout << "Area of Union -----------: " << AoU << std::endl;
+  std::cout << "Intersection Over Union -: " << IoU << std::endl;
+  std::cout << "#####################################" << std::endl;
+  */
+
+  return IoU;
+}
+
+float calculateIoU( KeyPoints kp1, KeyPoints kp2, cv::Mat H )
+{
+  KeyPoints kpAux;
+  getHomographicCorrespondence( kp1.x, kp1.y, kpAux.x, kpAux.y, H );
+
+  return calculateIoU( kpAux, kp2 );
+}
+
+float calculateAP( std::vector<MatchedKeyPoints> kpPairs, cv::Mat H )
+{
+  int totalPairs = kpPairs.size();
+  float sumIoU = 0.0f, ap = 0.0f;
+
+  for(int i = 0; i < totalPairs; i++)
+  {
+    float ciou = calculateIoU( kpPairs[i].kp1, kpPairs[i].kp2, H );
+//    std::cout << "Parcial IoU " << i << ": " << ciou << std::endl;
+    sumIoU = sumIoU + ciou;
+  }
+
+  ap = float(sumIoU / totalPairs);
+
+//  std::cout << "Total sum : " << sumIoU << std::endl;
+//  std::cout << "Total pair: " << totalPairs << std::endl;
+
+  return ap;   
 }
