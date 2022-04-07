@@ -27,6 +27,14 @@ float vectorHammingDistance( std::vector<int> vec1, std::vector<int> vec2 )
   return ret;
 }
 
+/**
+ * @brief Calculate distance between two vectors.
+ * 
+ * @param vec1 descriptor 1 
+ * @param vec2 descriptor 2
+ * @param distanceMethod defaults to euclidean distance
+ * @return float return the distance between two vectors
+ */
 float calculateDistance( std::vector<int> vec1, std::vector<int> vec2, 
                          int distanceMethod )
 {
@@ -46,6 +54,13 @@ float calculateDistance( std::vector<int> vec1, std::vector<int> vec2,
   return 0.0f;
 }
 
+/**
+ * @brief Concatenate two cv::Mat objects, resulting in a resulting Matrix 
+ * 
+ * @param img1 image 1 that will be concatenated
+ * @param img2 image 2 that will be concatenated
+ * @param out resulting image with same height and double width of images 1 and 2
+ */
 void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
 {
   // Concatenating img1 and img2 into out
@@ -61,6 +76,17 @@ void concatenateImages( cv::Mat img1, cv::Mat img2, cv::Mat &out )
   
 }
 
+/**
+ * @brief Calculates Nearest-neighbor distance ratio (NNDR) method to match keypoints.
+ * Reference to Lowe (2004)
+ * 
+ * @param kpListImg1 List of Keypoints from image 1
+ * @param kpListImg2 List of Keypoints from image 2
+ * @param output output object with matches
+ * @param H Homographic Matrix
+ * @param threshold defaults to MATCHING_NNDR_THRESHOLD constant
+ * @param calcDistMode distance calculation method
+ */
 void nndr( std::vector<KeyPoints> kpListImg1,
            std::vector<KeyPoints> kpListImg2,
            std::vector<MatchedKeyPoints> &output,
@@ -177,6 +203,16 @@ void nndr( std::vector<KeyPoints> kpListImg1,
   std::cout << " --> Incorrect matches: " << countIncorrect << std::endl;
 }
 
+/**
+ * @brief method that creates a concatenation of two images and print lines with 
+ *        matched keypoints between those images. blue lines are correct matches
+ *        and red lines are incorrect matches
+ * 
+ * @param img1 image 1
+ * @param img2 image 2
+ * @param out concatenated images with lines matching keypoints
+ * @param matchedDesc vector of keypoints matched between img1 and img2
+ */
 void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
                         std::vector<MatchedKeyPoints> matchedDesc )
 {
@@ -201,15 +237,16 @@ void printLineOnImages( cv::Mat img1, cv::Mat img2, cv::Mat &out,
 }
 
 /**
- * Main Method that match FPs.
+ * @brief Method that matches Keypoints and generates a output image with lines 
+ *        correlating matched keypoints.
  * 
  * @param img1: Reference image
  * @param img1KpList: Reference image keypoint vector
  * @param img2: Query image
  * @param img2KpList: Query image keypoint vector
  * @param H: homography matrix to map keypoints from reference to query image
+ * @param matchings: vector of matched keypoints
  * @param imgOut: output image
- * @param kpsOut: matched keypoints
 **/
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,
@@ -223,6 +260,17 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   printLineOnImages(img1, img2, imgOut, matchings);
 }
 
+/**
+ * @brief Method that matches Keypoints and generates a output image with lines 
+ *        correlating matched keypoints.
+ * 
+ * @param img1: Reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: Query image
+ * @param img2KpList: Query image keypoint vector
+ * @param H: homography matrix to map keypoints from reference to query image
+ * @param imgOut: output image
+**/
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,
                cv::Mat H, cv::Mat &imgOut )
@@ -231,6 +279,15 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   matchFPs(img1, img1KpList, img2, img2KpList, H, matchings, imgOut );
 }
 
+/**
+ * @brief Method that matches Keypoints.
+ * 
+ * @param img1: Reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: Query image
+ * @param img2KpList: Query image keypoint vector
+ * @param H: homography matrix to map keypoints from reference to query image
+**/
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList,
                cv::Mat H )
@@ -239,6 +296,15 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   matchFPs( img1, img1KpList, img2, img2KpList, H, aux );
 }
 
+/**
+ * @brief Method that matches Keypoints.
+ * 
+ * @param img1: path to reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: path to query image
+ * @param img2KpList: Query image keypoint vector
+ * @param H: path to homography matrix to map keypoints from reference to query image
+**/
 void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
                std::string img2Path, std::vector<KeyPoints> img2KpList,
                std::string pathH )
@@ -254,6 +320,14 @@ void matchFPs( std::string img1Path, std::vector<KeyPoints> img1KpList,
   matchFPs( img1, img1KpList, img2, img2KpList, H );
 }
 
+/**
+ * @brief Method that matches Keypoints when no Homography matrix is needed.
+ * 
+ * @param img1: Reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: Query image
+ * @param img2KpList: Query image keypoint vector
+**/
 void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
                cv::Mat img2, std::vector<KeyPoints> img2KpList )
 {
@@ -261,6 +335,15 @@ void matchFPs( cv::Mat img1, std::vector<KeyPoints> img1KpList,
   matchFPs( img1, img1KpList, img2, img2KpList, H, aux );
 }
 
+/**
+ * @brief Method that matches Keypoints when no Homography matrix is needed. Returns
+ *        concatenated image with lines printing the KeyPoints matching.
+ * 
+ * @param img1: Reference image
+ * @param img1KpList: Reference image keypoint vector
+ * @param img2: Query image
+ * @param img2KpList: Query image keypoint vector
+**/
 void matchFPs( cv::Mat img1, cv::Mat img2, 
                std::vector<KeyPoints> img1KpList,
                std::vector<KeyPoints> img2KpList,

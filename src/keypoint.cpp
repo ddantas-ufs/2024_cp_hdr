@@ -1,5 +1,11 @@
 #include "../include/detectors/keypoint.h"
 
+/**
+ * @brief prints a KeyPoints object
+ * 
+ * @param kp : keypoint to be printed
+ * @return std::string returned keypoint image
+ */
 std::string keypointToString( KeyPoints &kp )
 {
   return "x: " +std::to_string(kp.x) 
@@ -10,6 +16,15 @@ std::string keypointToString( KeyPoints &kp )
          +", direction:" +std::to_string(kp.direction);
 }
 
+/**
+ * @brief Test if coordinate is out of image
+ * 
+ * @param i y coordinate
+ * @param j x coordinate
+ * @param size_img image to test
+ * @return true if coordinates are inside image
+ * @return false if coordinates are outside image
+ */
 bool outOfBounds(int i, int j, cv::Size size_img)
 {
   return ((i < 0) || (j < 0) || (i >= size_img.height) || (j >= size_img.width));
@@ -27,6 +42,13 @@ void transformCoord(std::vector<KeyPoints> &kp)
   }
 }
 
+/**
+ * @brief Calculates the distance between points A and B, using Pitagoras theorem
+ * 
+ * @param p1 point A
+ * @param p2 point B
+ * @return float distance between points
+ */
 float distanceBetwenTwoKeyPoints( KeyPoints p1, KeyPoints p2 )
 {
   float distance = std::sqrt( std::pow( std::abs( p1.x-p2.x ), 2 ) + std::pow( p1.y-p2.y, 2 ) );
@@ -34,6 +56,14 @@ float distanceBetwenTwoKeyPoints( KeyPoints p1, KeyPoints p2 )
   return distance;
 }
 
+/**
+ * @brief get slice of vector
+ * 
+ * @param vtr vector to be 
+ * @param beg inicial interval
+ * @param end final interval
+ * @return std::vector<KeyPoints> 
+ */
 std::vector<KeyPoints> vectorSlice(std::vector<KeyPoints> const &vtr, int beg, int end)
 {
   if( vtr.size() <= end )
@@ -90,6 +120,14 @@ void normalizeDescriptor( cv::Mat hist, cv::Mat &descriptor  )
     descriptor.at<float>(k) = uchar( descriptor.at<float>(k)*nrm2 );
 }
 
+/**
+ * @brief plot bubbles in images using KeyPoints vector
+ * 
+ * @param img image where bubbles will be ploted
+ * @param kp vector of KeyPoints
+ * @param out_path output images
+ * @param max_kp max amount of KeyPoints
+ */
 void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
   int num_kp = 0;

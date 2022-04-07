@@ -1,5 +1,11 @@
 #include "../include/detectors/aux_func.h"
 
+/**
+ * @brief Prints an cv::Mat matrix
+ * 
+ * @param m Matrix to be printed
+ * @param mat_name Matrix name
+ */
 void printMat( cv::Mat &m, std::string mat_name )
 {
     std::cout << mat_name << std::endl;
@@ -12,7 +18,11 @@ void printMat( cv::Mat &m, std::string mat_name )
     }
 }
 
-
+/**
+ * @brief Clear KeyPoints struct
+ * 
+ * @param kp struct to be cleared
+ */
 void cleanKeyPointVector( std::vector<KeyPoints> &kp )
 {
   for(int i=0; i < kp.size(); i++)
@@ -22,7 +32,14 @@ void cleanKeyPointVector( std::vector<KeyPoints> &kp )
   kp.clear();
 }
 
-std::string returnOpenCVArrayType(int type) {
+/**
+ * @brief Textually returns the OpenCV datatype
+ * 
+ * @param type OpenCV type integer
+ * @return std::string string containing datatype
+ */
+std::string returnOpenCVArrayType(int type) 
+{
   std::string r;
 
   uchar depth = type & CV_MAT_DEPTH_MASK;
@@ -90,6 +107,12 @@ void readImg( std::string img_path, cv::Mat &img_in, cv::Mat &img_gray, std::str
   img_name = getFileName(img_path, withExtension);
 }
 
+/**
+ * @brief Reads image 
+ * 
+ * @param img_path path to image
+ * @param img_in where original image will be returned
+ */
 void readImg( std::string img_path, cv::Mat &img_in )
 {
   cv::Mat gray;
@@ -98,12 +121,27 @@ void readImg( std::string img_path, cv::Mat &img_in )
   readImg(img_path, img_in, gray, imgName);
 }
 
+/**
+ * @brief Reads image
+ * 
+ * @param img_path path to image
+ * @param img_in original image
+ * @param img_gray grayscale image from img_in
+ * @param img_name image name
+ * @param withExtension flag to tell if img_name must be returned with or without extension
+ */
 void readImg(char *img_path, cv::Mat &img_in, cv::Mat &img_gray, std::string &img_name, bool withExtension)
 {
   std::string strImgPath = std::string(img_path);
   readImg(strImgPath, img_in, img_gray, img_name, withExtension);
 }
 
+/**
+ * @brief Reads the Homography matrix
+ * 
+ * @param path path to homography matrix
+ * @param H where homography matrix will be returned
+ */
 void readHomographicMatrix( std::string path, cv::Mat &H )
 {
   if( !path.empty() )
@@ -123,6 +161,12 @@ void readHomographicMatrix( std::string path, cv::Mat &H )
   }
 }
 
+/**
+ * @brief Reads camera matrix 
+ * 
+ * @param path path to camera path
+ * @param cam where the camera matrix will be returned
+ */
 void readCameraMatrix( std::string path, cv::Mat &cam )
 {
   cam = cv::Mat( cv::Size(3,3), CV_32F );
@@ -139,6 +183,12 @@ void readCameraMatrix( std::string path, cv::Mat &cam )
   arch.close();
 }
 
+/**
+ * @brief Get the File Name object
+ * 
+ * @param file_path path to file
+ * @param withExtension if the filename returned is returned with or without extension
+ */
 std::string getFileName(std::string file_path, bool withExtension)
 {
   size_t size = file_path.rfind("/", file_path.length());
@@ -195,6 +245,12 @@ std::vector<std::string> split(const std::string& s, char delimiter)
    return tokens;
 }
 
+/**
+ * @brief Return a vector of cv::Point that delimits the polygon of the ROI
+ * 
+ * @param roi_path path to polygon that delimits ROI
+ * @param verts object where return the vector of cv::Point
+ */
 void readROI(std::string roi_path, std::vector<cv::Point> &verts)
 {
   std::fstream arch( roi_path, std::ios_base::in );
@@ -223,6 +279,12 @@ void readROI(std::string roi_path, std::vector<cv::Point> &verts)
   arch.close();
 }
 
+/**
+ * @brief apply ROI in image
+ * 
+ * @param img image to be segmented
+ * @param pathROI path to ROI
+ */
 void applyROI( cv::Mat &img, std::string pathROI )
 {
   cv::Mat imgROI, aux;
@@ -242,6 +304,13 @@ void applyROI( cv::Mat &img, std::string pathROI )
   aux.release();
 }
 
+/**
+ * @brief Create ROI image object using a polygon of (x, y) points;
+ * 
+ * @param pathROI path to (x,y) point polygon
+ * @param img image to be segmented
+ * @param roi ROI image
+ */
 void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi )
 {
   std::vector<cv::Point> vecROI, ROIPolygon;
@@ -253,17 +322,38 @@ void readROIAsImage( std::string pathROI, cv::Mat img, cv::Mat &roi )
   cv::fillConvexPoly( roi, &ROIPolygon[0], ROIPolygon.size(), cv::Scalar::all(255), 8, 0);
 }
 
+/**
+ * @brief Create a ROI image object using an existing image.
+ * 
+ * @param pathROI path to image
+ * @param img image where ROI will be returned
+ */
 void readROIFromImage( std::string pathROI, cv::Mat &img )
 {
   readImg( pathROI, img );
 }
 
+/**
+ * @brief segment image using a rectangle as "Region Of Interest". v1 and v2 are the extrema points of rectangle.
+ * 
+ * @param img image to be segmented
+ * @param img_roi ROI image, created using v1 and v2
+ * @param v1 First extrema of the rectangle
+ * @param v2 Second extrema of the rectangle
+ */
 void selectROI(cv::Mat img, cv::Mat &img_roi, cv::Point v1, cv::Point v2)
 {
 	cv::Rect roi = cv::Rect(v1, v2);
 	img_roi = img(roi);
 }
 
+/**
+ * @brief Create gaussian window based with size and sigma sent in argument.
+ * 
+ * @param kernel where to return gaussian window
+ * @param size window size
+ * @param sigma sigma value
+ */
 void gaussKernel(cv::Mat &kernel, int size, float sigma)
 {
 	int k_mid = size / 2;
@@ -381,6 +471,15 @@ void getHomographicCorrespondence( cv::Point2f p1, cv::Point2f &p2, cv::Mat H )
 //  printMat(H, "Homography Matrix");
 }
 
+/**
+ * @brief Get the Homographic Correspondence of a point
+ * 
+ * @param x1: x coordinate of point 1
+ * @param y1: y coordinate of point 1
+ * @param x2: x coordinate of point 2
+ * @param y2: y coordinate of point 2
+ * @param H: Homographic matrix
+ */
 void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv::Mat H )
 {
   cv::Point2f p1, p2;
@@ -393,6 +492,12 @@ void getHomographicCorrespondence( float x1, float y1, float &x2, float &y2, cv:
   y2 = p2.y;
 }
 
+/**
+ * @brief create a vector that all KeyPoints inside lKps in kps.
+ * 
+ * @param lKps vector containing of KeyPoints vectors
+ * @param kps vector of KeyPoints
+ */
 void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyPoints> &kps )
 {
   std::cout << "## Joining Vectors of Keypoints into single vector of KeyPoints" << std::endl;
@@ -410,6 +515,12 @@ void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyP
   }
 }
 
+/**
+ * @brief Metlhod that sums all cv::Mat objects inside matList. Result is stored into result object.
+ * 
+ * @param matList: vector of Mat objects
+ * @param result cv::Mat object that contains the sum of the matList cv::Mat objects
+ */
 void sumListOfMats( std::vector< cv::Mat > matList, cv::Mat &result )
 {
   result = cv::Mat::zeros( matList[0].size(), matList[0].type() );
