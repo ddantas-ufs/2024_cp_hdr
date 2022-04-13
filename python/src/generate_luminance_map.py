@@ -152,9 +152,8 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
     if( img_mask_path is not None ):
         imgMask = rgb2gray( imread(img_mask_path) )
     else:
-        imgMask = None #imgMask * 255
-    #cv2.imwrite( img_out_dir + img_name_str + "_ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOIh.png", imgMask )
-
+        imgMask = None 
+    
     cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
 
     # CALCULATE LUMINANCE
