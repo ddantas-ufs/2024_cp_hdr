@@ -3,6 +3,12 @@ import numpy as np
 from tqdm import tqdm
 from os import listdir
 from os.path import isfile, join
+from pathlib import Path
+
+
+def imread( filename ):
+    img = cv2.imread( filename, -1 )
+    return img
 
 def is_gray_image( img ):
     if( isinstance(img, np.ndarray) ):
@@ -118,9 +124,9 @@ def thresh( img, tr_min, tr_max ):
             img_thresh = np.logical_and( img >= tr_min, img <= tr_max ) * 255
             return img_thresh
         else:
-            img_bool_r = np.logical_and( img[:, :, 0] >= tr_min, img[:, :, 0] <= tr_max )# img[:, :, 0] >= tr
-            img_bool_g = np.logical_and( img[:, :, 1] >= tr_min, img[:, :, 1] <= tr_max )# img[:, :, 1] >= tr
-            img_bool_b = np.logical_and( img[:, :, 2] >= tr_min, img[:, :, 2] <= tr_max )# img[:, :, 2] >= tr
+            img_bool_r = np.logical_and( img[:, :, 0] >= tr_min, img[:, :, 0] <= tr_max )
+            img_bool_g = np.logical_and( img[:, :, 1] >= tr_min, img[:, :, 1] <= tr_max )
+            img_bool_b = np.logical_and( img[:, :, 2] >= tr_min, img[:, :, 2] <= tr_max )
             img_thresh = np.zeros( (img.shape[0], img.shape[1], img.shape[2]), np.uint8 )
             
             img_thresh[:, :, 0] = img_bool_r * 255
@@ -130,6 +136,72 @@ def thresh( img, tr_min, tr_max ):
             return img_thresh
     return None
 
+def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
+    print( "Method: Calculate Subregions" )
+
+    print( "img_path :", img_path )
+    print( "img_name :", img_name )
+    print( "img_mask_path :", img_mask_path )
+    print( "img_out_dir :", img_out_dir )
+
+    img_name_str = Path(img_name).stem
+
+    img = imread( img_path+img_name )
+    imgMask = np.ones( (img.shape[0], img.shape[1]), img.dtype )
+
+    if( img_mask_path is not None ):
+        imgMask = rgb2gray( imread(img_mask_path) )
+    else:
+        imgMask = None #imgMask * 255
+    #cv2.imwrite( img_out_dir + img_name_str + "_ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOIh.png", imgMask )
+
+    cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
+
+    # CALCULATE LUMINANCE
+    L = calculate_luminance( img )
+
+    # NORMALIZING
+    cv2.normalize( L, L, 0, 255, cv2.NORM_MINMAX, -1 )
+    if( imgMask is not None ):
+        cv2.normalize( imgMask, imgMask, 0, 255, cv2.NORM_MINMAX, -1 )
+
+    # CREATE IMAGE HEATMAP
+    heat = calculate_heatmap( L )
+
+    L_histeq = histeqRGB( L )
+    L_histeq_gray = histeq( rgb2gray(L) )
+
+    thrl = thresh( L_histeq_gray, 0, 84 )
+    thrm = thresh( L_histeq_gray, 85, 169 )
+    thrh = thresh( L_histeq_gray, 170, 255 )
+
+    if( imgMask is not None ):
+        ROIl = np.logical_and( imgMask, thrl ) * 255
+        ROIm = np.logical_and( imgMask, thrm ) * 255
+        ROIh = np.logical_and( imgMask, thrh ) * 255
+    else:
+        ROIl = thrl
+        ROIm = thrm
+        ROIh = thrh
+
+    ROI = np.logical_or( ROIl, ROIm ) * 255
+    ROI = np.logical_or( ROI, ROIh ) * 255
+
+    ROISeg = np.zeros( (ROI.shape[0], ROI.shape[1], 3), np.uint8 )
+    ROISeg[:,:,0] = ROIl
+    ROISeg[:,:,1] = ROIm
+    ROISeg[:,:,2] = ROIh
+
+    cv2.imwrite( img_out_dir + img_name_str + "_ROIh.png", ROIh )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROIm.png", ROIm )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROIl.png", ROIl )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROI.png", ROI )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROISegments.png", ROISeg )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMap.png", L )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHeatmap.png", heat )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEq.png", L_histeq )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEqGray.png", L_histeq_gray )
+
 """
     MAIN
 """
@@ -137,47 +209,17 @@ def thresh( img, tr_min, tr_max ):
 root_dir_output  = "F:/artur/Documents/Python Scripts/"
 root_dir_rana_pr = "F:/artur/Documents/Python Scripts/Rana/PR/"
 root_dir_rana_lr = "F:/artur/Documents/Python Scripts/Rana/LR/"
-img_path = "scene-6.hdr"
+#img_path = "scene-6.hdr"
 
 img_list_rana_pr = [f for f in listdir(root_dir_rana_pr) if isfile(join(root_dir_rana_pr, f))]
 img_list_rana_lr = [f for f in listdir(root_dir_rana_lr) if isfile(join(root_dir_rana_lr, f))]
 
-img = cv2.imread( root_dir_output+img_path, -1 )
-cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
+#for img_path in img_list_rana_pr:
+#    if( not "ROIa.png" == img_path ):
+#       calculate_subregions( root_dir_rana_pr, img_path, root_dir_rana_pr+"ROIa.png", root_dir_rana_pr )
 
-# CALCULATE LUMINANCE
-L = calculate_luminance( img )
+for img_path in img_list_rana_lr:
+    if( not "ROIa.png" == img_path ):
+        calculate_subregions( root_dir_rana_lr, img_path, None, root_dir_rana_lr )
 
-# NORMALIZING
-cv2.normalize( L, L, 0, 255, cv2.NORM_MINMAX, -1 )
-
-# CREATE IMAGE HEATMAP
-heat = calculate_heatmap( L )
-
-#ret = calculate_cumulative_histogram( L )
-#print( ret )
-L_heq = histeq( rgb2gray(L) )
-
-Ll = thresh( L_heq, 0, 84 )
-Lm = thresh( L_heq, 85, 169 )
-Lh = thresh( L_heq, 170, 255 )
-"""
-vals = L.mean(axis=2).flatten()
-counts, bins = np.histogram(vals, range(4))
-print( "Counts:" )
-print( counts )
-print( "Bins:" )
-print( bins )
-
-# plot histogram centered on values 0..255
-plt.bar(bins[:-1] - 0.5, counts, width=1, edgecolor='none')
-plt.xlim([-0.5, 255.5])
-plt.show()
-"""
-cv2.imwrite( root_dir_output + "LuminanceMap.png", L )
-cv2.imwrite( root_dir_output + "LuminanceMap_h.png", Lh )
-cv2.imwrite( root_dir_output + "LuminanceMap_m.png", Lm )
-cv2.imwrite( root_dir_output + "LuminanceMap_l.png", Ll )
-cv2.imwrite( root_dir_output + "LuminanceMapHeatmap.png", heat )
-cv2.imwrite( root_dir_output + "LuminanceMapHistogramEq.png", L_heq )
-#"""
+#calculate_subregions( root_dir_output, img_path, root_dir_rana_pr+"ROIa.png", "F:/artur/Documents/Python Scripts/Rana/" )
