@@ -6,10 +6,16 @@ from os.path import isfile, join
 from pathlib import Path
 
 
+"""
+    READS IMAGE POINTED BY filename. HDR is readed as float64 and LDR is readed as uint8.
+"""
 def imread( filename ):
     img = cv2.imread( filename, -1 )
     return img
 
+"""
+    RETURNS TRUE IF IS GRAYSCALE AND FALSE IF IS RGB
+"""
 def is_gray_image( img ):
     if( isinstance(img, np.ndarray) ):
         if( img.ndim == 2 ):
@@ -19,22 +25,25 @@ def is_gray_image( img ):
     else:
         return False
 
+"""
+    GENERATE ILUMINATION MAP FROM IMAGE
+"""
 def generate_lumination_map_from_image( img ):
     hsv = cv2.cvtColor( img, cv2.COLOR_BGR2HSV )
     return hsv
 
-def get_unique_values( img ):
-    return np.unique( img, return_counts=True )[0] #np.array( np.unique( img, return_counts=True ) )
-
-def calculate_cumulative_histogram( img ):
-    return cv2.calcHist( img )
-
+"""
+    CALCULATES HEAT MAP FROM IMAGE
+"""
 def calculate_heatmap( img ):
     heat = np.uint8( img )
     heat = cv2.applyColorMap( heat, cv2.COLORMAP_JET )
 
     return heat
 
+"""
+    TRANSFORMS RGB IMAGE INTO GRAYSCALE
+"""
 def rgb2gray( img ):
     print("method: rgb2gray")
     if( isinstance( img, np.ndarray ) ):
@@ -46,17 +55,9 @@ def rgb2gray( img ):
             return np.asarray(gray, dtype=np.uint8)
     return None
 
-def get_mask_by_values( img, list_values, ini, end ):
-    print( "ini:", ini, ", end:", end )
-    print( "val i:", list_values[ini], ", val e:", list_values[end-1] )
-    mask = np.zeros( img.shape, img.dtype )
-    arr_1 = img >= list_values[ini]
-    arr_2 = img <= list_values[end-1]
-
-    mask = np.logical_and( arr_1, arr_2 ) * 1.0
-
-    return mask
-
+"""
+    CALCULATES LUMINANCE MAP FROM IMAGE, USING RANA AND CHIU ET. AL METHOD
+"""
 def calculate_luminance( img ):
     alpha = 0.007
     r = alpha * max( img.shape[0], img.shape[1] )
@@ -64,13 +65,12 @@ def calculate_luminance( img ):
     if( ( size % 2) == 0 ):
         size = size+1
     
-    print( "img size:", size )
-    print( "img alpha:", alpha )
-    print( "img r:", r )
-    blur_img = cv2.GaussianBlur( img, (size, size), r )
-    
+    blur_img = cv2.GaussianBlur( img, (size, size), r )    
     return blur_img
 
+"""
+    CALCULATE HISTOGRAM FROM IMAGE
+"""
 def hist( img ):
     print( "method hist" )
     if( isinstance(img, np.ndarray) ):
@@ -85,29 +85,35 @@ def hist( img ):
             return hist
     return None
 
+"""
+    CALCULATE IMAGE HISTOGRAM EQUALIZATION
+"""
 def histeq( img ):
     print( "method histeq" )
     if( isinstance(img, np.ndarray) ):
         if( not is_gray_image( img ) ):
             img = rgb2gray( img )
         
-        # CALCULANDO CDF
+        # CALCULATE CDF VALUES
         cdf = np.cumsum( hist( img ).flatten() )
         
-        # MASCARANDO PIXELS 0
+        # MASKING 0-VALUES
         cdf_m = np.ma.masked_equal( cdf, 0 )
 
-        # CALCULA HISTOGRAMA ACUMULADO [T(rk)]
+        # CALCULATING CUMULATIVE HISTOGRAM
         cdf_m = ( ( cdf_m - cdf_m.min() ) * 255 ) / ( cdf_m.max() - cdf_m.min() )
         
-        # NORMALIZA HISTOGRAMA [0, 255]
+        # NORMALIZING [0,255]
         cdf_f = np.ma.filled( cdf_m, 0 ).astype( 'uint8' )
         
-        # FAZ A TRANSFORMACAO DA IMAGEM
+        # TRANSFORMING INTO IMAGE
         img_ret = cdf_f[img]
         
         return img_ret
 
+"""
+    CALCULATES HISTOGRAM EQUALIZATION OF RGB IMAGE
+"""
 def histeqRGB( img ):
     img_eq = np.zeros( img.shape, np.uint8 )
     img_eq[:,:,0] = histeq( np.uint8( img[:,:,0] ) )
@@ -115,6 +121,9 @@ def histeqRGB( img ):
     img_eq[:,:,2] = histeq( np.uint8( img[:,:,2] ) )
     return img_eq
 
+"""
+    CALCULATES TRESHOLD OF INTERVAL
+"""
 def thresh( img, tr_min, tr_max ):
     print("method: threshold")
     print("thresh min:", tr_min, "thresh max:", tr_max)
@@ -136,23 +145,23 @@ def thresh( img, tr_min, tr_max ):
             return img_thresh
     return None
 
+"""
+    CALCULATE ILLUMINATION SUBREGIONS OF IMAGE
+    @param img_path: directory where image is stored
+    @param img_name: image name
+    @param img_mask_path: absolute path to image ROI (if none, all 255 image is used)
+    @param img_out_dir: path to directory where output must be stored
+"""
 def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
     print( "Method: Calculate Subregions" )
-
-    print( "img_path :", img_path )
-    print( "img_name :", img_name )
-    print( "img_mask_path :", img_mask_path )
-    print( "img_out_dir :", img_out_dir )
 
     img_name_str = Path(img_name).stem
 
     img = imread( img_path+img_name )
-    imgMask = np.ones( (img.shape[0], img.shape[1]), img.dtype )
+    imgMask = None
 
     if( img_mask_path is not None ):
         imgMask = rgb2gray( imread(img_mask_path) )
-    else:
-        imgMask = None 
     
     cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
 
@@ -205,20 +214,20 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
     MAIN
 """
 
+# DIRECTORY WHERE 
 root_dir_output  = "F:/artur/Documents/Python Scripts/"
+
+# DIRECTORY WITH HDR IMAGES
 root_dir_rana_pr = "F:/artur/Documents/Python Scripts/Rana/PR/"
 root_dir_rana_lr = "F:/artur/Documents/Python Scripts/Rana/LR/"
-#img_path = "scene-6.hdr"
 
 img_list_rana_pr = [f for f in listdir(root_dir_rana_pr) if isfile(join(root_dir_rana_pr, f))]
 img_list_rana_lr = [f for f in listdir(root_dir_rana_lr) if isfile(join(root_dir_rana_lr, f))]
 
-#for img_path in img_list_rana_pr:
-#    if( not "ROIa.png" == img_path ):
-#       calculate_subregions( root_dir_rana_pr, img_path, root_dir_rana_pr+"ROIa.png", root_dir_rana_pr )
+for img_path in img_list_rana_pr:
+    if( not "ROIa.png" == img_path ):
+       calculate_subregions( root_dir_rana_pr, img_path, root_dir_rana_pr+"ROIa.png", root_dir_rana_pr )
 
 for img_path in img_list_rana_lr:
     if( not "ROIa.png" == img_path ):
         calculate_subregions( root_dir_rana_lr, img_path, None, root_dir_rana_lr )
-
-#calculate_subregions( root_dir_output, img_path, root_dir_rana_pr+"ROIa.png", "F:/artur/Documents/Python Scripts/Rana/" )

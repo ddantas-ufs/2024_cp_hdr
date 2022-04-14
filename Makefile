@@ -1,4 +1,5 @@
 CC = g++
+PY = python3
 
 CV_LIB = `pkg-config opencv --cflags --libs` -g
 CPP_FLAGS = -fPIC -g
@@ -23,6 +24,8 @@ MAKE_LIB = $(CC) $(CPP_FLAGS) $(LD_FLAGS) -o $(TARGET_LIB) $(SRC_FILES)
 GET_URL = wget -r -np -R "index.html*" -e robots=off
 PRIBYL_DIR = www.fit.vutbr.cz/~ipribyl/FPinHDR/dataset_JVCI
 RANA_ZIP = webpages.l2s.centralesupelec.fr/perso/giuseppe.valenzise/sw/HDR%20Scenes.zip
+
+LUMINANCE_MAP_GENERATOR = python/src/generate_luminance_map.py
 
 DEMO_IMG_LOWE = lena.pgm
 #DEMO_IMG = lena.png
@@ -127,6 +130,9 @@ compare_algorithms:
 
 sintetic_test:
 	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
+
+run_generate_luminance:
+	$(PY) $(LUMINANCE_MAP_GENERATOR)
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
