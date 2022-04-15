@@ -25,6 +25,11 @@ def is_gray_image( img ):
     else:
         return False
 
+def negative( img ):
+    print("method: negative")
+    if( isinstance( img, np.ndarray ) ):
+        return  255 - img
+
 """
     GENERATE ILUMINATION MAP FROM IMAGE
 """
@@ -40,6 +45,18 @@ def calculate_heatmap( img ):
     heat = cv2.applyColorMap( heat, cv2.COLORMAP_JET )
 
     return heat
+
+def applyROIMask( img, ROI ):
+    res = np.zeros( img.shape, img.dtype )
+    ROI_mask = np.uint8( ROI/255 )
+
+    if( is_gray_image( img ) ):
+        res = img * ROI_mask
+    else:
+        res[:,:,0] = img[:,:,0] * ROI_mask
+        res[:,:,1] = img[:,:,1] * ROI_mask
+        res[:,:,2] = img[:,:,2] * ROI_mask
+    return res
 
 """
     TRANSFORMS RGB IMAGE INTO GRAYSCALE
@@ -151,17 +168,22 @@ def thresh( img, tr_min, tr_max ):
     @param img_name: image name
     @param img_mask_path: absolute path to image ROI (if none, all 255 image is used)
     @param img_out_dir: path to directory where output must be stored
+    @oaram regions: amount of ilumination images
 """
-def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
+def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir, regions ):
     print( "Method: Calculate Subregions" )
 
     img_name_str = Path(img_name).stem
+
+    interval_size = int( 255/regions )
 
     img = imread( img_path+img_name )
     imgMask = None
 
     if( img_mask_path is not None ):
         imgMask = rgb2gray( imread(img_mask_path) )
+    else:
+        imgMask = np.ones( (img.shape[0], img.shape[1]), np.uint8 )
     
     cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
 
@@ -176,30 +198,56 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
     # CREATE IMAGE HEATMAP
     heat = calculate_heatmap( L )
 
+    L = applyROIMask( L, imgMask )
+    L_gray = applyROIMask( rgb2gray( L ), imgMask )
+
+    # CALCULATE HISTOGRAM EQUALIZATION
     L_histeq = histeqRGB( L )
-    L_histeq_gray = histeq( rgb2gray(L) )
+    L_histeq_gray = histeq( L_gray )
 
-    thrl = thresh( L_histeq_gray, 0, 84 )
-    thrm = thresh( L_histeq_gray, 85, 169 )
-    thrh = thresh( L_histeq_gray, 170, 255 )
+    thresholds = []
+    for i in range( 0, regions ):
+        ini = i*interval_size
+        end = i*interval_size+interval_size
+        thresholds.append( thresh( L_histeq_gray, ini, end ) )
 
+    ROI_list = []
     if( imgMask is not None ):
-        ROIl = np.logical_and( imgMask, thrl ) * 255
-        ROIm = np.logical_and( imgMask, thrm ) * 255
-        ROIh = np.logical_and( imgMask, thrh ) * 255
+        for i in range( 0, regions ):
+            ROI_list.append( applyROIMask(thresholds[i], imgMask ) * 255 ) #np.logical_and( imgMask, thresholds[i] ) * 255 )
+            #ROI_list.append( np.logical_and( imgMask, thresholds[i] ) * 255 )
     else:
-        ROIl = thrl
-        ROIm = thrm
-        ROIh = thrh
+        ROI_list = ROI_list + thresholds
 
-    ROI = np.logical_or( ROIl, ROIm ) * 255
-    ROI = np.logical_or( ROI, ROIh ) * 255
+    # CREATING UNITED ROI
+    ROI_all = np.zeros( (img.shape[0], img.shape[1]), img.dtype )
+    for i in range( 0, regions ):
+        ROI_all = np.logical_or( ROI_all, ROI_list[i] ) * 255
 
-    ROISeg = np.zeros( (ROI.shape[0], ROI.shape[1], 3), np.uint8 )
-    ROISeg[:,:,0] = ROIl
-    ROISeg[:,:,1] = ROIm
-    ROISeg[:,:,2] = ROIh
+    # OBTAINING ROIs
+    ROI_segmented_regions = np.zeros( (img.shape[0],img.shape[1],3), np.uint8 )
+    segment_levels = int(128 / regions)
+    for i in range( 0, regions ):
+        value = 128 + int( i * segment_levels )
+        ROI_segmented_regions[:,:,1] = ROI_segmented_regions[:,:,1] + (ROI_list[i]/255) * value
+        print( "Value now: ", segment_levels+value )
 
+    negative_mask = negative( imgMask )
+    ROI_segmented_regions[:,:,0] = ROI_segmented_regions[:,:,0] + ( negative_mask/255 ) * 128
+
+    # SAVING ROI OF ILUMINATION REGIONS
+    for i in range( 0, regions ):
+        out_img_name = "_ROI_" +str(i) +".png"
+        cv2.imwrite( img_out_dir + img_name_str + out_img_name, ROI_list[i] )
+
+    # SAVING OTHER IMAGES    
+    #cv2.imwrite( img_out_dir + img_name_str + "_ROI_completo.png", ROI_all )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROI_segments.png", ROI_segmented_regions )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMap.png", L )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHeatmap.png", heat )
+    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEq.png", L_histeq )
+
+    """
     cv2.imwrite( img_out_dir + img_name_str + "_ROIh.png", ROIh )
     cv2.imwrite( img_out_dir + img_name_str + "_ROIm.png", ROIm )
     cv2.imwrite( img_out_dir + img_name_str + "_ROIl.png", ROIl )
@@ -209,6 +257,7 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir ):
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHeatmap.png", heat )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEq.png", L_histeq )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEqGray.png", L_histeq_gray )
+    """
 
 """
     MAIN
@@ -221,13 +270,21 @@ root_dir_output  = "F:/artur/Documents/Python Scripts/"
 root_dir_rana_pr = "F:/artur/Documents/Python Scripts/Rana/PR/"
 root_dir_rana_lr = "F:/artur/Documents/Python Scripts/Rana/LR/"
 
+# ABSOLUTE PATH OF ROI
+absolute_rana_pr_mask = root_dir_rana_pr + "ROIa.png"
+absolute_rana_lr_mask = root_dir_rana_lr + "ROIa.png"
+
 img_list_rana_pr = [f for f in listdir(root_dir_rana_pr) if isfile(join(root_dir_rana_pr, f))]
 img_list_rana_lr = [f for f in listdir(root_dir_rana_lr) if isfile(join(root_dir_rana_lr, f))]
 
+#calculate_subregions( root_dir_rana_pr, "scene-0.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
+
+#"""
 for img_path in img_list_rana_pr:
-    if( not "ROIa.png" == img_path ):
-       calculate_subregions( root_dir_rana_pr, img_path, root_dir_rana_pr+"ROIa.png", root_dir_rana_pr )
+    if( not img_path.endswith(".png") ):
+       calculate_subregions( root_dir_rana_pr, img_path, absolute_rana_pr_mask, root_dir_rana_pr, 3 )
 
 for img_path in img_list_rana_lr:
-    if( not "ROIa.png" == img_path ):
-        calculate_subregions( root_dir_rana_lr, img_path, None, root_dir_rana_lr )
+    if( not img_path.endswith(".png") ):
+        calculate_subregions( root_dir_rana_lr, img_path, None, root_dir_rana_lr, 3 )
+#"""
