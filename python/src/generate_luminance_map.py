@@ -147,12 +147,12 @@ def thresh( img, tr_min, tr_max ):
     if( isinstance( img, np.ndarray ) ):
         if( is_gray_image( img ) ):
             #img_thresh = (img >= tr) * 255
-            img_thresh = np.logical_and( img >= tr_min, img <= tr_max ) * 255
+            img_thresh = np.logical_and( img > tr_min, img <= tr_max ) * 255
             return img_thresh
         else:
-            img_bool_r = np.logical_and( img[:, :, 0] >= tr_min, img[:, :, 0] <= tr_max )
-            img_bool_g = np.logical_and( img[:, :, 1] >= tr_min, img[:, :, 1] <= tr_max )
-            img_bool_b = np.logical_and( img[:, :, 2] >= tr_min, img[:, :, 2] <= tr_max )
+            img_bool_r = np.logical_and( img[:, :, 0] > tr_min, img[:, :, 0] <= tr_max )
+            img_bool_g = np.logical_and( img[:, :, 1] > tr_min, img[:, :, 1] <= tr_max )
+            img_bool_b = np.logical_and( img[:, :, 2] > tr_min, img[:, :, 2] <= tr_max )
             img_thresh = np.zeros( (img.shape[0], img.shape[1], img.shape[2]), np.uint8 )
             
             img_thresh[:, :, 0] = img_bool_r * 255
@@ -199,11 +199,11 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir, region
     heat = calculate_heatmap( L )
 
     L = applyROIMask( L, imgMask )
-    L_gray = applyROIMask( rgb2gray( L ), imgMask )
+    #L_gray = applyROIMask( rgb2gray( L ), imgMask )
 
     # CALCULATE HISTOGRAM EQUALIZATION
     L_histeq = histeqRGB( L )
-    L_histeq_gray = histeq( L_gray )
+    L_histeq_gray = rgb2gray( histeq( L ) )
 
     thresholds = []
     for i in range( 0, regions ):
@@ -214,26 +214,23 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir, region
     ROI_list = []
     if( imgMask is not None ):
         for i in range( 0, regions ):
-            ROI_list.append( applyROIMask(thresholds[i], imgMask ) * 255 ) #np.logical_and( imgMask, thresholds[i] ) * 255 )
-            #ROI_list.append( np.logical_and( imgMask, thresholds[i] ) * 255 )
+            ROI_list.append( applyROIMask(thresholds[i], imgMask ) * 255 ) 
     else:
         ROI_list = ROI_list + thresholds
 
-    # CREATING UNITED ROI
-    ROI_all = np.zeros( (img.shape[0], img.shape[1]), img.dtype )
-    for i in range( 0, regions ):
-        ROI_all = np.logical_or( ROI_all, ROI_list[i] ) * 255
-
     # OBTAINING ROIs
     ROI_segmented_regions = np.zeros( (img.shape[0],img.shape[1],3), np.uint8 )
-    segment_levels = int(128 / regions)
-    for i in range( 0, regions ):
-        value = 128 + int( i * segment_levels )
-        ROI_segmented_regions[:,:,1] = ROI_segmented_regions[:,:,1] + (ROI_list[i]/255) * value
-        print( "Value now: ", segment_levels+value )
-
+    segment_levels = int( 128/regions )
+    actual_level = 128
+    for roi in ROI_list:
+        ROI_segmented_regions[:,:,1] = ROI_segmented_regions[:,:,1] + ( roi / 255 * actual_level )
+        print( "Value now:", actual_level )
+        actual_level += segment_levels
+    
+    # SEGMENTATION
+    ROI_segmented_regions[:,:,1] = applyROIMask( negative( ROI_segmented_regions[:,:,1] ), imgMask )
     negative_mask = negative( imgMask )
-    ROI_segmented_regions[:,:,0] = ROI_segmented_regions[:,:,0] + ( negative_mask/255 ) * 128
+    ROI_segmented_regions[:,:,0] = ROI_segmented_regions[:,:,0] + ( negative_mask/255 ) * 150
 
     # SAVING ROI OF ILUMINATION REGIONS
     for i in range( 0, regions ):
@@ -247,22 +244,138 @@ def calculate_subregions( img_path, img_name, img_mask_path, img_out_dir, region
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHeatmap.png", heat )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEq.png", L_histeq )
 
-    """
-    cv2.imwrite( img_out_dir + img_name_str + "_ROIh.png", ROIh )
-    cv2.imwrite( img_out_dir + img_name_str + "_ROIm.png", ROIm )
-    cv2.imwrite( img_out_dir + img_name_str + "_ROIl.png", ROIl )
-    cv2.imwrite( img_out_dir + img_name_str + "_ROI.png", ROI )
-    cv2.imwrite( img_out_dir + img_name_str + "_ROISegments.png", ROISeg )
+def count_valid_pixels( img, ROI ):
+    value_count = np.zeros((256), np.uint32)
+
+    print( "Min:", np.min(img) )
+    print( "Max:", np.max(img) )
+
+    for i in range( 0, img.shape[0] ):
+        for j in range( 0, img.shape[1] ):
+            if( ROI[i,j] == 255 ):
+                value_count[ img[i,j] ] += 1
+    
+    return value_count
+
+def calculate_subregions_by_pixels( img_path, img_name, img_mask_path, img_out_dir, regions ):
+    print( "Method: Calculate Subregions" )
+
+    img_name_str = Path(img_name).stem
+
+    #interval_size = int( 255/regions )
+
+    img = imread( img_path+img_name )
+    imgMask = None
+
+    if( img_mask_path is not None ):
+        imgMask = rgb2gray( imread(img_mask_path) )
+    else:
+        imgMask = np.ones( (img.shape[0], img.shape[1]), np.uint8 )
+    
+    cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
+
+    # CALCULATE LUMINANCE
+    L = calculate_luminance( img )
+
+    # NORMALIZING
+    cv2.normalize( L, L, 0, 255, cv2.NORM_MINMAX, -1 )
+    if( imgMask is not None ):
+        cv2.normalize( imgMask, imgMask, 0, 255, cv2.NORM_MINMAX, -1 )
+
+    # CREATE IMAGE HEATMAP
+    heat = calculate_heatmap( L )
+
+    L = applyROIMask( L, imgMask )
+    #L_gray = applyROIMask( rgb2gray( L ), imgMask )
+
+    # CALCULATE HISTOGRAM EQUALIZATION
+    L_histeq = histeqRGB( L )
+    L_histeq_gray = rgb2gray( L_histeq )
+
+    #pixel_values = L_histeq_gray.ravel()
+    #img_bincount = np.bincount( pixel_values, minlength=256 )
+    #print( img_bincount )
+    value_count = count_valid_pixels( L_histeq_gray, imgMask )
+    total_pixels = cv2.countNonZero(imgMask)
+
+    print( "Valid Pixels:", cv2.countNonZero(imgMask) )
+    print( "Valid Pixels sum:", np.sum( value_count ) )
+    print( value_count )
+
+    #exit(0)
+
+    #total_pixels = img.shape[0] * img.shape[1]#( (img.shape[0] * img.shape[1]) - img_bincount[0] )
+    pixels_in_interval = int(total_pixels / regions)
+
+    limits = []
+    pixel_sum = 0
+    for i in range( 0, len( value_count ) ):
+        #if( not i == 0 ):
+        pixel_sum = pixel_sum + value_count[i]
+        if( pixel_sum >= pixels_in_interval ):
+            pixel_sum = 0
+            limits.append( i )
+    limits.append(255)
+    
+    print( "Limits:", limits )
+    print( "Total of Pixels:", total_pixels )
+    print( "Total of Pixels - 0:", total_pixels )
+    print( "Pixels in Each interval:", pixels_in_interval )
+
+    #return(0)
+
+    thresholds = []
+    for i in range( 0, len(limits) ):
+        #ini = i*interval_size
+        #end = i*interval_size+interval_size
+        ini = 0
+        end = 0
+        if( i == 0 ):
+            end = limits[0]
+        else:
+            ini = limits[i-1]
+            end = limits[i]
+
+        print("ini:", ini, "fim:", end)
+        thresholds.append( thresh( L_histeq_gray, ini, end ) )
+
+    #exit(0)
+    ROI_list = []
+    if( imgMask is not None ):
+        for i in range( 0, regions ):
+            ROI_list.append( applyROIMask(thresholds[i], imgMask ) * 255 ) 
+    else:
+        ROI_list = ROI_list + thresholds
+
+    # OBTAINING ROIs
+    ROI_segmented_regions = np.zeros( (img.shape[0],img.shape[1],3), np.uint8 )
+    segment_levels = int( 128/regions )
+    actual_level = 128
+    for roi in ROI_list:
+        ROI_segmented_regions[:,:,1] = ROI_segmented_regions[:,:,1] + ( roi / 255 * actual_level )
+        print( "Value now:", actual_level )
+        actual_level += segment_levels
+    
+    # SEGMENTATION
+    ROI_segmented_regions[:,:,1] = applyROIMask( negative( ROI_segmented_regions[:,:,1] ), imgMask )
+    negative_mask = negative( imgMask )
+    ROI_segmented_regions[:,:,0] = ROI_segmented_regions[:,:,0] + ( negative_mask/255 ) * 150
+
+    # SAVING ROI OF ILUMINATION REGIONS
+    for i in range( 0, regions ):
+        out_img_name = "_ROI_" +str(i) +".png"
+        cv2.imwrite( img_out_dir + img_name_str + out_img_name, ROI_list[i] )
+
+    # SAVING OTHER IMAGES    
+    #cv2.imwrite( img_out_dir + img_name_str + "_ROI_completo.png", ROI_all )
+    cv2.imwrite( img_out_dir + img_name_str + "_ROI_segments.png", ROI_segmented_regions )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMap.png", L )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHeatmap.png", heat )
     cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEq.png", L_histeq )
-    cv2.imwrite( img_out_dir + img_name_str + "_LuminanceMapHistogramEqGray.png", L_histeq_gray )
-    """
 
 """
     MAIN
 """
-
 # DIRECTORY WHERE 
 root_dir_output  = "F:/artur/Documents/Python Scripts/"
 
@@ -270,16 +383,16 @@ root_dir_output  = "F:/artur/Documents/Python Scripts/"
 root_dir_rana_pr = "F:/artur/Documents/Python Scripts/Rana/PR/"
 root_dir_rana_lr = "F:/artur/Documents/Python Scripts/Rana/LR/"
 
-# ABSOLUTE PATH OF ROI
+# ABSOLUTE PATH TO ROI
 absolute_rana_pr_mask = root_dir_rana_pr + "ROIa.png"
 absolute_rana_lr_mask = root_dir_rana_lr + "ROIa.png"
 
 img_list_rana_pr = [f for f in listdir(root_dir_rana_pr) if isfile(join(root_dir_rana_pr, f))]
 img_list_rana_lr = [f for f in listdir(root_dir_rana_lr) if isfile(join(root_dir_rana_lr, f))]
 
-#calculate_subregions( root_dir_rana_pr, "scene-0.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
+calculate_subregions_by_pixels( root_dir_rana_pr, "scene-0.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
 
-#"""
+"""
 for img_path in img_list_rana_pr:
     if( not img_path.endswith(".png") ):
        calculate_subregions( root_dir_rana_pr, img_path, absolute_rana_pr_mask, root_dir_rana_pr, 3 )
@@ -287,4 +400,4 @@ for img_path in img_list_rana_pr:
 for img_path in img_list_rana_lr:
     if( not img_path.endswith(".png") ):
         calculate_subregions( root_dir_rana_lr, img_path, None, root_dir_rana_lr, 3 )
-#"""
+"""
