@@ -201,16 +201,20 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
     img_name_str = Path(img_name).stem
 
     img = imread( img_path+img_name )
-    ROI0_1 = np.zeros( (img.shape[0], img.shape[1]), np.float32 )
+    ROI0_1 = np.ones( (img.shape[0], img.shape[1]), np.float32 )
     ROI0_255 = np.ones( (img.shape[0], img.shape[1]), np.uint8 ) * 255
 
     if( img_mask_path is not None ):
         print( "-> ROI being used" )
         ROI0_255 = rgb2gray( imread(img_mask_path) )
     
+    print( "--------> {}".format(cv2.countNonZero( ROI0_1 )) )
     # NORMALIZING IMAGE AND ROI
-    cv2.normalize( ROI0_255, ROI0_1, 0.0, 1.0, cv2.NORM_MINMAX, cv2.CV_32F )
+    #cv2.normalize( ROI0_255, ROI0_1, 0.0, 1.0, cv2.NORM_MINMAX, cv2.CV_32FC1 )
+    ROI0_1 = ROI0_255 / 255
     cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
+
+    print( "--------> {}".format(cv2.countNonZero( ROI0_1 )) )
 
     L = calculate_luminance( img )
     cv2.normalize( L, L, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
@@ -218,17 +222,15 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
     # CREATE IMAGE HEATMAP
     heat = calculate_heatmap( L )
 
-    L = applyROIMask( L, ROI0_1 )
     L_gray = rgb2gray( L )
-    L_gray_ROI = values_inside_roi(L_gray, ROI0_1)
+    L_gray_ROI = L_gray
+
+    if( img_mask_path is not None ):
+        L = applyROIMask( L, ROI0_1 )
+        L_gray_ROI = values_inside_roi(L_gray, ROI0_1)
 
     unique_occurrences, maskedHistogram = np.unique( L_gray_ROI, return_counts=True )
-    #print(unique_occurrences)
-    #print(histogram)
-    #print("Unique Occurrences Min: {}, Max: {}".format(np.min(unique_occurrences), np.max(unique_occurrences)))
-    #print("Histogram Min: {}, Max: {}".format(np.min(histogram), np.max(histogram)))
 
-    #return 0
     amount_of_bins = len(unique_occurrences)
 
     print( "Unique Occurrences: {}".format(unique_occurrences) )
@@ -236,8 +238,6 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
     print( "Image: Min: {}, Max: {}".format( np.min(img), np.max(img) ) )
     print( "Luminance: Min: {}, Max: {}".format( np.min(L_gray), np.max(L_gray) ) )
     print( "ROI Luminance: Min: {}, Max: {}".format( np.min(L_gray_ROI), np.max(L_gray_ROI) ) )
-
-    #maskedHistogram, _ = np.histogram( L_gray_ROI, amount_of_bins )
 
     total_pixels = cv2.countNonZero( ROI0_1 )
 
@@ -250,7 +250,7 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
     pixels_in_interval = int(total_pixels / regions)
     print( "Pixels in interval: {}".format(pixels_in_interval) )
     print( maskedHistogram )
-
+    
     limits = []
     pixel_sum = 0
     for i in range( 0, amount_of_bins ):
@@ -261,14 +261,10 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
             limits.append( i )
 
     print( "Limits: {}".format(limits) )
-
-    #return 0
     
     print( "Limits: {}".format(limits) )
     print( "Total of Pixels: {}".format(total_pixels) )
     print( "Pixels in Each interval: {}".format(pixels_in_interval) )
-
-    #return(0)
 
     thresholds = []
     for i in range( 0, len(limits) ):
@@ -289,7 +285,7 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
 
     #exit(0)
     ROI_list = []
-    if( ROI0_1 is not None ):
+    if( img_mask_path is not None ):
         for i in range( 0, regions ):
             ROI_list.append( applyROIMask( thresholds[i], ROI0_1 ) ) 
     else:
@@ -306,9 +302,9 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
         actual_level += segment_levels
     
     # SEGMENTATION
-    #ROI_segmented_regions[:,:,1] = applyROIMask( negative( ROI_segmented_regions[:,:,1] ), ROI0_1 )
-    negative_mask = negative( ROI0_1 )
-    ROI_segmented_regions[:,:,0] += ( negative_mask * 0.44 )
+    if( img_mask_path is not None ):
+        negative_mask = negative( ROI0_1 )
+        ROI_segmented_regions[:,:,0] += ( negative_mask * 0.44 )
 
     # SAVING ROI OF ILUMINATION REGIONS
     for i in range( 0, regions ):
