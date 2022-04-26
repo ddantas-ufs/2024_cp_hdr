@@ -132,7 +132,8 @@ sintetic_test:
 	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
 
 run_generate_luminance:
-	$(PY) $(LUMINANCE_MAP_GENERATOR)
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png /home/artur/builded_apps/dataset/2D/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.HDR.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png /home/artur/builded_apps/dataset/2D/ 3
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/

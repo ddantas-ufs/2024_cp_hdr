@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+import sys
 import cv2
 import time
 import numpy as np
@@ -192,15 +195,16 @@ def thresh( img, tr_min, tr_max ):
             return img_thresh
     return None
 
-def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_path, img_out_dir, regions ):
+def calculate_subregions_by_pixels_without_histeq( path_to_img, img_mask_path, img_out_dir, regions ):
     print( "Method: Calculate Subregions" )
 
-    print( "Image Name:", img_name )
+    print( "Image Name:", path_to_img )
     print( "ROI Path:", img_mask_path )
 
-    img_name_str = Path(img_name).stem
+    img_name_str = Path(path_to_img).stem
 
-    img = imread( img_path+img_name )
+    img = imread( path_to_img )
+    #img = imread( img_path+img_name )
     ROI0_1 = np.ones( (img.shape[0], img.shape[1]), np.float32 )
     ROI0_255 = np.ones( (img.shape[0], img.shape[1]), np.uint8 ) * 255
 
@@ -215,6 +219,10 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
     cv2.normalize( img, img, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
 
     print( "--------> {}".format(cv2.countNonZero( ROI0_1 )) )
+
+    print( "Shape Image: {}".format( img.shape ) )
+    print( "Shape ROI  : {}".format( ROI0_1.shape ) )
+    #return 0
 
     L = calculate_luminance( img )
     cv2.normalize( L, L, 0.0, 1.0, cv2.NORM_MINMAX, -1 )
@@ -318,47 +326,35 @@ def calculate_subregions_by_pixels_without_histeq( img_path, img_name, img_mask_
 
 """
     MAIN
+
+    How to call this script:
+        path_to_img path_to_ROI output_path subregions
 """
-# DIRECTORY WHERE 
-root_dir_output  = "F:/artur/Documents/Python Scripts/"
+# ARGS
+path_to_img = None
+path_to_ROI = None
+output_path = None
+subregions  = None
 
-# DIRECTORY WITH HDR IMAGES
-root_dir_rana_pr = "F:/artur/Documents/Python Scripts/Rana/PR/"
-root_dir_rana_lr = "F:/artur/Documents/Python Scripts/Rana/LR/"
+if( len(sys.argv) == 4 ):
+    path_to_img = sys.argv[1]
+    path_to_ROI = None
+    output_path = sys.argv[2]
+    subregions  = int(sys.argv[3])
+else:
+    path_to_img = sys.argv[1]
+    path_to_ROI = sys.argv[2]
+    output_path = sys.argv[3]
+    subregions  = int(sys.argv[4])
 
-# ABSOLUTE PATH TO ROI
-absolute_rana_pr_mask = root_dir_rana_pr + "ROIa.png"
-absolute_rana_lr_mask = root_dir_rana_lr + "ROIa.png"
+calculate_subregions_by_pixels_without_histeq( path_to_img, path_to_ROI, output_path, subregions )
+#exit(0)
+print( "Quantidade de argumentos: {}".format( len(sys.argv) ) )
+#for i in range( 0, len(sys.argv) ):
+#    print( "Argumento {}: {}".format( i, sys.argv[i] ) )
 
-img_list_rana_pr = [f for f in listdir(root_dir_rana_pr) if isfile(join(root_dir_rana_pr, f))]
-img_list_rana_lr = [f for f in listdir(root_dir_rana_lr) if isfile(join(root_dir_rana_lr, f))]
-
-#calculate_subregions_by_pixels( root_dir_rana_pr, "scene-6.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-#calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-0.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-"""
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-1.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-2.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-3.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-4.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-5.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-6.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-print( " -------------------------------------------------- " )
-calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, "scene-7.hdr", absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-"""
-
-#"""
-#for img_path in img_list_rana_pr:
-#    if( not img_path.endswith(".png") ):
-#       calculate_subregions_by_pixels_without_histeq( root_dir_rana_pr, img_path, absolute_rana_pr_mask, root_dir_rana_pr, 3 )
-#print( "###################################################################################################################" )
-#" ""
-for img_path in img_list_rana_lr:
-    if( not img_path.endswith(".png") ):
-        calculate_subregions_by_pixels_without_histeq( root_dir_rana_lr, img_path, None, root_dir_rana_lr, 3 )
-#"""
+print( "path_to_img: {}".format( path_to_img ) )
+print( "path_to_ROI: {}".format( path_to_ROI ) )
+print( "output_path: {}".format( output_path ) )
+print( "subregions : {}".format( subregions  ) )
+print( " ----------------------------------- " )
