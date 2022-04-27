@@ -133,8 +133,13 @@ sintetic_test:
 	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
 
 run_generate_luminance:
-	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png $(OUT_DIR_SEG) 3
-	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.HDR.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png $(OUT_DIR_SEG) 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-2/scene-2.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-3/scene-3.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-4/scene-4.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-5/scene-5.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-6/scene-6.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
@@ -175,7 +180,7 @@ run_matching_cphdr: matching_cphdr
 
 run_compare_algorithms: compare_algorithms
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_LDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
-	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR)/
+	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
