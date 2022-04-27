@@ -61,8 +61,8 @@ int main(int argv, char** args)
   dogKp(grayInputImage2, kp2);
   */
 
-  runSift(grayInputImage1, kp1);
-  runSift(grayInputImage2, kp2);
+  runSift(grayInputImage1, kp1, MAX_KP);
+  runSift(grayInputImage2, kp2, MAX_KP);
 
   std::cout << "Sorting Keypoint vectors" << std::endl;
   sortKeypoints( kp1 );
@@ -70,8 +70,8 @@ int main(int argv, char** args)
   
   std::cout << "Slicing Keypoint vectors" << std::endl;
   std::cout << " --> Before kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
-  kp1 = vectorSlice( kp1, 0, 500); // 500 items
-  kp2 = vectorSlice( kp2, 0, 500); // 500 items
+  kp1 = vectorSlice( kp1, 0, MAX_KP);
+  kp2 = vectorSlice( kp2, 0, MAX_KP);
   std::cout << " --> After kp1: " << kp1.size() << " kp2: " << kp2.size() << std::endl;
   
   /*
@@ -107,7 +107,7 @@ int main(int argv, char** args)
 
   // SAVING OUTPUT IMAGE
   std::cout << "Matching FPs and saving resulting image" << std::endl;
-  matchFPs(inputImage1, kp1, inputImage2, kp2, outputImage);
+  matchFPs(inputImage1, inputImage2, kp1, kp2, outputImage);
   cv::imwrite(outputPath, outputImage);
 
   kp1.clear();

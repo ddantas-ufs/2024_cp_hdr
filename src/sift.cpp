@@ -571,10 +571,14 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
  * @param kpMax: max amount of keypoints that sould be returned
  * @param roi: ROI image, mandatory to be CV_8UC1. White in the region of interest.
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat roi )
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat ROI )
 {
-  cv::Mat imgGray;
+  cv::Mat imgGray, roi;
   std::vector<KeyPoints> aux;
+
+  makeGrayscaleCopy(ROI, roi);
+  mapPixelValues(roi, roi);
+  roi.convertTo(roi, CV_8UC1);
 
   makeGrayscaleCopy( img, imgGray );
 
@@ -585,6 +589,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat ro
   if( !roi.empty() )
   {
     std::cout << " ## SIFT > Removing keypoints outside ROI..." << std::endl;
+
     if( roi.type() == CV_8UC1 )
     {
       // If ROI is sent as argument, use it to filter founded arguments

@@ -14,6 +14,7 @@ INC_SUBDIR = include/detectors
 LIB_DIR = lib
 IMG_DIR = img
 OUT_DIR = out
+OUT_DIR_SEG = out/results/segmentation
 INSTALL_DIR = ${HOME}
 
 NAME_LIB = cphdr
@@ -132,8 +133,8 @@ sintetic_test:
 	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
 
 run_generate_luminance:
-	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png /home/artur/builded_apps/dataset/2D/ 3
-	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.HDR.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png /home/artur/builded_apps/dataset/2D/ 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png $(OUT_DIR_SEG) 3
+	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/2D/viewpoint/00/00.HDR.hdr /home/artur/builded_apps/dataset/2D/viewpoint/00/ROI.00.png $(OUT_DIR_SEG) 3
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
@@ -173,8 +174,9 @@ run_matching_cphdr: matching_cphdr
 	./$(BIN_DIR)/$(MATCHING_CPHDR) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(OUT_DIR)/
 
 run_compare_algorithms: compare_algorithms
-	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_LDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
-	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+#	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_LDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR)/
+#	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 

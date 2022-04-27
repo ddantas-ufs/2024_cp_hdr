@@ -154,11 +154,8 @@ void nndr( std::vector<KeyPoints> kpListImg1,
     }
     
     // Calculating if ratio respect threshold
-    //float ratio = (1.0f * minVal1) / std::max(1e-6f, minVal2);
-
-    // 
     //std::cout << "     minVal1: " << minVal1 << ", minVal2: " << minVal2 << std::endl;
-    //std::cout << "        minVal2 threshold: " << MATCHING_NNDR_THRESHOLD * minVal2 << std::endl;
+    //std::cout << "     minVal2 threshold: " << MATCHING_NNDR_THRESHOLD * minVal2 << std::endl;
     if( minVal1 < MATCHING_NNDR_THRESHOLD * minVal2 )
     {
       MatchedKeyPoints kps;
@@ -176,7 +173,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         kpsDistance = distanceBetwenTwoKeyPoints( kps.kp2, kpAux );
       }
 
-      //float kpsDistance = distanceBetwenTwoKeyPoints( kps.kp1, kps.kp2 );
+      std::cout << " ----> Distance between matched KPs: " << kpsDistance << std::endl;
 
       // Verifying if the keypoints are in the defined max range from each other
       if( kpsDistance > MATCHING_RATIO_MATCH )
@@ -190,10 +187,10 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         countCorrect++;
       }
 
-//      std::cout << " --> Matched? " << kps.isCorrect << " -- Distance: " << kpsDistance << std::endl;
-//      std::cout << " --> Tried match: Xa: " << kps.kp1.x << ", Ya:" << kps.kp1.y << std::endl;
-//      std::cout << " --> Tried match: Xb: " << kps.kp2.x << ", Yb:" << kps.kp2.y << std::endl;
-//      std::cout << " --> Tried match: aux x: " << kpAux.x << ", aux y:" << kpAux.y << std::endl;
+      //std::cout << " --> Matched? " << kps.isCorrect << " -- Distance: " << kpsDistance << std::endl;
+      //std::cout << " --> Tried match: Xa: " << kps.kp1.x << ", Ya:" << kps.kp1.y << std::endl;
+      //std::cout << " --> Tried match: Xb: " << kps.kp2.x << ", Yb:" << kps.kp2.y << std::endl;
+      //std::cout << " --> Tried match: aux x: " << kpAux.x << ", aux y:" << kpAux.y << std::endl;
 
       output.push_back( kps );
     }
