@@ -700,13 +700,3 @@ void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kp
     kpList.push_back( kps );
   }
 }
-
-/*
-KeyPoints kp = aux[i];
-int x = (int) std::floor(kp.x);
-int y = (int) std::floor(kp.y);
-
-//std::cout << " ## SIFT > roi[" << x << "," << y << "], " << roi.size() << std::endl;
-uchar pixelValue = roi.at<uchar>(y, x);
-
-*/

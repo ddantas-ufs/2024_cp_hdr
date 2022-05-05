@@ -322,6 +322,7 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
  * @param scales matrix containing pointers to each image of scale space
  * @param mgauss gaussian filter convolution window size
  * @param is_hdr flag to enable hdr functions
+ * @param cv_size coefficient of variance mask size
 **/
 void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
                    bool is_hdr = false, int cv_size = CV_SIZE)
@@ -329,21 +330,6 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
-  /*
-  if (is_hdr)
-  {
-    cv::Mat img_cv, img_log;
-
-    coefVar(img, img_cv, cv_size);
-    logTransform(img_cv, img_log);
-
-    img_aux = img_log;
-  }
-  else
-  {
-    img_aux = img;
-  }
-  */
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
     cv::Mat img_cv, img_log;

@@ -57,4 +57,6 @@ void joinKeypoints( std::vector< std::vector<KeyPoints> > lKps, std::vector<KeyP
 
 void sumListOfMats( std::vector< cv::Mat > matList, cv::Mat &result );
 
+void writeTextFile( std::string absolutePath, std::string fileContent );
+
 #endif

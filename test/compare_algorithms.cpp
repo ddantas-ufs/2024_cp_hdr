@@ -98,6 +98,26 @@ int main(int argv, char** args)
     mapPixelValues( img2, img2 );
   }
 
+  cv::Mat img1_cv1, img1_cv2, img1_cv1log, img1_cv2log, img2_cv1, img2_cv2, img2_cv1log, img2_cv2log;
+
+  applyCVMask( img1, img1_cv1 );
+  logTransform( img1_cv1, img1_cv1log );
+
+  applyCVMask( img2, img2_cv1 );
+  logTransform( img2_cv1, img2_cv1log );
+
+  cv::imwrite( "out/img1_cv1.png",    img1_cv1    );
+  cv::imwrite( "out/img1_cv1log.png", img1_cv1log );
+  cv::imwrite( "out/img2_cv1.png",    img2_cv1    );
+  cv::imwrite( "out/img2_cv1log.png", img2_cv1log );
+
+  cv::imwrite( "out/img1_cv1.hdr",    img1_cv1    );
+  cv::imwrite( "out/img1_cvlog.hdr",  img1_cv1log );
+  cv::imwrite( "out/img2_cv1.hdr",    img2_cv1    );
+  cv::imwrite( "out/img2_cv1log.hdr", img2_cv1log );
+
+  return 0;
+
   // Running CP_HDR
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
   if( considerROI )

@@ -28,6 +28,7 @@ int main(int argv, char** args)
   std::string img1Path, img1ROIsPath, img1ROImPath, img1ROIhPath; // image 1 input path strings
   std::string img2Path, img2ROIsPath, img2ROImPath, img2ROIhPath; // input 2 input path strings
   std::string img1OutPath, img2OutPath, imgMatchingOutPath, outDir; // output path strings
+  std::string finalOut = "Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity\n";
 
   std:: string hdrSuf = ".hdr", pathH;
   bool isHDR = false;
@@ -201,6 +202,12 @@ int main(int argv, char** args)
 
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
+  // GENERATING CSV OUTPUT FILE
+  // Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity
+  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
+
+  writeTextFile( outDir + img1OutPath + "_"+ img2OutPath +".csv", finalOut );
+
   // Cleaning objects
   cleanKeyPointVector( kps1 );
   cleanKeyPointVector( kps2 );
@@ -220,83 +227,6 @@ int main(int argv, char** args)
   img2ROIm.release();
   img2ROIh.release();
   H.release();
-
-  /* OPENCV PART
-  // Algorithms that doesn't support HDR images
-  if(!isHDR)
-  {
-    cv::Mat ocvDesc1, ocvDesc2; // OpenCV Descriptors
-    std::vector<cv::KeyPoint> ocvKPs1, ocvKPs2;
-
-    // Reading images and setting output image name
-    readImg(img1Path, img1, img1Gray, img1OutPath);
-    readImg(img2Path, img2, img2Gray, img2OutPath);
-
-    if( considerROI )
-    {
-      std::cout << "> Running OpenCV SIFT [WITH ROI]..." << std::endl;
-
-      // Computing Keypoints using OpenCV SIFT with ROI
-      cv::Ptr<cv::SIFT> siftImage1 = cv::SIFT::create();
-      siftImage1->detect( img1Gray, ocvKPs1, img1ROI );
-      siftImage1->compute( img1Gray, ocvKPs1, ocvDesc1);
-
-      cv::Ptr<cv::SIFT> siftImage2 = cv::SIFT::create();
-      siftImage2->detect( img2Gray, ocvKPs2, img2ROI );
-      siftImage2->compute( img2Gray, ocvKPs2, ocvDesc2);
-    }
-    else
-    {
-      std::cout << "> Running OpenCV SIFT [WITHOUT ROI]..." << std::endl;
-
-      // Computing Keypoints using OpenCV SIFT without ROI
-      cv::Ptr<cv::SIFT> siftImage1 = cv::SIFT::create();
-      siftImage1->detect( img1Gray, ocvKPs1 );
-      siftImage1->compute( img1Gray, ocvKPs1, ocvDesc1);
-
-      cv::Ptr<cv::SIFT> siftImage2 = cv::SIFT::create();
-      siftImage2->detect( img2Gray, ocvKPs2 );
-      siftImage2->compute( img2Gray, ocvKPs2, ocvDesc2);      
-    }
- 
-    loadOpenCVKeyPoints( ocvKPs1, ocvDesc1, kp1 );
-    loadOpenCVKeyPoints( ocvKPs2, ocvDesc2, kp2 );
-
-    // Getting only the strongest keypoints
-    sortKeypoints( kp1 );
-    sortKeypoints( kp2 );
-    kp1 = vectorSlice( kp1, 0, MAX_KP);
-    kp2 = vectorSlice( kp2, 0, MAX_KP);
-
-    saveKeypoints( kp1, outDir+img1OutPath+"_OpenCV_SIFT_LDR.txt", kp1.size() );
-    saveKeypoints( kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.txt", kp2.size() );
-    plotKeyPoints( img1, kp1, outDir+img1OutPath+"_OpenCV_SIFT_LDR.png", kp1.size() );
-    plotKeyPoints( img2, kp2, outDir+img2OutPath+"_OpenCV_SIFT_LDR.png", kp2.size() );
-  
-    matchFPs(img1, img2, kp1, kp2, imgMatching);
-
-    // Matching and generating output image with matches
-    std::cout << "> Matching OpenCV FPs and saving resulting image..." << std::endl;
-    imgMatchingOutPath = outDir +img1OutPath + "_"+ img2OutPath +"_OpenCV_SIFT.png";
-
-    cv::imwrite(imgMatchingOutPath, imgMatching);
-
-    ocvDesc1.release();
-    ocvDesc2.release();
-    ocvKPs1.clear();
-    ocvKPs2.clear();
-
-    // Cleaning objects
-    cleanKeyPointVector( kp1 );
-    cleanKeyPointVector( kp2 );
-    img1.release();
-    img2.release();
-    img1Out.release();
-    img2Out.release();
-    img1Gray.release();
-    img2Gray.release();
-    imgMatching.release();
-  }*/
 
   return 0;
 }

@@ -173,7 +173,7 @@ void nndr( std::vector<KeyPoints> kpListImg1,
         kpsDistance = distanceBetwenTwoKeyPoints( kps.kp2, kpAux );
       }
 
-      std::cout << " ----> Distance between matched KPs: " << kpsDistance << std::endl;
+      //std::cout << " ----> Distance between matched KPs: " << kpsDistance << std::endl;
 
       // Verifying if the keypoints are in the defined max range from each other
       if( kpsDistance > MATCHING_RATIO_MATCH )

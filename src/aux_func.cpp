@@ -528,3 +528,10 @@ void sumListOfMats( std::vector< cv::Mat > matList, cv::Mat &result )
   for( int i = 0; i < matList.size(); i++ )
     cv::add( result, matList[i], result );
 }
+
+void writeTextFile( std::string absolutePath, std::string fileContent )
+{
+  std::ofstream out( absolutePath );
+  out << fileContent;
+  out.close();
+}
