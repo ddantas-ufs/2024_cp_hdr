@@ -28,7 +28,7 @@ int main(int argv, char** args)
   std::string img1Path, img1ROIsPath, img1ROImPath, img1ROIhPath; // image 1 input path strings
   std::string img2Path, img2ROIsPath, img2ROImPath, img2ROIhPath; // input 2 input path strings
   std::string img1OutPath, img2OutPath, imgMatchingOutPath, outDir; // output path strings
-  std::string finalOut = "Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity\n";
+//  std::string finalOut = "Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity\n";
 
   std:: string hdrSuf = ".hdr", pathH;
   bool isHDR = false;
@@ -172,7 +172,13 @@ int main(int argv, char** args)
   }
   
   matchFPs(img1, kps1, img2, kps2, H, matchings, imgMatching);
-//  matchFPs(img1, img2, kps1, kps2, imgMatching, matchings);
+  
+  int trueMatches = 0, falseMatches = 0;
+  for( int k = 0; k < matchings.size(); k++ )
+  {
+    if( matchings[k].isCorrect ) trueMatches++;
+    else falseMatches++;
+  }
 
   std::cout << "> ## Calculating metrics" << std::endl;
   float rr = 0.0f;
@@ -203,8 +209,8 @@ int main(int argv, char** args)
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
   // GENERATING CSV OUTPUT FILE
-  // Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity
-  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
+  std::string finalOut = "Image 1;Image 2;Correct Matches;Incorrect Matches;Total Matches;Repeatability;Uniformity\n";
+  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(trueMatches) +";" +std::to_string(falseMatches) +";" +std::to_string(matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
 
   writeTextFile( outDir + img1OutPath + "_"+ img2OutPath +".csv", finalOut );
 
