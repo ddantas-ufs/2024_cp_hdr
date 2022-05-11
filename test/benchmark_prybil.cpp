@@ -209,8 +209,8 @@ int main(int argv, char** args)
   cv::imwrite(imgMatchingOutPath, imgMatching);
 
   // GENERATING CSV OUTPUT FILE
-  std::string finalOut = "Image 1;Image 2;Correct Matches;Incorrect Matches;Total Matches;Repeatability;Uniformity\n";
-  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(trueMatches) +";" +std::to_string(falseMatches) +";" +std::to_string(matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
+  std::string finalOut = "Image 1;Image 2;Uniformity 1;Uniformity 2;Correct Matches;Incorrect Matches;% Correct Matches;Repeatability;Average Precision\n";
+  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(U1) +";" +std::to_string(U2) +";" +std::to_string(trueMatches) +";" +std::to_string(falseMatches) +";" +std::to_string(trueMatches/matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
 
   writeTextFile( outDir + img1OutPath + "_"+ img2OutPath +".csv", finalOut );
 
