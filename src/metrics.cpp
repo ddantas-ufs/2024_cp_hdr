@@ -180,10 +180,16 @@ float calculateIoU( KeyPoints kp1, KeyPoints kp2 )
 
 float calculateIoU( KeyPoints kp1, KeyPoints kp2, cv::Mat H )
 {
-  KeyPoints kpAux;
-  getHomographicCorrespondence( kp1.x, kp1.y, kpAux.x, kpAux.y, H );
-
-  return calculateIoU( kpAux, kp2 );
+  if( H.empty() )
+  {
+    return calculateIoU( kp1, kp2 );
+  }
+  else
+  {
+    KeyPoints kpAux;
+    getHomographicCorrespondence( kp1.x, kp1.y, kpAux.x, kpAux.y, H );
+    return calculateIoU( kpAux, kp2 );
+  }
 }
 
 float calculateAP( std::vector<MatchedKeyPoints> kpPairs, cv::Mat H )
@@ -191,17 +197,19 @@ float calculateAP( std::vector<MatchedKeyPoints> kpPairs, cv::Mat H )
   int totalPairs = kpPairs.size();
   float sumIoU = 0.0f, ap = 0.0f;
 
+  if( totalPairs == 0 ) return 0.0f;
+
   for(int i = 0; i < totalPairs; i++)
   {
     float ciou = calculateIoU( kpPairs[i].kp1, kpPairs[i].kp2, H );
-//    std::cout << "Parcial IoU " << i << ": " << ciou << std::endl;
+    std::cout << "Parcial IoU " << i << ": " << ciou << std::endl;
     sumIoU = sumIoU + ciou;
   }
 
   ap = float(sumIoU / totalPairs);
 
-//  std::cout << "Total sum : " << sumIoU << std::endl;
-//  std::cout << "Total pair: " << totalPairs << std::endl;
+  std::cout << "Total sum : " << sumIoU << std::endl;
+  std::cout << "Total pair: " << totalPairs << std::endl;
 
   return ap;   
 }

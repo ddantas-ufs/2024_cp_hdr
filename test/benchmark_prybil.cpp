@@ -40,17 +40,31 @@ int main(int argv, char** args)
   for( int i = 0; i < argv; i++ )
     std::cout << "  > args[" << i << "]: " << args[i] << std::endl;
 
-  img1Path     = std::string(args[1]);
-  img1ROIsPath = std::string(args[2]);
-  img1ROImPath = std::string(args[3]);
-  img1ROIhPath = std::string(args[4]);
-  img2Path     = std::string(args[5]);
-  img2ROIsPath = std::string(args[6]);
-  img2ROImPath = std::string(args[7]);
-  img2ROIhPath = std::string(args[8]);
-  pathH        = std::string(args[9]);
-  outDir       = std::string(args[10]);
-
+  if( argv == 11 )
+  { // COMPLETE
+    img1Path     = std::string(args[1]);
+    img1ROIsPath = std::string(args[2]);
+    img1ROImPath = std::string(args[3]);
+    img1ROIhPath = std::string(args[4]);
+    img2Path     = std::string(args[5]);
+    img2ROIsPath = std::string(args[6]);
+    img2ROImPath = std::string(args[7]);
+    img2ROIhPath = std::string(args[8]);
+    pathH        = std::string(args[9]);
+    outDir       = std::string(args[10]);
+  } 
+  else if( argv == 10 )
+  { // NO HOMOGRAPHY MATRIX
+    img1Path     = std::string(args[1]);
+    img1ROIsPath = std::string(args[2]);
+    img1ROImPath = std::string(args[3]);
+    img1ROIhPath = std::string(args[4]);
+    img2Path     = std::string(args[5]);
+    img2ROIsPath = std::string(args[6]);
+    img2ROImPath = std::string(args[7]);
+    img2ROIhPath = std::string(args[8]);
+    outDir       = std::string(args[9]);
+  }
   /*
   KeyPoints A, B;
   A.x = 500.0f;
@@ -97,7 +111,10 @@ int main(int argv, char** args)
   readROIFromImage( img2ROImPath, img2ROIm );
   readROIFromImage( img2ROIhPath, img2ROIh );
 
-  readHomographicMatrix( pathH, H );
+  if( !pathH.empty() )
+  {
+    readHomographicMatrix( pathH, H );
+  }
 
   img1AllROIs.push_back(img1ROIs);
   img1AllROIs.push_back(img1ROIm);
@@ -210,7 +227,7 @@ int main(int argv, char** args)
 
   // GENERATING CSV OUTPUT FILE
   std::string finalOut = "Image 1;Image 2;Uniformity 1;Uniformity 2;Correct Matches;Incorrect Matches;% Correct Matches;Repeatability;Average Precision\n";
-  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(U1) +";" +std::to_string(U2) +";" +std::to_string(trueMatches) +";" +std::to_string(falseMatches) +";" +std::to_string(trueMatches/matchings.size()) +";" +std::to_string(rr) +";" +std::to_string(AP);
+  finalOut += img1OutPath +";" +img2OutPath +";" +std::to_string(U1) +";" +std::to_string(U2) +";" +std::to_string(trueMatches) +";" +std::to_string(falseMatches) +";" +std::to_string(0) +";" +std::to_string(rr) +";" +std::to_string(AP);
 
   writeTextFile( outDir + img1OutPath + "_"+ img2OutPath +".csv", finalOut );
 
@@ -232,7 +249,7 @@ int main(int argv, char** args)
   img2ROIs.release();
   img2ROIm.release();
   img2ROIh.release();
-  H.release();
+  if( !H.empty() ) H.release();
 
   return 0;
 }
