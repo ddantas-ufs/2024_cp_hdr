@@ -251,5 +251,7 @@ int main(int argv, char** args)
   img2ROIh.release();
   if( !H.empty() ) H.release();
 
+  std::this_thread::sleep_for( std::chrono::nanoseconds(50) );
+
   return 0;
 }
