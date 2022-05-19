@@ -94,16 +94,16 @@ int main(int argv, char** args)
   // Normalizing images (mandatory to HDR images).
   if( isHDR )
   {
-    mapPixelValues( img1, img1 );
-    mapPixelValues( img2, img2 );
+    mapPixelValues( img1Gray, img1Gray );
+    mapPixelValues( img2Gray, img2Gray );
   }
 
   cv::Mat img1_cv1, img1_cv2, img1_cv1log, img1_cv2log, img2_cv1, img2_cv2, img2_cv1log, img2_cv2log;
 
-  applyCVMask( img1, img1_cv1 );
+  applyCVMask( img1Gray, img1_cv1 );
   logTransform( img1_cv1, img1_cv1log );
 
-  applyCVMask( img2, img2_cv1 );
+  applyCVMask( img2Gray, img2_cv1 );
   logTransform( img2_cv1, img2_cv1log );
 
   cv::imwrite( "out/img1_cv1.png",    img1_cv1    );
@@ -112,11 +112,11 @@ int main(int argv, char** args)
   cv::imwrite( "out/img2_cv1log.png", img2_cv1log );
 
   cv::imwrite( "out/img1_cv1.hdr",    img1_cv1    );
-  cv::imwrite( "out/img1_cvlog.hdr",  img1_cv1log );
+  cv::imwrite( "out/img1_cv1log.hdr", img1_cv1log );
   cv::imwrite( "out/img2_cv1.hdr",    img2_cv1    );
   cv::imwrite( "out/img2_cv1log.hdr", img2_cv1log );
 
-  return 0;
+  return 0; 
 
   // Running CP_HDR
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
