@@ -674,9 +674,6 @@ void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kp
 
   sumListOfMats( lRoi, sumROI );
 
-//  for( int i = 0; i < lRoi.size(); i++ )
-//    cv::add( sumROI, lRoi[i], sumROI );
-
   // Running SIFT with all ROIs
   runSift( img, sumKps, kpMax, sumROI );
 

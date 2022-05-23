@@ -339,6 +339,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     logTransform(img_cv, img_log);
 
     img_aux = img_log;
+    //img_aux = img_cv;
   }
   else
   {
@@ -398,7 +399,8 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   ** changed normalization method
   */
   //imgNormalize(img, img_norm);
-  mapPixelValues(img, img_norm);
+  //mapPixelValues(img, img_norm);
+  img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);

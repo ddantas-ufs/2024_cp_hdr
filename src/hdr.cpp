@@ -22,7 +22,8 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
     for( int j = 0; j < img.cols; j++ )
     {
       float r = img.at<float>(i, j);
-      float val =  ln10 * std::log10( r + 1.0f );
+      //float val =  ln10 * std::log10( r + 1.0f );
+      float val = ln10 * log( 1.0f + r );
       img_log10.at<float>(i, j) = val;
     }
   }
@@ -32,7 +33,6 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
 
   mapPixelValues(img_log10, img_log10);
 }
-
 
 /**
  * Implementation of the Coefficient of Variation 
@@ -117,7 +117,8 @@ void applyCVMask( cv::Mat img, cv::Mat &res )
   //aux = resp1;
 
   // normalizing image and copying data to output matrix
-  mapPixelValues( resp1, res );
+  //mapPixelValues( resp1, res );
+  resp1.copyTo( res );
 
   mapPixelValues( saida, saida );
   cv::imwrite( "out/saida_teste.png", saida );
@@ -145,4 +146,94 @@ void calculaPonto( int rowAtual, int colAtual, int row, int col, int maxRow, int
 //  printf("--> rowAtual: %d, colAtual: %d, row: %d, col: %d\n", rowAtual, colAtual, row, col );
 //  printf("----> maxRow: %d,  maxCol: %d, rowRes: %d, colRes: %d\n", maxRow, maxCol, rowRes, colRes );
 
+}
+
+
+/* ------------------------------ METODOS ORIGINAIS ------------------------------ */
+
+//função para aplicar a tranformação logaritmica na image HDR
+//Parametros: c constante de multiplicacao da formula
+void logTranformUchar( cv::Mat src, int c, cv::Mat &out ) {
+	for(int y = 0; y < src.rows; y++){
+		for(int x = 0; x < src.cols; x++){
+			float r = src.at<uchar>(y, x);
+			float val = c * log10(r + 1);
+			src.at<uchar>(y, x) = val;
+		}
+	}
+  //return src;
+  out = src;
+}
+
+//Coeficiente de Variacao
+void coefficienceOfVariationMask( cv::Mat aux, cv::Mat &out ) {
+	
+  float mediaGeral = 0; //Media geral dos coefV
+	if(aux.depth() != CV_32F)
+		aux.convertTo(aux, CV_32F);
+	
+	cv::Mat response = aux;
+	
+	cv::Mat auxResponse = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_32F);
+	
+	int n = 3;//maskSize impar
+	int N = n*n, cont = 0;//quantidade de pixels visitados
+	
+	cv::Mat response2 = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_64F);
+	//response * response 
+	for(int y = 0; y < response.rows; y++)
+		for(int x = 0; x < response.cols; x++)
+			response2.at<float>(y, x) = (response.at<float>(y, x) * response.at<float>(y, x));
+	
+	float sum1 = 0, sum2 = 0;
+	
+	for(int y = 1; y < n; y++){
+		for(int x = 0; x <= n; x++){
+			sum1 += response.at<float>(y, x);
+			sum2 += response2.at<float>(y, x);
+		}
+	}
+	
+	//"Convolution"
+	for(int i = (n/2)+1; i < response.rows - (n/2); i++){
+		int yBeg = i-(n/2), yEnd = i+(n/2);
+		for(int j = (n/2); j < response.cols - (n/2); j++){
+			//passando mascara 
+			float sumVal = 0, sumVal2 = 0, maior = 0;
+			int xBeg = j-(n/2), xEnd = j+(n/2);
+			
+			for(int y = yBeg; y <= yEnd; y++){
+				for(int x = xBeg; x <= xEnd; x++){
+					sumVal += response.at<float>(y, x);
+					sumVal2 += response2.at<float>(y, x);
+					maior = std::max(maior, response.at<float>(y, x));
+				}
+			}
+						
+			float media = sumVal/N;
+			
+			float variancia = (sumVal2/N) - (media*media);
+
+			float S = sqrt(variancia); // desvio padrao
+			float CV = media == 0? 0 : S/media; // Coef de Variacao
+			auxResponse.at<float>(i, j) = CV * 100;
+			
+			//printf("%d %d %f\n", i, j, CV);
+			//printf("%.8f %.8f %.8f %.8f %.8f %.8f\n", sumVal, sumVal2, media, variancia, S, CV);
+			
+			mediaGeral += CV;	
+		}
+	}
+
+	mediaGeral = mediaGeral/((response.cols-n)*(response.rows-n));
+	printf("Media do Coefv = %.10f\n", mediaGeral);//
+	
+	//Response recebe o valor de coef salvo em aux
+	response = auxResponse;
+	
+	cv::Mat aux2;
+	cv::normalize(response, aux2, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
+	
+	//return aux2;
+  out = aux2;
 }

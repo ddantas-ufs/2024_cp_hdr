@@ -92,11 +92,11 @@ int main(int argv, char** args)
   readHomographicMatrix( pathH, H );
 
   // Normalizing images (mandatory to HDR images).
-  if( isHDR )
-  {
-    mapPixelValues( img1Gray, img1Gray );
-    mapPixelValues( img2Gray, img2Gray );
-  }
+//  if( isHDR )
+//  {
+//    mapPixelValues( img1Gray, img1Gray );
+//    mapPixelValues( img2Gray, img2Gray );
+//  }
 
   cv::Mat img1_cv1, img1_cv2, img1_cv1log, img1_cv2log, img2_cv1, img2_cv2, img2_cv1log, img2_cv2log;
 
@@ -105,6 +105,19 @@ int main(int argv, char** args)
 
   applyCVMask( img2Gray, img2_cv1 );
   logTransform( img2_cv1, img2_cv1log );
+
+  coefficienceOfVariationMask( img1Gray, img1_cv2 );
+  //logTranformUchar( img1_cv2, 2, img1_cv2log );
+  logTransform( img1_cv2, img1_cv2log );
+
+  coefficienceOfVariationMask( img2Gray, img2_cv2 );
+  //logTranformUchar( img2_cv2, 2, img2_cv2log );
+  logTransform( img2_cv2, img2_cv2log );
+
+  mapPixelValues( img1_cv2, img1_cv2 );
+  mapPixelValues( img1_cv2log, img1_cv2log );
+  mapPixelValues( img2_cv2, img2_cv2 );
+  mapPixelValues( img2_cv2log, img2_cv2log );
 
   cv::imwrite( "out/img1_cv1.png",    img1_cv1    );
   cv::imwrite( "out/img1_cv1log.png", img1_cv1log );
@@ -115,6 +128,18 @@ int main(int argv, char** args)
   cv::imwrite( "out/img1_cv1log.hdr", img1_cv1log );
   cv::imwrite( "out/img2_cv1.hdr",    img2_cv1    );
   cv::imwrite( "out/img2_cv1log.hdr", img2_cv1log );
+
+  /************************************************/
+
+  cv::imwrite( "out/img1_cv2.png",    img1_cv2    );
+  cv::imwrite( "out/img1_cv2log.png", img1_cv2log );
+  cv::imwrite( "out/img2_cv2.png",    img2_cv2    );
+  cv::imwrite( "out/img2_cv2log.png", img2_cv2log );
+
+  cv::imwrite( "out/img1_cv2.hdr",    img1_cv2    );
+  cv::imwrite( "out/img1_cv2log.hdr", img1_cv2log );
+  cv::imwrite( "out/img2_cv2.hdr",    img2_cv2    );
+  cv::imwrite( "out/img2_cv2log.hdr", img2_cv2log );
 
   return 0; 
 

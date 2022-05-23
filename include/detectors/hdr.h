@@ -14,4 +14,10 @@ void applyCVMask( cv::Mat img, cv::Mat &res );
 
 void applyCVMask( cv::Mat &img );
 
+
+/* ------------------------------ METODOS ORIGINAIS ------------------------------ */
+
+void logTranformUchar( cv::Mat src, int c, cv::Mat &out );
+void coefficienceOfVariationMask( cv::Mat aux, cv::Mat &out );
+
 #endif
