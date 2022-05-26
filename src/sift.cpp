@@ -573,6 +573,7 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
 **/
 void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat ROI )
 {
+  std::cout << " ## SIFT > Run with ROI." << std::endl;
   cv::Mat imgGray, roi;
   std::vector<KeyPoints> aux;
 
@@ -668,7 +669,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
 **/
 void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kpMax, std::vector<cv::Mat> lRoi )
 {
-  std::cout << " ## SIFT > Run without ROI." << std::endl;
+  std::cout << " ## SIFT > Run with " << std::to_string(lRoi.size()) << " ROIs." << std::endl;
   cv::Mat sumROI;// = cv::Mat::zeros( lRoi[0].size(), lRoi[0].type() );
   std::vector<KeyPoints> sumKps;
 
@@ -677,6 +678,7 @@ void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kp
   // Running SIFT with all ROIs
   runSift( img, sumKps, kpMax, sumROI );
 
+  std::cout << " ## SIFT > Computing Keypoints inside ROI." << std::endl;
   // Separing Keypoints found in each ROI
   for( int i = 0; i < lRoi.size(); i++ )
   {

@@ -65,36 +65,6 @@ int main(int argv, char** args)
     img2ROIhPath = std::string(args[8]);
     outDir       = std::string(args[9]);
   }
-  /*
-  KeyPoints A, B;
-  A.x = 500.0f;
-  A.y = 500.0f;
-  B.y = 500.0f;
-
-  B.x = 530.0f;
-  std::cout << " IoU A(500,500), B(530,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 525.0f;
-  std::cout << " IoU A(500,500), B(525,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 520.0f;
-  std::cout << " IoU A(500,500), B(520,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 515.0f;
-  std::cout << " IoU A(500,500), B(515,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 510.0f;
-  std::cout << " IoU A(500,500), B(510,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 505.0f;
-  std::cout << " IoU A(500,500), B(505,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 504.0f;
-  std::cout << " IoU A(500,500), B(504,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 503.0f;
-  std::cout << " IoU A(500,500), B(503,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 502.0f;
-  std::cout << " IoU A(500,500), B(502,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 501.0f;
-  std::cout << " IoU A(500,500), B(501,500): " << calculateIoU(A, B) << std::endl;
-  B.x = 500.0f;
-  std::cout << " IoU A(500,500), B(500,500): " << calculateIoU(A, B) << std::endl;
-  return 0;
-  */
 
   // Evaluating if image is LDR or HDR
   if( 0 == img1Path.compare(img1Path.size()-hdrSuf.size(), hdrSuf.size(), hdrSuf) )

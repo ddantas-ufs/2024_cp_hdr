@@ -202,7 +202,7 @@ float calculateAP( std::vector<MatchedKeyPoints> kpPairs, cv::Mat H )
   for(int i = 0; i < totalPairs; i++)
   {
     float ciou = calculateIoU( kpPairs[i].kp1, kpPairs[i].kp2, H );
-    std::cout << "Parcial IoU " << i << ": " << ciou << std::endl;
+    //std::cout << "Parcial IoU " << i << ": " << ciou << std::endl;
     sumIoU = sumIoU + ciou;
   }
 

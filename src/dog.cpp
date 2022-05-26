@@ -175,7 +175,7 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
-    for (int s = 1; s < NUM_SCALES - 1; s++)
+    for (int s = 1; s < NUM_SCALES - 2; s++)
     {
       cv::Mat middle = dog[o][s];
       cv::Mat down = dog[o][s - 1];
@@ -332,7 +332,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
 
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
-    cv::Mat img_cv, img_log;
+    cv::Mat img_cv = cv::Mat{}, img_log = cv::Mat{};
 
     applyCVMask( img, img_cv );
     //coefVar(img, img_cv, cv_size);
@@ -399,8 +399,8 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   ** changed normalization method
   */
   //imgNormalize(img, img_norm);
-  //mapPixelValues(img, img_norm);
-  img.copyTo( img_norm );
+  mapPixelValues(img, img_norm);
+  //img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);
