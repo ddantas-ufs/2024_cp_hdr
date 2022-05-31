@@ -1,6 +1,6 @@
 #include "../include/detectors/hdr.h"
 #include "../include/detectors/aux_func.h"
-
+/*
 void logTransform(cv::Mat img, cv::Mat &img_log10)
 {
   cv::Mat img_aux, img_ln;
@@ -33,6 +33,61 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
 
   mapPixelValues(img_log10, img_log10);
 }
+/
+void logTransform(cv::Mat img, cv::Mat &img_log10)
+{
+  cv::Mat img_aux, img_ln;
+  float ln10 = 2.0f;//2.302585f;
+  int rmax = 255;
+
+  double minVal; 
+  double maxVal; 
+  cv::Point minLoc; 
+  cv::Point maxLoc;
+
+  img_log10 = cv::Mat::zeros( cv::Size( img.cols, img.rows ), CV_32F );
+  img_aux = cv::Mat::zeros( cv::Size( img.cols, img.rows ), CV_32F );
+  img_ln = cv::Mat::zeros( cv::Size( img.cols, img.rows ), CV_32F );
+
+  cv::minMaxLoc( img, &minVal, &maxVal, &minLoc, &maxLoc );
+  printf("Original image: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+
+  img_aux = (img * rmax) + 1;
+  for( int i = 0; i < img.rows; i++ )
+  {
+    for( int j = 0; j < img.cols; j++ )
+    {
+      float r = img_aux.at<float>(i, j);
+      float val = ln10 * std::log( 1.0f + r );
+      img_ln.at<float>(i, j) = val;
+    }
+  }
+
+//  cv::log(img_aux, img_ln);
+  img_log10 = img_ln / ln10;
+  img_log10 = img_log10 / std::log10(rmax + 1);
+
+  cv::minMaxLoc( img_log10, &minVal, &maxVal, &minLoc, &maxLoc );
+  printf("Log10 image: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+
+  mapPixelValues(img_log10, img_log10);
+}
+*/
+
+void logTransform( cv::Mat img, cv::Mat &out )
+{
+	out = cv::Mat::zeros(cv::Size(img.cols, img.rows), CV_8UC1);
+
+	for(int y = 0; y < img.rows; y++)
+	{
+		for(int x = 0; x < img.cols; x++)
+		{
+			float r = img.at<uchar>(y, x);
+			float val = 2 * log10(r + 1);
+			out.at<uchar>(y, x) = uchar(val);
+		}
+	}
+}
 
 /**
  * Implementation of the Coefficient of Variation 
@@ -51,7 +106,7 @@ void applyCVMask( cv::Mat img, cv::Mat &res )
   }
 
   float mediaGeral = 0.0f;
-  int n = CV_SIZE; // maskSize is odd, cp_hdr defaults to 5 
+  int n = 5; // maskSize is odd, cp_hdr defaults to 5 
   int N = n*n; // total amount of pixels being analised
 
   cv::Mat aux = img;
@@ -89,7 +144,8 @@ void applyCVMask( cv::Mat img, cv::Mat &res )
       {
         for(int x = xBeg; x <= xEnd; x++)
         {
-          float v = std::pow( (aux.at<float>(y, x) - mean), 2 );
+          float v = 0.0f;
+          v = std::pow( (aux.at<float>(y, x) - mean), 2 );
           variation += v;
         }
       }
@@ -120,8 +176,7 @@ void applyCVMask( cv::Mat img, cv::Mat &res )
   //mapPixelValues( resp1, res );
   resp1.copyTo( res );
 
-  mapPixelValues( saida, saida );
-  cv::imwrite( "out/saida_teste.png", saida );
+  //cv::normalize( saida, saida, 0.0f, 255.0f, cv::NORM_MINMAX, CV_32F, cv::Mat() );
 }
 
 void applyCVMask( cv::Mat &img )
@@ -154,15 +209,16 @@ void calculaPonto( int rowAtual, int colAtual, int row, int col, int maxRow, int
 //função para aplicar a tranformação logaritmica na image HDR
 //Parametros: c constante de multiplicacao da formula
 void logTranformUchar( cv::Mat src, int c, cv::Mat &out ) {
+  cv::Mat ret = cv::Mat::zeros(cv::Size(src.cols, src.rows), CV_32F);
 	for(int y = 0; y < src.rows; y++){
 		for(int x = 0; x < src.cols; x++){
-			float r = src.at<uchar>(y, x);
+			float r = src.at<float>(y, x);
 			float val = c * log10(r + 1);
-			src.at<uchar>(y, x) = val;
+			ret.at<float>(y, x) = val;
 		}
 	}
   //return src;
-  out = src;
+  ret.copyTo( out );
 }
 
 //Coeficiente de Variacao

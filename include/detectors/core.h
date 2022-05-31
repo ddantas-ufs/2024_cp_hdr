@@ -30,6 +30,7 @@
 #define MAX_KP 1000 // if zero, it is not used
 #define ALL_KP -1  // when all keypoints should be used
 #define CV_SIZE 5 // mask size to compute coefficient of variation
+#define LOG_TRANSFORM_CONSTANT 2.302585f
 #define LDR_MAX_RANGE 255.0
 #define HDR_MAX_RANGE 256.0
 

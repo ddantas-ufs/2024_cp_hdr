@@ -22,6 +22,11 @@ int main(int argv, char** args)
   bool isHDR = false;
   bool considerROI = false;
 
+	double minVal; 
+	double maxVal; 
+	cv::Point minLoc; 
+	cv::Point maxLoc;
+
   // Showing inputs
   std::cout << "----------------------------------" << std::endl;
   std::cout << "> Received " << argv << " arguments:" << std::endl;
@@ -76,6 +81,8 @@ int main(int argv, char** args)
   readImg(img1Path, img1, img1Gray, img1OutPath);
   readImg(img2Path, img2, img2Gray, img2OutPath);
 
+	cv::minMaxLoc( img1Gray, &minVal, &maxVal, &minLoc, &maxLoc );
+
   if( considerROI )
   {
     // Reading ROI as image mask
@@ -100,24 +107,50 @@ int main(int argv, char** args)
 
   cv::Mat img1_cv1, img1_cv2, img1_cv1log, img1_cv2log, img2_cv1, img2_cv2, img2_cv1log, img2_cv2log;
 
+  //cv::GaussianBlur(img1Gray, img1Gray, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
   applyCVMask( img1Gray, img1_cv1 );
   logTransform( img1_cv1, img1_cv1log );
 
   applyCVMask( img2Gray, img2_cv1 );
   logTransform( img2_cv1, img2_cv1log );
 
-  coefficienceOfVariationMask( img1Gray, img1_cv2 );
+	cv::minMaxLoc( img1Gray, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale image 1: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+	cv::minMaxLoc( img1_cv1, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale CV image 1: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+	cv::minMaxLoc( img1_cv1log, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale Log image 1: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+
+	cv::minMaxLoc( img2Gray, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale image 2: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+	cv::minMaxLoc( img2_cv1, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale CV image 2: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+	cv::minMaxLoc( img2_cv1log, &minVal, &maxVal, &minLoc, &maxLoc );
+	printf("GrayScale Log image 2: Max value = %.10f, Min value = %.10f\n", maxVal, minVal);
+
+  //cv::GaussianBlur(img1Gray, img1Gray, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
+  //coefficienceOfVariationMask( img1Gray, img1_cv2 );
   //logTranformUchar( img1_cv2, 2, img1_cv2log );
-  logTransform( img1_cv2, img1_cv2log );
+  //logTransform( img1_cv2, img1_cv2log );
 
-  coefficienceOfVariationMask( img2Gray, img2_cv2 );
+  //coefficienceOfVariationMask( img2Gray, img2_cv2 );
   //logTranformUchar( img2_cv2, 2, img2_cv2log );
-  logTransform( img2_cv2, img2_cv2log );
+  //logTransform( img2_cv2, img2_cv2log );
 
-  mapPixelValues( img1_cv2, img1_cv2 );
-  mapPixelValues( img1_cv2log, img1_cv2log );
-  mapPixelValues( img2_cv2, img2_cv2 );
-  mapPixelValues( img2_cv2log, img2_cv2log );
+  //mapPixelValues( img1_cv1, img1_cv1 );
+  //mapPixelValues( img1_cv1log, img1_cv1log );
+  //mapPixelValues( img2_cv1, img2_cv1 );
+  //mapPixelValues( img2_cv1log, img2_cv1log );
+
+  cv::normalize( img1_cv1, img1_cv1, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat() );
+  cv::normalize( img2_cv1, img2_cv1, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat() );
+  cv::normalize( img1_cv1log, img1_cv1log, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat() );
+  cv::normalize( img2_cv1log, img2_cv1log, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat() );
+
+  //mapPixelValues( img1_cv2, img1_cv2 );
+  //mapPixelValues( img1_cv2log, img1_cv2log );
+  //mapPixelValues( img2_cv2, img2_cv2 );
+  //mapPixelValues( img2_cv2log, img2_cv2log );
 
   cv::imwrite( "out/img1_cv1.png",    img1_cv1    );
   cv::imwrite( "out/img1_cv1log.png", img1_cv1log );
@@ -130,7 +163,7 @@ int main(int argv, char** args)
   cv::imwrite( "out/img2_cv1log.hdr", img2_cv1log );
 
   /************************************************/
-
+  /*
   cv::imwrite( "out/img1_cv2.png",    img1_cv2    );
   cv::imwrite( "out/img1_cv2log.png", img1_cv2log );
   cv::imwrite( "out/img2_cv2.png",    img2_cv2    );
@@ -140,6 +173,19 @@ int main(int argv, char** args)
   cv::imwrite( "out/img1_cv2log.hdr", img1_cv2log );
   cv::imwrite( "out/img2_cv2.hdr",    img2_cv2    );
   cv::imwrite( "out/img2_cv2log.hdr", img2_cv2log );
+  */
+
+  //inputGray = coefficienceOfVariationMask(img1Gray);
+  //cv::Mat outCv, outLog;
+  //coefficienceOfVariationMask(img1Gray, outCv);
+
+  //logTranformUchar(outCv, 2, outLog);//Tranformaçao logarítimica com constante c = 
+
+  //cv::Mat logSalvar;
+  //cv::normalize(outLog, logSalvar, 0, 255, cv::NORM_MINMAX, CV_8U, cv::Mat());
+
+  //cv::imwrite("in_log.jpg", logSalvar);
+  //cv::imwrite("in.jpg", outCv);
 
   return 0; 
 

@@ -175,7 +175,7 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
-    for (int s = 1; s < NUM_SCALES - 2; s++)
+    for (int s = 1; s < NUM_SCALES - 1; s++)
     {
       cv::Mat middle = dog[o][s];
       cv::Mat down = dog[o][s - 1];
@@ -330,15 +330,27 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
+  //cv::GaussianBlur(img, img, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
+
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
     cv::Mat img_cv = cv::Mat{}, img_log = cv::Mat{};
 
-    applyCVMask( img, img_cv );
+//    applyCVMask( img, img_cv );
     //coefVar(img, img_cv, cv_size);
-    logTransform(img_cv, img_log);
+    //cv::Mat aux;
+    //cv::normalize(img_cv, aux, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
+    //logTransform(aux, img_log);
 
-    img_aux = img_log;
+    coefficienceOfVariationMask( img, img_cv );
+    logTranformUchar( img_cv, 2, img_log );
+
+    mapPixelValues( img_cv, img_cv );
+    cv::imwrite("out/img_cv.png", img_cv);
+    mapPixelValues( img_log, img_aux );
+    cv::imwrite("out/img_log.png", img_aux);
+
+    //img_aux = img_log;
     //img_aux = img_cv;
   }
   else
@@ -399,8 +411,8 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   ** changed normalization method
   */
   //imgNormalize(img, img_norm);
-  mapPixelValues(img, img_norm);
-  //img.copyTo( img_norm );
+  //mapPixelValues(img, img_norm);
+  img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, mgauss, is_hdr);

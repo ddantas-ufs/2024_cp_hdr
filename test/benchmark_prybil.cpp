@@ -121,11 +121,11 @@ int main(int argv, char** args)
 //  return 0;/*
 
   // Normalizing images (mandatory to HDR images).
-  if( isHDR )
-  {
-    mapPixelValues( img1, img1 );
-    mapPixelValues( img2, img2 );
-  }
+//  if( isHDR )
+//  {
+//    mapPixelValues( img1, img1 );
+//    mapPixelValues( img2, img2 );
+//  }
 
   // Running CP_HDR
   std::cout << "> Running CP_HDR SIFT..." << std::endl;
