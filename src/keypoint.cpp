@@ -131,6 +131,8 @@ void normalizeDescriptor( cv::Mat hist, cv::Mat &descriptor  )
 void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path, int max_kp)
 {
   int num_kp = 0;
+  cv::Mat out;
+  img.copyTo( out );
 
   transformCoord(kp);
 
@@ -145,9 +147,9 @@ void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path,
 
   for (int i = 0; i < num_kp; i++)
   {
-    cv::circle(img, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
   }
-  cv::imwrite(out_path + ".kp.png", img);
+  cv::imwrite(out_path + ".kp.png", out);
 }
 
 bool compareResponse(KeyPoints a, KeyPoints b)

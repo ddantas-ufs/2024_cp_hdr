@@ -584,7 +584,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat RO
   makeGrayscaleCopy( img, imgGray );
 
   std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
-  dogKp(imgGray, aux);
+  dogKp(imgGray, aux, true, GAUSS_SIZE, MAXSUP_SIZE, CONTRAST_TH, CURV_TH, CV_SIZE );
   std::cout << " ## SIFT > " << aux.size() << " Keypoints detected." << std::endl;
 
   if( !roi.empty() )

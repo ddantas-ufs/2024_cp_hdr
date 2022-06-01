@@ -169,9 +169,10 @@ KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
  * @param maxsup_size maximum number of checks when locating maxima/minima in DoG images
 **/
 void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
-               int maxsup_size, float curv_th, bool refine_px)
+               float maxsup_size, float curv_th, bool refine_px)
 {
-  int maxsup_rad = maxsup_size/2;
+  //int maxsup_rad = maxsup_size/2;
+  int maxsup_rad = DOG_BORDER;
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
@@ -252,6 +253,7 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
       }
     }
   }
+  std::cout << " ## SIFT > > > Total amount of Keypoints Founded: " << kp.size() << "." << std::endl;
 }
 
 /**
@@ -274,6 +276,7 @@ void contrastTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints>
   }
   kp.clear();
   kp = kp_aux;
+  std::cout << " ## SIFT > > > " << kp.size() << " Keypoints left..." << std::endl;
 }
 
 /**
@@ -286,7 +289,8 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
             float curv_th)
 {
   std::vector<KeyPoints> kp_aux;
-  curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
+  float th = curv_th;//(curv_th + 1) * (curv_th + 1) / curv_th;
+  std::cout << " ## SIFT > > > > > > > > > > > > > > > > > > > > > th: " << th << std::endl;
 
   for (int i = 0; i < kp.size(); i++)
   {
@@ -308,12 +312,127 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
 
     curv_ratio = trH * trH / detH;
 
-    if ((detH > 0) && (curv_ratio < curv_th))
+    if( detH < 1e-4 ) detH = -1;
+    std::cout << " ## SIFT > > > detH: " << detH << ", curv_ratio: " << curv_ratio << std::endl;
+
+    if ((detH > 0) && (curv_ratio < th))
          kp_aux.push_back(kp[i]);
   }
   kp.clear();
   kp = kp_aux;
+  std::cout << " ## SIFT > > > " << kp.size() << " Keypoints left..." << std::endl;
 }
+
+void edgeThreshold(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
+            float curv_th)
+{
+  std::vector<KeyPoints> auxKp;
+  cv::Mat Ix[NUM_OCTAVES][NUM_SCALES - 1], Iy[NUM_OCTAVES][NUM_SCALES - 1],
+          Ix2[NUM_OCTAVES][NUM_SCALES - 1], Iy2[NUM_OCTAVES][NUM_SCALES - 1],
+          Ixy[NUM_OCTAVES][NUM_SCALES - 1], response[NUM_OCTAVES][NUM_SCALES - 1];
+
+  // INITIALIZING VARIABLES
+  std::cout << " ## SIFT > > > Computing variables..." << std::endl;
+  for(int i = 0; i < NUM_OCTAVES; i++)
+  {
+    for(int j = 0; j < NUM_SCALES - 1; j++)
+    {
+      cv::Sobel(dog[i][j], Ix[i][j], CV_32F, 1, 0, 7, 1, 0, cv::BORDER_DEFAULT);
+      cv::Sobel(dog[i][j], Iy[i][j], CV_32F, 0, 1, 7, 1, 0, cv::BORDER_DEFAULT);
+      
+      Ix2[i][j] = Ix[i][j].mul(Ix[i][j]); // Ix^2
+      Iy2[i][j] = Iy[i][j].mul(Iy[i][j]); // Iy^2
+      Ixy[i][j] = Ix[i][j].mul(Iy[i][j]); // Ix * Iy
+
+      response[i][j] = cv::Mat::zeros(cv::Size(dog[i][j].cols, dog[i][j].rows), CV_32F);
+      for(int row = 0; row < dog[i][j].rows; row++)
+      {
+        for(int col = 0; col < dog[i][j].cols; col++)
+        {
+          float fx2 = Ix2[i][j].at<float>(row, col);
+          float fy2 = Iy2[i][j].at<float>(row, col);
+          float fxy = Ixy[i][j].at<float>(row, col);
+          float det = (fx2 * fy2) - (fxy * fxy);
+          float trace = (fx2 + fy2);
+          response[i][j].at<float>(row, col) = det - 0.04*(trace*trace);
+          //if(response.at<float>(row, col) < 0) response.at<float>(row, col) = 0;
+          //printf("%f", response.at<float>(row, col));
+        }
+      }
+      
+      for(int row = 0; row < dog[i][j].rows; row++)
+      {
+        for(int col = 0; col < dog[i][j].cols; col++)
+        {
+          float val = response[i][j].at<float>(row, col);
+          if(val < -1e4)
+          {
+            //printf( "%f :).\n", val );
+            response[i][j].at<float>(row, col) = 0;
+          }
+        }
+      }
+    }
+  }
+  std::cout << " ## SIFT > > > Variables computed." << std::endl;
+
+  for(int i = 0; i < kp.size(); i++)
+  {
+    int oct = kp[i].octave, scl = kp[i].scale;
+    //Computando sobel operator (derivada da gaussiana) no eixo x e y
+    /*
+    cv::Mat dogCopy = dog[kp[i].octave][kp[i].scale];
+
+    cv::Sobel(dogCopy, Ix, CV_32F, 1, 0, 7, 1, 0, cv::BORDER_DEFAULT);
+    cv::Sobel(dogCopy, Iy, CV_32F, 0, 1, 7, 1, 0, cv::BORDER_DEFAULT);
+    
+    Ix2 = Ix.mul(Ix); // Ix^2
+    Iy2 = Iy.mul(Iy); // Iy^2
+    Ixy = Ix.mul(Iy); // Ix * Iy
+    /    
+    cv::Mat response = cv::Mat::zeros(cv::Size(dog[oct][scl].cols, dog[oct][scl].rows), CV_32F);
+    for(int row = 0; row < dog[oct][scl].rows; row++)
+    {
+      for(int col = 0; col < dog[oct][scl].cols; col++)
+      {
+        float fx2 = Ix2[oct][scl].at<float>(row, col);
+        float fy2 = Iy2[oct][scl].at<float>(row, col);
+        float fxy = Ixy[oct][scl].at<float>(row, col);
+        float det = (fx2 * fy2) - (fxy * fxy);
+        float trace = (fx2 + fy2);
+        response.at<float>(row, col) = det - 0.04*(trace*trace);
+        //if(response.at<float>(row, col) < 0) response.at<float>(row, col) = 0;
+        //printf("%f", response.at<float>(row, col));
+      }
+    }
+    
+    for(int row = 0; row < dog[oct][scl].rows; row++)
+    {
+      for(int col = 0; col < dog[oct][scl].cols; col++)
+      {
+        float val = response.at<float>(row, col);
+        if(val < -1e4)
+        {
+          //printf( "%f :).\n", val );
+          response.at<float>(row, col) = 0;
+        }
+      }	
+    }
+    */
+    //std::vector<KeyPoints> auxKp;
+    //for(int j = 0; j < (int) kp.size(); j++)
+    //{
+      int y = kp[i].y, x = kp[i].x;
+      if(response[oct][scl].at<float>(y, x) != 0)
+      {
+        auxKp.push_back( kp[i] );
+      }
+    //}
+  }
+  kp = auxKp;
+  std::cout << "edgeThr end\n";
+}
+
 
 /**
  * Initializes the scale scpace to calculate difference of gaussian (DoG) images.
@@ -325,29 +444,30 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
  * @param cv_size coefficient of variance mask size
 **/
 void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
-                   bool is_hdr = false, int cv_size = CV_SIZE)
+                   int cv_size = CV_SIZE)
 {
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
-  //cv::GaussianBlur(img, img, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
+  cv::GaussianBlur(img, img, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
 
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
     cv::Mat img_cv = cv::Mat{}, img_log = cv::Mat{};
 
-//    applyCVMask( img, img_cv );
+    applyCVMask( img, img_cv );
     //coefVar(img, img_cv, cv_size);
     //cv::Mat aux;
     //cv::normalize(img_cv, aux, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
-    //logTransform(aux, img_log);
+    logTransform(img_cv, img_log);
 
-    coefficienceOfVariationMask( img, img_cv );
-    logTranformUchar( img_cv, 2, img_log );
+    //coefficienceOfVariationMask( img, img_cv );
+    //logTranformUchar( img_cv, 2, img_log );
 
     mapPixelValues( img_cv, img_cv );
     cv::imwrite("out/img_cv.png", img_cv);
-    mapPixelValues( img_log, img_aux );
+    //mapPixelValues( img_log, img_aux );
+    img_log.copyTo( img_aux );
     cv::imwrite("out/img_log.png", img_aux);
 
     //img_aux = img_log;
@@ -399,8 +519,8 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
  * @param curv_th edge threshold value to threshold process
  * @param cv_size mask size to compute coefficient of variation
 **/
-void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
-           int mgauss, int maxsup_size, float contrast_th, float curv_th, int cv_size)
+void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
+           int maxsup_size, float contrast_th, float curv_th, int cv_size )
 {
   cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
@@ -415,17 +535,22 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, bool refine_px,
   img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
-  dogInitScales(img_norm, scales, mgauss, is_hdr);
+  dogInitScales(img_norm, scales, mgauss);
   
   std::cout << " ## SIFT > > Calculating Difference of Gaussians..." << std::endl;
   dogCalc(scales, dog);
   
   std::cout << " ## SIFT > > Computing Maxima Suppression and subpixel keypoint coordinates..." << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
+  plotKeyPoints( img, kp, "out/img_kps_total.png", kp.size() );
   
   std::cout << " ## SIFT > > Contrast Threshold..." << std::endl;
   contrastTh(dog, kp, contrast_th);
+  plotKeyPoints( img, kp, "out/img_kps_contrast_th.png", kp.size() );
   
   std::cout << " ## SIFT > > Edge Threshold..." << std::endl;
-  edgeTh(dog, kp, curv_th);
+  //edgeTh(dog, kp, curv_th);
+  edgeThreshold(dog, kp, curv_th);
+  
+  plotKeyPoints( img, kp, "out/img_kps_edge_th.png", kp.size() );
 }

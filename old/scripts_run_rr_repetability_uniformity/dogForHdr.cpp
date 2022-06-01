@@ -232,10 +232,12 @@ void initOctaves(){
 	GaussianBlur(inputGray, inputGray, Size(5, 5), 0, 0, BORDER_DEFAULT);
 	inputGray = coefficienceOfVariationMask(inputGray);	
 	
-	//imwrite("in.jpg", inputGray);
-	
+	imwrite("in.jpg", inputGray);
 	inputGray = logTranformUchar(inputGray, 2);//Tranformaçao logarítimica com constante c = 
 	
+	Mat logSalvar;
+	normalize(inputGray, logSalvar, 0, 255, NORM_MINMAX, CV_8UC1, Mat());
+	imwrite("in_log.jpg", logSalvar);
 	
 	Mat auxImg;
 	inputGray.convertTo(auxImg, CV_32FC1);

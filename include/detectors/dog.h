@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "aux_func.h"
+#include "keypoint.h"
 
 void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px = true,
            int mgauss = GAUSS_SIZE, int maxsup_size = MAXSUP_SIZE,

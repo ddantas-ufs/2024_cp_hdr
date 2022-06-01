@@ -76,15 +76,15 @@ void logTransform(cv::Mat img, cv::Mat &img_log10)
 
 void logTransform( cv::Mat img, cv::Mat &out )
 {
-	out = cv::Mat::zeros(cv::Size(img.cols, img.rows), CV_8UC1);
+	out = cv::Mat::zeros(cv::Size(img.cols, img.rows), CV_32F);
 
 	for(int y = 0; y < img.rows; y++)
 	{
 		for(int x = 0; x < img.cols; x++)
 		{
-			float r = img.at<uchar>(y, x);
-			float val = 2 * log10(r + 1);
-			out.at<uchar>(y, x) = uchar(val);
+			float r = img.at<float>(y, x);
+			float val = LOG_TRANSFORM_CONSTANT * log10(r + 1);
+			out.at<float>(y, x) = val;
 		}
 	}
 }
@@ -106,7 +106,7 @@ void applyCVMask( cv::Mat img, cv::Mat &res )
   }
 
   float mediaGeral = 0.0f;
-  int n = 5; // maskSize is odd, cp_hdr defaults to 5 
+  int n = 3; // maskSize is odd, cp_hdr defaults to 3
   int N = n*n; // total amount of pixels being analised
 
   cv::Mat aux = img;
@@ -232,7 +232,7 @@ void coefficienceOfVariationMask( cv::Mat aux, cv::Mat &out ) {
 	
 	cv::Mat auxResponse = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_32F);
 	
-	int n = 3;//maskSize impar
+	int n = 3; //maskSize impar
 	int N = n*n, cont = 0;//quantidade de pixels visitados
 	
 	cv::Mat response2 = cv::Mat::zeros(cv::Size(response.cols, response.rows), CV_64F);
