@@ -18,8 +18,8 @@
 #define NUM_SCALES 5 // number of scales
 #define MAX_INTERP_STEPS 5 // interpolation max steps before failure (OpenSIFT, OpenCV)
 #define DOG_BORDER 5 // interpolation border to ignore keypoints
-#define CONTRAST_TH 0.03 // prybil set to 8
-#define CURV_TH 0.0003f //10.0f // curvature threshold
+#define CONTRAST_TH 0.17f // prybil set to 8
+#define CURV_TH 0.02f //10.0f // curvature threshold
 #define GAUSS_SIZE 9 // mask size of gauss bluring
 #define SIGMA_X 1.0 // fix value (ex. 1.0) to keep a standard
 #define SIGMA_Y 1.0 // fix value (ex. 1.0) to keep a standard
@@ -27,7 +27,7 @@
 #define SOBEL_SIZE 5 // mask size of sobel operator
 #define K 0.04 // harris constant
 #define MIN_QUALITY 0.01 // quality percentual for the kp response
-#define MAX_KP 2000 // if zero, it is not used
+#define MAX_KP 1000 // if zero, it is not used
 #define ALL_KP -1  // when all keypoints should be used
 #define CV_SIZE 3 // mask size to compute coefficient of variation
 #define LOG_TRANSFORM_CONSTANT 2.0f//2.302585f

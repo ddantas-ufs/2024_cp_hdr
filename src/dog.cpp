@@ -354,83 +354,43 @@ void edgeThreshold(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoin
           float fxy = Ixy[i][j].at<float>(row, col);
           float det = (fx2 * fy2) - (fxy * fxy);
           float trace = (fx2 + fy2);
-          response[i][j].at<float>(row, col) = det - 0.04*(trace*trace);
+          response[i][j].at<float>(row, col) = det - curv_th * (trace*trace);
           //if(response.at<float>(row, col) < 0) response.at<float>(row, col) = 0;
           //printf("%f", response.at<float>(row, col));
         }
       }
       
+      int count = 0;
       for(int row = 0; row < dog[i][j].rows; row++)
       {
         for(int col = 0; col < dog[i][j].cols; col++)
         {
           float val = response[i][j].at<float>(row, col);
-          if(val < -1e4)
+          if(val < -1e4f)
           {
-            //printf( "%f :).\n", val );
-            response[i][j].at<float>(row, col) = 0;
+            response[i][j].at<float>(row, col) = 0.0f;
+            count++;
           }
         }
       }
+
+      std::cout << " ## SIFT > > > ########## dog[" << i << "][" << j << "], values to zero: " << count << ", total: " << dog[i][j].cols*dog[i][j].rows << std::endl;
     }
   }
   std::cout << " ## SIFT > > > Variables computed." << std::endl;
-
+  
+  std::cout << " ## SIFT > > > Thresholding Keypoints..." << std::endl;
   for(int i = 0; i < kp.size(); i++)
   {
     int oct = kp[i].octave, scl = kp[i].scale;
-    //Computando sobel operator (derivada da gaussiana) no eixo x e y
-    /*
-    cv::Mat dogCopy = dog[kp[i].octave][kp[i].scale];
-
-    cv::Sobel(dogCopy, Ix, CV_32F, 1, 0, 7, 1, 0, cv::BORDER_DEFAULT);
-    cv::Sobel(dogCopy, Iy, CV_32F, 0, 1, 7, 1, 0, cv::BORDER_DEFAULT);
-    
-    Ix2 = Ix.mul(Ix); // Ix^2
-    Iy2 = Iy.mul(Iy); // Iy^2
-    Ixy = Ix.mul(Iy); // Ix * Iy
-    /    
-    cv::Mat response = cv::Mat::zeros(cv::Size(dog[oct][scl].cols, dog[oct][scl].rows), CV_32F);
-    for(int row = 0; row < dog[oct][scl].rows; row++)
-    {
-      for(int col = 0; col < dog[oct][scl].cols; col++)
-      {
-        float fx2 = Ix2[oct][scl].at<float>(row, col);
-        float fy2 = Iy2[oct][scl].at<float>(row, col);
-        float fxy = Ixy[oct][scl].at<float>(row, col);
-        float det = (fx2 * fy2) - (fxy * fxy);
-        float trace = (fx2 + fy2);
-        response.at<float>(row, col) = det - 0.04*(trace*trace);
-        //if(response.at<float>(row, col) < 0) response.at<float>(row, col) = 0;
-        //printf("%f", response.at<float>(row, col));
-      }
-    }
-    
-    for(int row = 0; row < dog[oct][scl].rows; row++)
-    {
-      for(int col = 0; col < dog[oct][scl].cols; col++)
-      {
-        float val = response.at<float>(row, col);
-        if(val < -1e4)
-        {
-          //printf( "%f :).\n", val );
-          response.at<float>(row, col) = 0;
-        }
-      }	
-    }
-    */
-    //std::vector<KeyPoints> auxKp;
-    //for(int j = 0; j < (int) kp.size(); j++)
-    //{
       int y = kp[i].y, x = kp[i].x;
-      if(response[oct][scl].at<float>(y, x) != 0)
+      if(response[oct][scl].at<float>(y, x) != 0.0f)
       {
         auxKp.push_back( kp[i] );
       }
-    //}
   }
   kp = auxKp;
-  std::cout << "edgeThr end\n";
+  std::cout << " ## SIFT > > > Edge Threshold end." << std::endl;
 }
 
 
