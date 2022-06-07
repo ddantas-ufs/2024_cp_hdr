@@ -171,8 +171,7 @@ KeyPoints interpExtremum(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], int o, int s,
 void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
                float maxsup_size, float curv_th, bool refine_px)
 {
-  //int maxsup_rad = maxsup_size/2;
-  int maxsup_rad = DOG_BORDER;
+  int maxsup_rad = maxsup_size/2;
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {

@@ -23,7 +23,7 @@
 #define GAUSS_SIZE 9 // mask size of gauss bluring
 #define SIGMA_X 1.0 // fix value (ex. 1.0) to keep a standard
 #define SIGMA_Y 1.0 // fix value (ex. 1.0) to keep a standard
-#define MAXSUP_SIZE 3 // can be 3 (based on Lowe's paper)
+#define MAXSUP_SIZE 5 // can be 3 (based on Lowe's paper)
 #define SOBEL_SIZE 5 // mask size of sobel operator
 #define K 0.04 // harris constant
 #define MIN_QUALITY 0.01 // quality percentual for the kp response
@@ -38,7 +38,7 @@
 #define USE_CV_FILTER_FALSE 0
 #define USE_CV_FILTER_TRUE 1
 
-#define USE_CV_FILTER USE_CV_FILTER_TRUE
+#define USE_CV_FILTER USE_CV_FILTER_FALSE
 
 // MAPPING INTERVALS
 #define MAPPING_INTERVAL_FLOAT_0_1 0
