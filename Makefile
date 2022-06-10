@@ -85,6 +85,17 @@ SINTETIC_TEST = sintetic_test
 
 DEMO_HOMOGRAPHY = demo_homography
 
+# PATH TO PRYBIL DATASET
+PATH_PRYBIL = ../dataset
+PATH_RANA = ../dataset
+
+2DLIGHTING  = $(PATH_PRYBIL)/2D/lighting
+2DDISTANCE  = $(PATH_PRYBIL)/2D/distance
+2DVIEWPOINT = $(PATH_PRYBIL)/2D/viewpoint
+
+LIGHTROOM = $(PATH_RANA)/lightRoom
+PROJECTROOM = $(PATH_RANA)/projectRoom
+
 install:
 	mkdir -p $(INSTALL_DIR)/$(NAME_LIB)
 	cp -ar $(INC_DIR)/ $(INSTALL_DIR)/$(NAME_LIB)/
@@ -199,7 +210,7 @@ run_sintetic_test: sintetic_test
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.hdr img/teste_sintetico/escada_branco_step20.hdr $(OUT_DIR)/
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.jpg  img/teste_sintetico/escada_preto_step20.jpg $(OUT_DIR)/
 	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.hdr  img/teste_sintetico/escada_preto_step20.hdr $(OUT_DIR)/
-
+		
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 

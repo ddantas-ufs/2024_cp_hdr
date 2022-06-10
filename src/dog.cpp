@@ -288,8 +288,7 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
             float curv_th)
 {
   std::vector<KeyPoints> kp_aux;
-  float th = curv_th;//(curv_th + 1) * (curv_th + 1) / curv_th;
-  std::cout << " ## SIFT > > > > > > > > > > > > > > > > > > > > > th: " << th << std::endl;
+  curv_th = (curv_th + 1) * (curv_th + 1) / curv_th;
 
   for (int i = 0; i < kp.size(); i++)
   {
@@ -311,15 +310,13 @@ void edgeTh(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp
 
     curv_ratio = trH * trH / detH;
 
-    if( detH < 1e-4 ) detH = -1;
-    std::cout << " ## SIFT > > > detH: " << detH << ", curv_ratio: " << curv_ratio << std::endl;
-
-    if ((detH > 0) && (curv_ratio < th))
-         kp_aux.push_back(kp[i]);
+    if ( (detH > 0) && (curv_ratio < curv_th) )
+    {
+      kp_aux.push_back(kp[i]);
+    }
   }
   kp.clear();
   kp = kp_aux;
-  std::cout << " ## SIFT > > > " << kp.size() << " Keypoints left..." << std::endl;
 }
 
 void edgeThreshold(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> &kp,
@@ -408,25 +405,31 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
-  cv::GaussianBlur(img, img, cv::Size(CV_SIZE, CV_SIZE), 0, 0, cv::BORDER_DEFAULT);
+  mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
+  cv::GaussianBlur(img, img, cv::Size(11, 11), 0, 0, cv::BORDER_DEFAULT);
 
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
-    cv::Mat img_cv = cv::Mat{}, img_log = cv::Mat{};
+    cv::Mat img_cv, img_log;
 
-    applyCVMask( img, img_cv );
+    mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
+    coefficienceOfVariationMask( img, img_cv );
+    logTranformUchar( img_cv, 2, img_log );
+    mapPixelValues( img_log, img_aux );
+
+    //applyCVMask( img, img_cv );
     //coefVar(img, img_cv, cv_size);
     //cv::Mat aux;
     //cv::normalize(img_cv, aux, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
-    logTransform(img_cv, img_log);
+    //logTransform(img_cv, img_log);
 
     //coefficienceOfVariationMask( img, img_cv );
     //logTranformUchar( img_cv, 2, img_log );
 
-    mapPixelValues( img_cv, img_cv );
+    //mapPixelValues( img_cv, img_cv );
     cv::imwrite("out/img_cv.png", img_cv);
     //mapPixelValues( img_log, img_aux );
-    img_log.copyTo( img_aux );
+    //img_log.copyTo( img_aux );
     cv::imwrite("out/img_log.png", img_aux);
 
     //img_aux = img_log;
@@ -508,8 +511,8 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
   plotKeyPoints( img, kp, "out/img_kps_contrast_th.png", kp.size() );
   
   std::cout << " ## SIFT > > Edge Threshold..." << std::endl;
-  //edgeTh(dog, kp, curv_th);
-  edgeThreshold(dog, kp, curv_th);
+  edgeTh(dog, kp, curv_th);
+  //edgeThreshold(dog, kp, curv_th);
   
   plotKeyPoints( img, kp, "out/img_kps_edge_th.png", kp.size() );
 }
