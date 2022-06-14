@@ -150,12 +150,12 @@ void logTranformUchar( cv::Mat src, int c, cv::Mat &out ) {
 */
 //função para aplicar a tranformação logaritmica na image HDR
 //Parametros: c constante de multiplicacao da formula
-void logTranformUchar( cv::Mat src, int c, cv::Mat &out)
+void logTranformUchar( cv::Mat src, cv::Mat &out)
 {
 	for(int y = 0; y < src.rows; y++){
 		for(int x = 0; x < src.cols; x++){
 			float r = src.at<uchar>(y, x);
-			float val = c * log10(r + 1);
+			float val = LOG_TRANSFORM_CONSTANT * log10(r + 1);
 			src.at<uchar>(y, x) = val;
 		}
 	}

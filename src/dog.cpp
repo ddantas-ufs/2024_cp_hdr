@@ -406,7 +406,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
   mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
-  cv::GaussianBlur(img, img, cv::Size(11, 11), 0, 0, cv::BORDER_DEFAULT);
+  cv::GaussianBlur(img, img, cv::Size(GAUSS_SIZE, GAUSS_SIZE), 0, 0, cv::BORDER_DEFAULT);
 
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
@@ -414,7 +414,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
 
     mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
     coefficienceOfVariationMask( img, img_cv );
-    logTranformUchar( img_cv, 2, img_log );
+    logTranformUchar( img_cv, img_log );
     mapPixelValues( img_log, img_aux );
 
     //applyCVMask( img, img_cv );
