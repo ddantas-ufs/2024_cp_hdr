@@ -172,6 +172,7 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
                float maxsup_size, float curv_th, bool refine_px)
 {
   int maxsup_rad = maxsup_size/2;
+  //refine_px = false;
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
@@ -406,16 +407,18 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
 
   mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
-  cv::GaussianBlur(img, img, cv::Size(GAUSS_SIZE, GAUSS_SIZE), 0, 0, cv::BORDER_DEFAULT);
+  cv::GaussianBlur(img, img, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
 
   if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
   {
     cv::Mat img_cv, img_log;
+    
 
     mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
     coefficienceOfVariationMask( img, img_cv );
     logTranformUchar( img_cv, img_log );
-    mapPixelValues( img_log, img_aux );
+    //mapPixelValues( img_log, img_aux );
+    img_log.convertTo( img_aux, CV_32FC1 );
 
     //applyCVMask( img, img_cv );
     //coefVar(img, img_cv, cv_size);
@@ -432,6 +435,9 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     //img_log.copyTo( img_aux );
     cv::imwrite("out/img_log.png", img_aux);
 
+    mapPixelValues( img, img );
+    cv::imwrite("out/img_entrada.png", img);
+
     //img_aux = img_log;
     //img_aux = img_cv;
   }
@@ -445,10 +451,10 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     float ko = k[i];
     for (int j = 0; j < NUM_SCALES; j++)
     {
-      cv::GaussianBlur(img_aux, scales[i][j], cv::Size(mgauss, mgauss), ko, ko, cv::BORDER_REPLICATE);
+      cv::GaussianBlur(img_aux, scales[i][j], cv::Size(21, 21), ko, ko, cv::BORDER_DEFAULT);
       ko = ko * SQRT_2;
     }
-    cv::resize(img_aux, img_aux, cv::Size(img_aux.cols / 2, img_aux.rows / 2));
+    cv::resize(img_aux, img_aux, cv::Size(img_aux.cols/2, img_aux.rows/2));
   }
 }
 
@@ -465,7 +471,19 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
     for (int s = 0; s < NUM_SCALES - 1; s++)
     {
       dog[o][s] = cv::Mat::zeros(scales[o][s].size(), CV_32FC1);
-      cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);
+      //cv::subtract(scales[o][s], scales[o][s + 1], dog[o][s]);
+
+      for( int rows = 0; rows < scales[o][s].rows; rows++ )
+      {
+        for( int cols = 0; cols < scales[o][s].cols; cols++ )
+        {
+          float f = scales[o][s].at<float>(rows, cols) - scales[o][s+1].at<float>(rows, cols);
+          dog[o][s].at<float>(rows, cols) = f;
+        }
+      }
+
+      std::string imgName = "img_dog_oct" +std::to_string(o) +"_scl" +std::to_string(s) +".png";
+      cv::imwrite("out/"+imgName, dog[o][s]);
     }
   }
 }

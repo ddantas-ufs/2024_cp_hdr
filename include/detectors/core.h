@@ -12,9 +12,9 @@
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-#define SQRT_2 1.41421356237; // Square root of two [sqrt(2)]
+#define SQRT_2 1.414213562f //1.41421356237; // Square root of two [sqrt(2)]
 
-#define NUM_OCTAVES 4 // number of octaves
+#define NUM_OCTAVES 1//4 // number of octaves
 #define NUM_SCALES 5 // number of scales
 #define MAX_INTERP_STEPS 5 // interpolation max steps before failure (OpenSIFT, OpenCV)
 #define DOG_BORDER 5 // interpolation border to ignore keypoints
@@ -30,7 +30,7 @@
 #define MAX_KP 500 // if zero, it is not used
 #define ALL_KP -1  // when all keypoints should be used
 #define CV_SIZE 3 // mask size to compute coefficient of variation
-#define LOG_TRANSFORM_CONSTANT 1.0f//2.302585f
+#define LOG_TRANSFORM_CONSTANT 2.0f//1.0f//2.302585f
 #define LDR_MAX_RANGE 255.0
 #define HDR_MAX_RANGE 256.0
 

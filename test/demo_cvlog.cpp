@@ -37,7 +37,7 @@ int main(int argv, char** args)
   // LEGADO
   mapPixelValues( imgGray, imgGray, MAPPING_INTERVAL_FLOAT_0_1 );
   coefficienceOfVariationMask( imgGray, img_cv );
-  logTranformUchar( img_cv, 2, img_log );
+  logTranformUchar( img_cv, img_log );
   mapPixelValues( img_log, out );
 
   // CP_HDR
@@ -50,5 +50,6 @@ int main(int argv, char** args)
   else
     cv::imwrite( outPath +imgName, out );
 
+  std::this_thread::sleep_for( std::chrono::nanoseconds(250) );
   return 0;
 }
