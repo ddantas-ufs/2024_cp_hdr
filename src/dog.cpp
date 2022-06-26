@@ -430,20 +430,21 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
     //logTranformUchar( img_cv, 2, img_log );
 
     //mapPixelValues( img_cv, img_cv );
-    cv::imwrite("out/img_cv.png", img_cv);
+    //cv::imwrite("out/img_cv.png", img_cv);
     //mapPixelValues( img_log, img_aux );
     //img_log.copyTo( img_aux );
-    cv::imwrite("out/img_log.png", img_aux);
+    //cv::imwrite("out/img_log.png", img_aux);
 
     mapPixelValues( img, img );
-    cv::imwrite("out/img_entrada.png", img);
+    //cv::imwrite("out/img_entrada.png", img);
 
     //img_aux = img_log;
     //img_aux = img_cv;
   }
   else
   {
-    img_aux = img;
+    mapPixelValues( img, img_aux );
+    //img_aux = img;
   }
 
   for (int i = 0; i < NUM_OCTAVES; i++)
@@ -482,8 +483,8 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
         }
       }
 
-      std::string imgName = "img_dog_oct" +std::to_string(o) +"_scl" +std::to_string(s) +".png";
-      cv::imwrite("out/"+imgName, dog[o][s]);
+      //std::string imgName = "img_dog_oct" +std::to_string(o) +"_scl" +std::to_string(s) +".png";
+      //cv::imwrite("out/"+imgName, dog[o][s]);
     }
   }
 }
