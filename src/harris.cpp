@@ -54,7 +54,7 @@ void harrisThreshold(cv::Mat &resp_map, std::vector<KeyPoints> &kp, float min_qu
       }
       else
       {
-        resp_map.at<float>(y, x) = 0;
+        resp_map.at<float>(y, x) = 0.0f;
       }
     }
   }
@@ -104,11 +104,6 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
 {
   cv::Mat resp_map, img_norm, img_blur, img_aux;
 
-  /*
-  ** Edited by @arturxz 14/10/2021
-  ** changed normalization method
-  */
-  //imgNormalize(img, img_norm);
   mapPixelValues(img, img_norm);
 
   cv::GaussianBlur(img_norm, img_blur, cv::Size(mgauss, mgauss), sigma_x, sigma_y,
@@ -118,13 +113,8 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   {
     cv::Mat img_cv, img_log;
 
-    /*
-    ** Edited by @arturxz 14/10/2021
-    ** changed CoV filter method
-    */
-    //coefVar(img_blur, img_cv, cv_size);
-    applyCVMask( img_blur, img_cv );
-    logTransform(img_cv, img_log);
+    coefficienceOfVariationMask( img_blur, img_cv );
+    logTranformUchar( img_cv, img_log );
 
     img_aux = img_log;
   }
@@ -132,7 +122,49 @@ void harrisKp(cv::Mat img, std::vector<KeyPoints> &kp, bool is_hdr, int msobel,
   {
     img_aux = img_blur;
   }
+
+  mapPixelValues(img_aux, img_aux, MAPPING_INTERVAL_FLOAT_0_1);
+
+  std::cout << " ## HARRIS > > Calculating Harris Keypoints..." << std::endl;
   harrisCalc(img_aux, resp_map, msobel, mgauss, sigma_x, sigma_y, k);
+
+  std::cout << " ## HARRIS > > Thresolding..." << std::endl;
   harrisThreshold(resp_map, kp, min_quality);
+  std::cout << " ## HARRIS > > Total amount of Keypoints Founded: " << kp.size() << "." << std::endl;
+
+  std::cout << " ## HARRIS > > Making Maxima Suppression..." << std::endl;
   harrisMaxSup(resp_map, kp, msup_size);
+  std::cout << " ## HARRIS > > Keypoints after Maxima supression: " << kp.size() << "." << std::endl;
+}
+
+void harrisKp( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, std::vector<cv::Mat> lRoi, bool is_hdr )
+{
+  //cv::Mat sumROI;
+  std::vector<KeyPoints> allKps;
+  int cont = 0;
+
+  //sumListOfMats( lRoi, sumROI );
+  harrisKp(img, allKps, is_hdr );
+
+  std::cout << " ## HARRIS > Computing Keypoints inside ROI." << std::endl;
+  // Separing Keypoints found in each ROI
+  for( int i = 0; i < lRoi.size(); i++ )
+  {
+    std::vector<KeyPoints> kps;
+
+    for( int j = 0; j < allKps.size(); j++ )
+    {
+      KeyPoints kp = allKps[j];
+      int x = (int) std::floor( kp.x );
+      int y = (int) std::floor( kp.y );
+
+      uchar pixelValue = lRoi[i].at<uchar>(y, x);
+      if( pixelValue > 0 )
+        kps.push_back( kp );
+    }
+    
+    // Saving position i ROI keypoints
+    kpList.push_back( kps );    
+    std::cout << " ## Keypoints inside ROI " << i << ": " << kps.size() << std::endl;
+  }
 }
