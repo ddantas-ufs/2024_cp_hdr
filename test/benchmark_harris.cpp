@@ -9,7 +9,7 @@ int main(int argv, char** args)
   std::vector< std::vector<KeyPoints> > lKps;
   std::vector<cv::Mat> imgAllROIs;
 
-  std::string img_name, out_path, imgPath;
+  std::string img_name, out_path, imgPath, outDir;
   std::string img1ROIsPath, img1ROImPath, img1ROIhPath;
 
   // Showing inputs
@@ -18,13 +18,14 @@ int main(int argv, char** args)
   for( int i = 0; i < argv; i++ )
     std::cout << "  > args[" << i << "]: " << args[i] << std::endl;
 
-  imgPath = std::string(args[1]);
+  imgPath      = std::string(args[1]);
   img1ROIsPath = std::string(args[2]);
   img1ROImPath = std::string(args[3]);
   img1ROIhPath = std::string(args[4]);
+  outDir       = std::string(args[5]);
 
   readImg(imgPath, img_in, img_gray, img_name);
-  out_path = std::string(args[5]) + img_name + ".harris";
+  out_path = outDir + img_name + ".harris";
 
   readROIFromImage( img1ROIsPath, img1ROIs );
   readROIFromImage( img1ROImPath, img1ROIm );
@@ -42,8 +43,18 @@ int main(int argv, char** args)
   saveKeypoints(kp, out_path, MAX_KP);
   plotKeyPoints(img_in, kp, out_path, MAX_KP);
 
-  //saveKeypoints( kp, out_path, kp.size() );
-  //plotKeyPoints( img_in, kp, out_path, kp.size() );
+  std::cout << "> ## Calculating metrics" << std::endl;
+  float U = 0.0f;
+  
+  U = calculateUniformity( lKps );
+  std::cout << "> Uniformity: " << U << std::endl;
 
+  std::string finalOut = "Image;Uniformity 1\n";
+  finalOut += img_name +";" +std::to_string(U);
+
+  writeTextFile( out_path + "_uniformity.csv", finalOut );
+
+  std::this_thread::sleep_for( std::chrono::nanoseconds(500) );
+  
   return 0;
 }
