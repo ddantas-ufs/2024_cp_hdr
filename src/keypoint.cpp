@@ -220,13 +220,17 @@ void saveKeypoints(std::vector<KeyPoints> &kp, std::string out_path, int max_kp,
 std::vector<KeyPoints> loadKeypoints( std::string arqPath )
 {
   std::fstream arch; 
-  std::string line, strY, strX, strOctave, strScale, strResp;
+  std::string line, strY = "", strX = "", strOctave = "", strScale = "", strResp = "";
   std::vector<KeyPoints> kp;
+  std::vector<int> desc;
 
   arch.open( arqPath, std::ios::in ); 
 
   if( arch.is_open() )
   {
+    getline( arch, line );
+    std::cout << "> # Keypoints being loaded: " << line << std::endl;
+
     while( getline( arch, line ) )
     {
       int i = 0;
@@ -266,26 +270,34 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
         buff = strtok( NULL, "\t");
         i = i + 1;
       }
-      /*
-      std::cout << " -------------------------------------------------- " << std::endl;
-      std::cout << " > > > Line: " << line << std::endl;
-      std::cout << " -------------------------------------------------- " << std::endl;
-      std::cout << strY << ", " << strX << ", " << strOctave << ", " << strScale << ", " << strResp << std::endl;
-      std::cout << " -------------------------------------------------- " << std::endl;
-      */
-      if( !strResp.empty() )
-      {
-        KeyPoints key;
-        key.y = std::stof(strY);
-        key.x = std::stof(strX);
-        key.octave = std::stoi(strOctave);
-        key.scale = std::stoi(strScale);
-        key.resp = std::stof(strResp);
-        key.direction = 0.0;
 
-        kp.push_back( key );
+      // READING DESCRIPTION
+      getline( arch, line );
+      strcpy( ln, line.c_str() );
+
+      buff = strtok( ln, " " );
+      while( buff != NULL )
+      {
+        std::string strBuff = buff;
+        strBuff.erase(std::remove(strBuff.begin(), strBuff.end(), ' '), strBuff.end());
+
+        desc.push_back( std::stoi( strBuff ) );
+        
+        buff = strtok( NULL, " ");
+        i = i + 1;
       }
 
+      KeyPoints key;
+      key.y      = std::stof(strY);
+      key.x      = std::stof(strX);
+      key.octave = std::stoi(strOctave);
+      key.scale  = std::stoi(strScale);
+      key.resp   = std::stof(strResp);
+      key.direction = 0.0f;
+
+      kp.push_back( key );
+
+      //strY = "", strX = "", strOctave = "", strScale = "", strResp = "";
       i = 0;
       delete buff;
     }
