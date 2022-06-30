@@ -4,12 +4,46 @@ std::string finalOut = "Image 1;Image 2; Repeatability Rate\n";
 
 void loadRanaDataset( char** args, std::vector< std::vector<KeyPoints> > &lKps )
 {
-    for( int i = 2; i < 9; i++ )
-    {
-      std::string arq = std::string( args[i] );
-      std::cout << i << ": " << arq << std::endl;
-      lKps.push_back( loadKeypoints( arq ) );
-    }
+  for( int i = 2; i < 9; i++ )
+  {
+    std::string arq = std::string( args[i] );
+    std::cout << i << ": " << arq << std::endl;
+    lKps.push_back( loadKeypoints( arq ) );
+  }
+}
+
+void loadPribylDataset( char** args, std::vector< std::vector<KeyPoints> > &lKps, std::vector<cv::Mat> &lHomography )
+{
+  int dataset = std::stoi( std::string(args[1]) );
+  int qtdImages = 0, iniHomography = 0, qtdHomography = 0;
+
+  if( dataset == 3 || dataset == 4 )
+  {
+    qtdImages = 9;
+    iniHomography = 9;
+    qtdHomography = 30;
+  }
+  else if( dataset == 5 )
+  {
+    qtdImages = 23;
+    iniHomography = 23;
+    qtdHomography = 233;
+  }
+
+  for( int i = 2; i < qtdImages; i++ )
+  {
+    std::string arq = std::string( args[i] );
+    std::cout << i << ": " << arq << std::endl;
+    lKps.push_back( loadKeypoints( arq ) );
+  }
+
+  for( int i = iniHomography; i < qtdHomography; i++ )
+  {
+    std::string arq = std::string( args[i] );
+    cv::Mat H;
+    readHomographicMatrix( arq, H );
+    lHomography.push_back( H );
+  }
 }
 
 float calculateSRR( std::vector< std::vector<KeyPoints> > &lKps )
@@ -20,7 +54,7 @@ float calculateSRR( std::vector< std::vector<KeyPoints> > &lKps )
   {
     for(int j=i+1; j < lKps.size(); j++ )
     {
-      std::cout << i << ", " << j << std::endl;
+      //std::cout << i << ", " << j << std::endl;
       
       float rr = 0.0f;
       int cc = 0;
@@ -51,15 +85,29 @@ int main(int argv, char** args)
   // DATASET
   int dataset = std::stoi( std::string(args[1]) );
   std::vector< std::vector<KeyPoints> > lKps;
+  std::vector<cv::Mat> lHomography;
 
   std::string outDir = std::string( args[argv-1] );
 
-  std::cout << outDir << std::endl;
-
+  // Showing inputs
+  //*
+  std::cout << "----------------------------------" << std::endl;
+  std::cout << "> Received " << argv << " arguments:" << std::endl;
+  for( int i = 0; i < argv; i++ )
+    std::cout << "  > args[" << i << "]: " << args[i] << std::endl;
+  //*/
   //return 0;
 
   if( dataset == 1 || dataset == 2 )
     loadRanaDataset( args, lKps );
+
+  if( dataset == 3 || dataset == 4 || dataset == 5 )
+    loadPribylDataset( args, lKps, lHomography );
+
+  std::cout << "> > > # # # Quantidade de Keypoints: " << lKps.size() << "." << std::endl;
+  std::cout << "> > > # # # Quantidade de Matrizes de Homografia: " << lHomography.size() << "." << std::endl;
+
+  return 0;
 
   for( int i = 0; i < lKps.size(); i++ )
   {
