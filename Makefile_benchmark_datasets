@@ -104,7 +104,7 @@ run_test: #benchmark_prybil
 #	./$(BIN_DIR)/$(BENCHMARK_RANA) $(LIGHTROOM)/scene-1/scene-1.hdr $(LIGHTROOM)/ROIs/scene-1_ROI_0.png $(LIGHTROOM)/ROIs/scene-1_ROI_1.png $(LIGHTROOM)/ROIs/scene-1_ROI_2.png $(LIGHTROOM)/scene-2/scene-2.hdr $(LIGHTROOM)/ROIs/scene-2_ROI_2.png $(LIGHTROOM)/ROIs/scene-2_ROI_1.png $(LIGHTROOM)/ROIs/scene-2_ROI_2.png $(OUT_DIR_HDR)/
 #	./$(BIN_DIR)/$(BENCHMARK_RANA) $(LIGHTROOM)/scene-4/scene-4.jpg $(LIGHTROOM)/ROIs/scene-4_ROI_0.png $(LIGHTROOM)/ROIs/scene-4_ROI_1.png $(LIGHTROOM)/ROIs/scene-4_ROI_2.png $(LIGHTROOM)/scene-5/scene-5.jpg $(LIGHTROOM)/ROIs/scene-5_ROI_0.png $(LIGHTROOM)/ROIs/scene-5_ROI_1.png $(LIGHTROOM)/ROIs/scene-5_ROI_2.png $(OUT_DIR_LDR)/
 
-run_calculate_srr: #calculate_srr
+run_calculate_srr: calculate_srr
 	./$(BIN_DIR)/$(CALCULATE_SRR) 1 $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-0.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-1.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-2.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-3.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-4.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-5.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/scene-6.harris.kp.txt $(OUT_DIR_HARRIS)/HDR/rana_projectroom/
 	./$(BIN_DIR)/$(CALCULATE_SRR) 1 $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-0.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-1.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-2.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-3.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-4.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-5.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/scene-6.harris.kp.txt $(OUT_DIR_HARRIS)/LDR/rana_projectroom/
 

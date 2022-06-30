@@ -17,9 +17,21 @@ void calculateRRUsingOpenCV( cv::Mat img1, cv::Mat img2, cv::Mat H, float &rr, i
   cv::evaluateFeatureDetector( img1, img2, H, &kp1, &kp2, rr, cc );
 }
 
-void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> kp2,
+void calculateRR( cv::Mat H, std::vector<KeyPoints> kpa, std::vector<KeyPoints> kpb,
                   int &cc, float &rr )
 {
+  std::vector<KeyPoints> kp1, kp2;
+  if( kpa.size() < kpb.size() )
+  {
+    kp1 = kpa;
+    kp2 = kpb;
+  }
+  else
+  {
+    kp1 = kpb;
+    kp2 = kpa;
+  }
+
   int kp1_size = kp1.size();
   int kp2_size = kp2.size();
   int total = 0;
@@ -52,8 +64,15 @@ void calculateRR( cv::Mat H, std::vector<KeyPoints> kp1, std::vector<KeyPoints> 
     }
   }
 
+  if( kp1_size == 0.0f ) kp1_size = kp2_size;
+  if( kp2_size == 0.0f ) kp2_size = kp1_size;
+
   cc = total;
-  rr = float( total / std::fmin( kp1_size, kp2_size ) );
+
+  if( kp1_size == 0.0f && kp2_size == 0.0f )
+    rr = 0.0f;
+  else
+    rr = float( total / std::fmin( kp1_size, kp2_size ) );
 
   std::cout << "## METRIC (RR) > Correspondence: " << cc << std::endl;
   std::cout << "## METRIC (RR) > Repeatability: " << rr << std::endl;

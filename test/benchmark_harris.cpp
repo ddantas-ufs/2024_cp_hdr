@@ -35,7 +35,7 @@ int main(int argv, char** args)
   imgAllROIs.push_back(img1ROIm);
   imgAllROIs.push_back(img1ROIh);
 
-  harrisKp(img_gray, lKps, imgAllROIs, false);
+  harrisKp(img_gray, lKps, imgAllROIs, true);
 
   joinKeypoints( lKps, kp );
   std::cout << " ############ Keypoints detected after ROI filtering:" << kp.size() << std::endl;
