@@ -100,7 +100,8 @@ void harrisMaxSup(cv::Mat &resp_map, std::vector<KeyPoints> &kp, int msize)
       KeyPoints k;
       k.x = x;
       k.y = y;
-      k.scale = 1;
+      k.scale = 1; // if scale != 0, SIFT Descriptor can be used
+      k.octave = 0;
       k.resp = kp_ref;
       kp_aux.push_back(k);
     }
