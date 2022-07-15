@@ -186,9 +186,9 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
     }
   }
 
-  //for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
-  //  std::cout << hist[z] << ", ";
-  //std::cout << std::endl;
+  for(int z = 0; z<SIFT_DESC_ORIENT_HIST_BINS; z++ ) 
+    std::cout << hist[z] << ", ";
+  std::cout << std::endl;
   
   maxIndex = std::numeric_limits<float>::min();
   maxValue = std::numeric_limits<float>::min();
@@ -203,11 +203,11 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
   }
   
   kp.direction = maxIndex * 10;
-  //std::cout << "kpIndex = " << maxIndex << std::endl;
-  //std::cout << "kpValue = " << maxValue << std::endl;
-  //std::cout << "kp.direction = " << kp.direction << std::endl;
-  //printKeypoint( kp );
-  //std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << "kpIndex = " << maxIndex << std::endl;
+  std::cout << "kpValue = " << maxValue << std::endl;
+  std::cout << "kp.direction = " << kp.direction << std::endl;
+  printKeypoint( kp );
+  std::cout << "--------------------------------------------------" << std::endl;
 }
 
 /**
