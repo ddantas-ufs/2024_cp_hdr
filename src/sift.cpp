@@ -203,11 +203,11 @@ void calcOrientation( cv::Mat &img, KeyPoints &kp )
   }
   
   kp.direction = maxIndex * 10;
-  std::cout << "kpIndex = " << maxIndex << std::endl;
-  std::cout << "kpValue = " << maxValue << std::endl;
-  std::cout << "kp.direction = " << kp.direction << std::endl;
-  printKeypoint( kp );
-  std::cout << "--------------------------------------------------" << std::endl;
+  //std::cout << "kpIndex = " << maxIndex << std::endl;
+  //std::cout << "kpValue = " << maxValue << std::endl;
+  //std::cout << "kp.direction = " << kp.direction << std::endl;
+  //printKeypoint( kp );
+  //std::cout << "--------------------------------------------------" << std::endl;
 }
 
 /**
