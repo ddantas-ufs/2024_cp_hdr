@@ -81,7 +81,7 @@ MATCHING_OPENCV = matching_opencv
 MATCHING_CPHDR = matching_cphdr
 
 COMPARE_ALGORITHMS = compare_algorithms
-SINTETIC_TEST = sintetic_test
+TEST_DETECTION = test_detection
 
 DEMO_HOMOGRAPHY = demo_homography
 
@@ -140,8 +140,8 @@ matching_cphdr:
 compare_algorithms:
 	$(CC) -o $(BIN_DIR)/$(COMPARE_ALGORITHMS) $(TEST_DIR)/$(COMPARE_ALGORITHMS).cpp $(SRC_FILES) $(CV_LIB)
 
-sintetic_test:
-	$(CC) -o $(BIN_DIR)/$(SINTETIC_TEST) $(TEST_DIR)/$(SINTETIC_TEST).cpp $(SRC_FILES) $(CV_LIB)
+test_detection:
+	$(CC) -o $(BIN_DIR)/$(TEST_DETECTION) $(TEST_DIR)/$(TEST_DETECTION).cpp $(SRC_FILES) $(CV_LIB)
 
 run_generate_luminance:
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
@@ -151,6 +151,10 @@ run_generate_luminance:
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-4/scene-4.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-5/scene-5.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-6/scene-6.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
+
+run_test_detection: test_detection
+	./$(BIN_DIR)/$(TEST_DETECTION) ~/builded_apps/dataset/lightRoom/scene-0/scene-0.jpg ~/builded_apps/dataset/lightRoom/ROI_lr.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(TEST_DETECTION) ~/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr ~/builded_apps/dataset/lightRoom/ROI_lr.jpg $(OUT_DIR)/
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
@@ -191,26 +195,12 @@ run_matching_cphdr: matching_cphdr
 
 run_compare_algorithms: compare_algorithms
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_LDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
-	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
+#	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_ROI_IMG1) $(DEMO_HDR_IMG2_MATCH) $(DEMO_ROI_IMG2) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 #	./$(BIN_DIR)/$(COMPARE_ALGORITHMS) $(DEMO_HDR_IMG1_MATCH) $(DEMO_HDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 
-run_sintetic_test: sintetic_test
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.jpg img/teste_sintetico/escada_branco_step2.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step2.hdr img/teste_sintetico/escada_branco_step2.hdr $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.jpg  img/teste_sintetico/escada_preto_step2.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step2.hdr  img/teste_sintetico/escada_preto_step2.hdr $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.jpg img/teste_sintetico/escada_branco_step10.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step10.hdr img/teste_sintetico/escada_branco_step10.hdr $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.jpg  img/teste_sintetico/escada_preto_step10.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step10.hdr  img/teste_sintetico/escada_preto_step10.hdr $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.jpg img/teste_sintetico/escada_branco_step20.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_branco_step20.hdr img/teste_sintetico/escada_branco_step20.hdr $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.jpg  img/teste_sintetico/escada_preto_step20.jpg $(OUT_DIR)/
-	./$(BIN_DIR)/$(SINTETIC_TEST) img/teste_sintetico/escada_preto_step20.hdr  img/teste_sintetico/escada_preto_step20.hdr $(OUT_DIR)/
-		
 pribyl_dtset:
 	$(GET_URL) http://$(PRIBYL_DIR)/ -P $(IMG_DIR)/
 

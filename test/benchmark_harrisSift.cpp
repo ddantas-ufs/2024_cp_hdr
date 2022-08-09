@@ -129,8 +129,8 @@ int main(int argv, char** args)
 
   // Running CP_HDR
   std::cout << "> Running CP_HDR HarrisSIFT..." << std::endl;
-  harrisKp(img1Gray, lKp1, img1AllROIs, true);
-  harrisKp(img2Gray, lKp2, img2AllROIs, true);
+  harrisKp(img1Gray, lKp1, img1AllROIs, false);
+  harrisKp(img2Gray, lKp2, img2AllROIs, false);
 
 //  runSift(img1Gray, lKp1, MAX_KP, img1AllROIs);
 //  runSift(img2Gray, lKp2, MAX_KP, img2AllROIs);

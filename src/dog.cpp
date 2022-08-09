@@ -523,15 +523,15 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
   
   std::cout << " ## SIFT > > Computing Maxima Suppression and subpixel keypoint coordinates..." << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
-  plotKeyPoints( img, kp, "out/img_kps_total.png", kp.size() );
+  //plotKeyPoints( img, kp, "out/img_kps_total.png", kp.size() );
   
   std::cout << " ## SIFT > > Contrast Threshold..." << std::endl;
   contrastTh(dog, kp, contrast_th);
-  plotKeyPoints( img, kp, "out/img_kps_contrast_th.png", kp.size() );
+  //plotKeyPoints( img, kp, "out/img_kps_contrast_th.png", kp.size() );
   
   std::cout << " ## SIFT > > Edge Threshold..." << std::endl;
   edgeTh(dog, kp, curv_th);
   //edgeThreshold(dog, kp, curv_th);
   
-  plotKeyPoints( img, kp, "out/img_kps_edge_th.png", kp.size() );
+  //plotKeyPoints( img, kp, "out/img_kps_edge_th.png", kp.size() );
 }

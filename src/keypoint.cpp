@@ -147,9 +147,15 @@ void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path,
 
   for (int i = 0; i < num_kp; i++)
   {
-    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 255, 0));
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 6, cv::Scalar(0, 255, 0), 1);
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 5, cv::Scalar(0, 255, 0), 1);
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 4, cv::Scalar(0, 0, 255), 1);
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 3, cv::Scalar(0, 0, 255), 1);
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 2, cv::Scalar(0, 0, 255), 1);
+    cv::circle(out, cv::Point(kp[i].x, kp[i].y), 1, cv::Scalar(0, 0, 255), 1);
   }
-  cv::imwrite(out_path + ".kp.png", out);
+  //cv::imwrite(out_path + ".kp.png", out);
+  cv::imwrite(out_path, out);
 }
 
 bool compareResponse(KeyPoints a, KeyPoints b)
