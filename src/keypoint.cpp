@@ -272,16 +272,21 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
         {
           strResp = strBuff;
         }
-        //std::cout << strBuff << "\n";
+        std::cout << strBuff << std::endl;
         buff = strtok( NULL, "\t");
         i = i + 1;
       }
 
       // READING DESCRIPTION
+      std::cout << "Reading description" << std::endl;
       getline( arch, line );
-      strcpy( ln, line.c_str() );
+      /*
+      std::cout << "Line size: " << sz << ", line: " << line << std::endl;
+      char lndesc[128];
+      strcpy( lndesc, line.c_str() );
+      std::cout << "Line char: " << lndesc << std::endl;
 
-      buff = strtok( ln, " " );
+      buff = strtok( lndesc, " " );
       while( buff != NULL )
       {
         std::string strBuff = buff;
@@ -289,9 +294,11 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
 
         desc.push_back( std::stoi( strBuff ) );
         
+        std::cout << strBuff << std::endl;
         buff = strtok( NULL, " ");
         i = i + 1;
       }
+      */
 
       KeyPoints key;
       key.y      = std::stof(strY);
@@ -308,6 +315,10 @@ std::vector<KeyPoints> loadKeypoints( std::string arqPath )
       delete buff;
     }
     arch.close();
+  }
+  else
+  {
+    std::cout << "Keypoints file not opened! Path:" << arqPath << std::endl;
   }
 
   return kp;

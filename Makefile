@@ -82,6 +82,7 @@ MATCHING_CPHDR = matching_cphdr
 
 COMPARE_ALGORITHMS = compare_algorithms
 TEST_DETECTION = test_detection
+PLOT_KEYPOINTS = plot_keypoints
 
 DEMO_HOMOGRAPHY = demo_homography
 
@@ -143,6 +144,9 @@ compare_algorithms:
 test_detection:
 	$(CC) -o $(BIN_DIR)/$(TEST_DETECTION) $(TEST_DIR)/$(TEST_DETECTION).cpp $(SRC_FILES) $(CV_LIB)
 
+plot_keypoints:
+	$(CC) -o $(BIN_DIR)/$(PLOT_KEYPOINTS) $(TEST_DIR)/$(PLOT_KEYPOINTS).cpp $(SRC_FILES) $(CV_LIB)
+
 run_generate_luminance:
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
 	$(PY) $(LUMINANCE_MAP_GENERATOR) /home/artur/builded_apps/dataset/lightRoom/scene-1/scene-1.hdr /home/artur/builded_apps/dataset/lightRoom/ROI_lr.png $(OUT_DIR_SEG)/ 3
@@ -155,6 +159,17 @@ run_generate_luminance:
 run_test_detection: test_detection
 	./$(BIN_DIR)/$(TEST_DETECTION) ~/builded_apps/dataset/lightRoom/scene-0/scene-0.jpg ~/builded_apps/dataset/lightRoom/ROI_lr.jpg $(OUT_DIR)/
 	./$(BIN_DIR)/$(TEST_DETECTION) ~/builded_apps/dataset/lightRoom/scene-0/scene-0.hdr ~/builded_apps/dataset/lightRoom/ROI_lr.jpg $(OUT_DIR)/
+
+run_plot_keypoints: plot_keypoints
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_HarrisSIFT_LDR.txt.kp.txt scene-0_CPHDR_HarrisSIFT_LDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_HarrisSIFT_HDR.txt.kp.txt scene-0_CPHDR_HarrisSIFT_HDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_HarrisSIFTForHDR_LDR.txt.kp.txt scene-0_CPHDR_HarrisSIFTForHDR_LDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_HarrisSIFTForHDR_HDR.txt.kp.txt scene-0_CPHDR_HarrisSIFTForHDR_HDR.jpg $(OUT_DIR)/
+
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_SIFT_LDR.txt.kp.txt scene-0_CPHDR_SIFT_LDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_SIFT_HDR.txt.kp.txt scene-0_CPHDR_SIFT_HDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_SIFTForHDR_LDR.txt.kp.txt scene-0_CPHDR_SIFTForHDR_LDR.jpg $(OUT_DIR)/
+	./$(BIN_DIR)/$(PLOT_KEYPOINTS) /home/artur/builded_apps/cp_hdr/img/scene-0.jpg /home/artur/builded_apps/cp_hdr/img/scene-0_CPHDR_SIFTForHDR_HDR.txt.kp.txt scene-0_CPHDR_SIFTForHDR_HDR.jpg $(OUT_DIR)/
 
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
