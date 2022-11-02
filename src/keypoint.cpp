@@ -154,7 +154,7 @@ void plotKeyPoints(cv::Mat img, std::vector<KeyPoints> kp, std::string out_path,
     cv::circle(out, cv::Point(kp[i].x, kp[i].y), 2, cv::Scalar(0, 0, 255), 1);
     cv::circle(out, cv::Point(kp[i].x, kp[i].y), 1, cv::Scalar(0, 0, 255), 1);
   }
-  //cv::imwrite(out_path + ".kp.png", out);
+  std::cout << "out path: " << out_path << std::endl;
   cv::imwrite(out_path, out);
 }
 

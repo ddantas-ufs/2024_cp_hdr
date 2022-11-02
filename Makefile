@@ -50,8 +50,7 @@ DEMO_HOMOGRAPHY_IMG2_IMG1 = H.04_00.txt
 DEMO_CAMERA_MATRIX_FILE = K.txt
 
 DEF_DOG = defaultdog
-DEMO_DOG = demodog
-DEMO_DOG_HDR = demodog_hdr
+EXAMPLE_DOG = example_dog
 DEMO_HARRIS = demoharris
 DEMO_HARRIS_HDR = demoharris_hdr
 DEMO_SURF = demosurf
@@ -114,11 +113,8 @@ demoharris:
 demoharris_hdr:
 	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS_HDR) $(TEST_DIR)/$(DEMO_HARRIS_HDR).cpp $(SRC_FILES) $(CV_LIB)
 
-demodog:
-	$(CC) -o $(BIN_DIR)/$(DEMO_DOG) $(TEST_DIR)/$(DEMO_DOG).cpp $(SRC_FILES) $(CV_LIB)
-
-demodog_hdr:
-	$(CC) -o $(BIN_DIR)/$(DEMO_DOG_HDR) $(TEST_DIR)/$(DEMO_DOG_HDR).cpp $(SRC_FILES) $(CV_LIB)
+example_dog:
+	$(CC) -o $(BIN_DIR)/$(EXAMPLE_DOG) $(TEST_DIR)/$(EXAMPLE_DOG).cpp $(SRC_FILES) $(CV_LIB)
 
 demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
@@ -180,11 +176,8 @@ run_demoharris: demoharris
 run_demoharris_hdr: demoharris_hdr
 	./$(BIN_DIR)/$(DEMO_HARRIS_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
-run_demodog: demodog
-	./$(BIN_DIR)/$(DEMO_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
-
-run_demodog_hdr: demodog_hdr
-	./$(BIN_DIR)/$(DEMO_DOG_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
+run_example_dog: example_dog
+	./$(BIN_DIR)/$(EXAMPLE_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
 
 run_demosurf: demosurf
 	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(OUT_DIR)/
