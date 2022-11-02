@@ -1,4 +1,6 @@
-# Project Title
+# Control Points for High Dynamic Range images (CP_HDR)
+
+This is the README for CP_HDR library. Please, feel free to suggest new features, improvements or make a pull request.
 
 ## Table of Contents
 
@@ -9,12 +11,14 @@
 
 ## About <a name = "about"></a>
 
-Write about 1-2 paragraphs describing the purpose of your project.
+This library is developed to easily generate detection and description of feature points (aka: keypoints) using HDR images as input and metrics to evaluate algorithms performance in detection and description. 
 
-## Getting Started <a name = "getting_started"></a>
+For now, we provide canonical Harris Corner Detector and SIFT detector and descriptor. The SIFT descriptor can easely be used with other detectors (Harris, for example). We also provide a Harris Corner and SIFT HDR-specialized algorithms, based on [Melo et al.](https://doi.org/10.1109/ISCC.2018.8538716) and [Nascimento et al.](https://doi.org/10.5220/0010779700003124) papers.
+
+### Prerequisites
 
 First of all, install OpenCV 3.4.x.
-We recommend the following tutorials: [Tutorial 1](#getting_started), [Tutorial 2](#getting_started), [Tutorial 3](#getting_started)
+We recommend the following tutorials: [Tutorial 1](https://linuxize.com/post/how-to-install-opencv-on-ubuntu-20-04/), [Tutorial 2](https://learnopencv.com/install-opencv3-on-ubuntu/), [Tutorial 3](https://linuxhint.com/install-opencv-ubuntu/)
 
 Secondly, on use your package manager to install OpenCV headers.
 In debian-like distros, you can use something like:
@@ -23,32 +27,28 @@ In debian-like distros, you can use something like:
 sudo apt install libopencv-dev
 ```
 
-### Prerequisites
+## Getting Started <a name = "getting_started"></a>
 
-What things you need to install the software and how to install them.
-
-```
-Give examples
-```
+Using CP_HDR you can: 
+- Detect feature points using LDR and HDR images
+- Describe feature points using LDR and HDR images
+- Save a .txt archive with detected the keypoints detected (optionally, description for each feature point)
+- Read a previously saved list of feature points saved
+- Plot feature points into the image
+- Make a feature point matching between two images
+- Calculate some detection and description metrics
+  - Repeatability rate
+  - Uniformity rate
+  - Mean average precision
+  - Matching performance
+- Retinex-based algorithm to segment images based in its ilumination
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running.
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo.
+For now, no installation needed.
 
 ## Usage <a name = "usage"></a>
 
-Add notes about how to use the system.
+For earch feature, we provide a example code.
+
+[ AVAILABRE SOON ]
