@@ -571,7 +571,7 @@ void siftDescriptor( std::vector<KeyPoints> &kpl, cv::Mat& img_in, cv::Mat& img_
  * @param kpMax: max amount of keypoints that sould be returned
  * @param roi: ROI image, mandatory to be CV_8UC1. White in the region of interest.
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat ROI )
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat ROI, bool isHDR )
 {
   std::cout << " ## SIFT > Run with ROI." << std::endl;
   cv::Mat imgGray, roi;
@@ -584,7 +584,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat RO
   makeGrayscaleCopy( img, imgGray );
 
   std::cout << " ## SIFT > Detecting Keypoints..." << std::endl;
-  dogKp(imgGray, aux, true, GAUSS_SIZE, MAXSUP_SIZE, CONTRAST_TH, CURV_TH, CV_SIZE );
+  dogKp(imgGray, aux, isHDR, true, GAUSS_SIZE, MAXSUP_SIZE, CONTRAST_TH, CURV_TH, CV_SIZE );
   std::cout << " ## SIFT > " << aux.size() << " Keypoints detected." << std::endl;
 
   if( !roi.empty() )
@@ -649,7 +649,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, cv::Mat RO
  * @param kpList: output vector containing detected keypoints and description.
  * @param kpMax: max amount of keypoints that sould be returned
 **/
-void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
+void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, bool isHDR )
 {
   std::cout << " ## SIFT > Run without ROI." << std::endl;
   cv::Mat roi;
@@ -667,7 +667,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax )
  * @param kpMax: max amount of keypoints that sould be returned
  * @param lRoi: vector of ROIs 
 **/
-void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kpMax, std::vector<cv::Mat> lRoi )
+void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kpMax, std::vector<cv::Mat> lRoi, bool isHDR )
 {
   std::cout << " ## SIFT > Run with " << std::to_string(lRoi.size()) << " ROIs." << std::endl;
   cv::Mat sumROI;// = cv::Mat::zeros( lRoi[0].size(), lRoi[0].type() );

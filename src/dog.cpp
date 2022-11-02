@@ -400,8 +400,8 @@ void edgeThreshold(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoin
  * @param is_hdr flag to enable hdr functions
  * @param cv_size coefficient of variance mask size
 **/
-void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mgauss,
-                   int cv_size = CV_SIZE)
+void dogInitScales( cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], bool isHDR,
+                    int mgauss, int cv_size = CV_SIZE )
 {
   cv::Mat img_aux;
   float k[] = {0.707107, 1.414214, 2.828428, 5.656856};
@@ -409,7 +409,7 @@ void dogInitScales(cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], int mga
   mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
   cv::GaussianBlur(img, img, cv::Size(5, 5), 0, 0, cv::BORDER_DEFAULT);
 
-  if ( USE_CV_FILTER == USE_CV_FILTER_TRUE )
+  if ( isHDR )
   {
     cv::Mat img_cv, img_log;
     
@@ -500,8 +500,8 @@ void dogCalc(cv::Mat scales[NUM_OCTAVES][NUM_SCALES],
  * @param curv_th edge threshold value to threshold process
  * @param cv_size mask size to compute coefficient of variation
 **/
-void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
-           int maxsup_size, float contrast_th, float curv_th, int cv_size )
+void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool isHDR, bool refine_px, 
+           int mgauss, int maxsup_size, float contrast_th, float curv_th, int cv_size )
 {
   cv::Mat scales[NUM_OCTAVES][NUM_SCALES];
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
@@ -516,7 +516,7 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool refine_px, int mgauss,
   img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
-  dogInitScales(img_norm, scales, mgauss);
+  dogInitScales(img_norm, scales, isHDR, mgauss);
   
   std::cout << " ## SIFT > > Calculating Difference of Gaussians..." << std::endl;
   dogCalc(scales, dog);

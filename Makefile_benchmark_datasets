@@ -89,7 +89,7 @@ benchmark_harris_sift:
 calculate_srr:
 	$(CC) -o $(BIN_DIR)/$(CALCULATE_SRR) $(TEST_DIR)/$(CALCULATE_SRR).cpp $(SRC_FILES) $(CV_LIB)
 
-run_test: #benchmark_sift benchmark_harris benchmark_harris_sift
+run_test: benchmark_sift benchmark_harris benchmark_harris_sift
 #	./$(BIN_DIR)/$(BENCHMARK_HARRIS_SIFT) $(PROJECTROOM)/scene-0/scene-0.hdr $(PROJECTROOM)/ROIs/scene-0_ROI_0.png $(PROJECTROOM)/ROIs/scene-0_ROI_1.png $(PROJECTROOM)/ROIs/scene-0_ROI_2.png $(PROJECTROOM)/scene-1/scene-1.hdr $(PROJECTROOM)/ROIs/scene-1_ROI_0.png $(PROJECTROOM)/ROIs/scene-1_ROI_1.png $(PROJECTROOM)/ROIs/scene-1_ROI_2.png $(OUT_DIR_HARRIS_HDR)/rana_projectroom/
 #	./$(BIN_DIR)/$(BENCHMARK_HARRIS_SIFT) $(LIGHTROOM)/scene-0/scene-0.jpg $(LIGHTROOM)/ROIs/scene-0_ROI_0.png $(LIGHTROOM)/ROIs/scene-0_ROI_1.png $(LIGHTROOM)/ROIs/scene-0_ROI_2.png $(LIGHTROOM)/scene-1/scene-1.jpg $(LIGHTROOM)/ROIs/scene-1_ROI_0.png $(LIGHTROOM)/ROIs/scene-1_ROI_1.png $(LIGHTROOM)/ROIs/scene-1_ROI_2.png $(OUT_DIR_HARRIS_LDR)/rana_lightroom/
 #	./$(BIN_DIR)/$(BENCHMARK_HARRIS_SIFT) $(2DLIGHTING)/001/001.hdr $(2DLIGHTING)/001/ROIs.001.png $(2DLIGHTING)/001/ROIm.001.png $(2DLIGHTING)/001/ROIh.001.png $(2DLIGHTING)/010/010.hdr $(2DLIGHTING)/010/ROIs.010.png $(2DLIGHTING)/010/ROIm.010.png $(2DLIGHTING)/010/ROIh.010.png $(2DLIGHTING)/H.001.010.txt $(OUT_DIR_HARRIS_HDR)/prybil_lighting/
