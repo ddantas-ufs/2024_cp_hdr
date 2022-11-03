@@ -14,7 +14,7 @@
 
 #define SQRT_2 1.414213562f //1.41421356237; // Square root of two [sqrt(2)]
 
-#define NUM_OCTAVES 1//4 // number of octaves
+#define NUM_OCTAVES 1 // number of octaves
 #define NUM_SCALES 5 // number of scales
 #define MAX_INTERP_STEPS 5 // interpolation max steps before failure (OpenSIFT, OpenCV)
 #define DOG_BORDER 5 // interpolation border to ignore keypoints

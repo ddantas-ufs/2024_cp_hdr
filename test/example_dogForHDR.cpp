@@ -26,21 +26,21 @@ int main(int argv, char** args)
     isHDR = true;
 
     out_path += "HDR_";
-    img_out = out_path + img_name + ".dog.hdr";
+    img_out = out_path + img_name + ".dogForHDR.hdr";
   }
   else
   {
     std::cout << " > Input image is LDR" << std::endl;
 
     out_path += "LDR_";
-    img_out = out_path + img_name + ".dog.jpg";
+    img_out = out_path + img_name + ".dogForHDR.jpg";
   }
 
   // OUTPUT USING SIFT DETECTOR
-  txt_out = out_path + img_name + ".dog";
+  txt_out = out_path + img_name + ".dogForHDR";
 
-  std::cout << " > Running DoG" << std::endl;
-  dogKp(img_gray1, kp); // SIFT DETECTOR
+  std::cout << " > Running DoG for HDR" << std::endl;
+  dogKp(img_gray1, kp, true); // SIFT DETECTOR
 
   // SAVING SIFT OUTPUT RESULTS
   saveKeypoints(kp, txt_out, 2000);

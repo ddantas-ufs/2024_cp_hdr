@@ -172,7 +172,6 @@ void dogMaxSup(cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1], std::vector<KeyPoints> 
                float maxsup_size, float curv_th, bool refine_px)
 {
   int maxsup_rad = maxsup_size/2;
-  //refine_px = false;
 
   for (int o = 0; o < NUM_OCTAVES; o++)
   {
@@ -413,38 +412,16 @@ void dogInitScales( cv::Mat img, cv::Mat scales[NUM_OCTAVES][NUM_SCALES], bool i
   {
     cv::Mat img_cv, img_log;
     
-
     mapPixelValues( img, img, MAPPING_INTERVAL_FLOAT_0_1 );
     coefficienceOfVariationMask( img, img_cv );
     logTranformUchar( img_cv, img_log );
-    //mapPixelValues( img_log, img_aux );
     img_log.convertTo( img_aux, CV_32FC1 );
 
-    //applyCVMask( img, img_cv );
-    //coefVar(img, img_cv, cv_size);
-    //cv::Mat aux;
-    //cv::normalize(img_cv, aux, 0, 255, cv::NORM_MINMAX, CV_8UC1, cv::Mat());
-    //logTransform(img_cv, img_log);
-
-    //coefficienceOfVariationMask( img, img_cv );
-    //logTranformUchar( img_cv, 2, img_log );
-
-    //mapPixelValues( img_cv, img_cv );
-    //cv::imwrite("out/img_cv.png", img_cv);
-    //mapPixelValues( img_log, img_aux );
-    //img_log.copyTo( img_aux );
-    //cv::imwrite("out/img_log.png", img_aux);
-
     mapPixelValues( img, img );
-    //cv::imwrite("out/img_entrada.png", img);
-
-    //img_aux = img_log;
-    //img_aux = img_cv;
   }
   else
   {
     mapPixelValues( img, img_aux );
-    //img_aux = img;
   }
 
   for (int i = 0; i < NUM_OCTAVES; i++)
@@ -507,20 +484,15 @@ void dogKp(cv::Mat img, std::vector<KeyPoints> &kp, bool isHDR, bool refine_px,
   cv::Mat dog[NUM_OCTAVES][NUM_SCALES - 1];
   cv::Mat img_norm;
 
-  /*
-  ** Edited by @arturxz 14/10/2021
-  ** changed normalization method
-  */
-  //imgNormalize(img, img_norm);
-  //mapPixelValues(img, img_norm);
-  img.copyTo( img_norm );
+  mapPixelValues( img, img_norm );
+  //img.copyTo( img_norm );
 
   std::cout << " ## SIFT > > Mounting Scale Space..." << std::endl;
   dogInitScales(img_norm, scales, isHDR, mgauss);
   
   std::cout << " ## SIFT > > Calculating Difference of Gaussians..." << std::endl;
   dogCalc(scales, dog);
-  
+
   std::cout << " ## SIFT > > Computing Maxima Suppression and subpixel keypoint coordinates..." << std::endl;
   dogMaxSup(dog, kp, maxsup_size, curv_th, refine_px);
   //plotKeyPoints( img, kp, "out/img_kps_total.png", kp.size() );

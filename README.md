@@ -41,7 +41,7 @@ Using CP_HDR you can:
   - Uniformity rate
   - Mean average precision
   - Matching performance
-- Retinex-based algorithm to segment images based in its ilumination
+- Segment image using a Retinex-based algorithm based in the image ilumination
 
 ### Installing
 
