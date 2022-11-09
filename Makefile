@@ -54,8 +54,8 @@ DEF_DOG = defaultdog
 EXAMPLE_DOG = example_dog
 EXAMPLE_DOG_HDR = example_dogForHDR
 
-DEMO_HARRIS = demoharris
-DEMO_HARRIS_HDR = demoharris_hdr
+EXAMPLE_HARRIS = example_harris
+EXAMPLE_HARRIS_HDR = example_harrisForHDR
 
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
@@ -113,11 +113,11 @@ libcphdr:
 demohomography:
 	$(CC) -o $(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(TEST_DIR)/$(DEMO_HOMOGRAPHY).cpp $(SRC_FILES) $(CV_LIB)
 
-demoharris:
-	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS) $(TEST_DIR)/$(DEMO_HARRIS).cpp $(SRC_FILES) $(CV_LIB)
+example_harris:
+	$(CC) -o $(BIN_DIR)/$(EXAMPLE_HARRIS) $(TEST_DIR)/$(EXAMPLE_HARRIS).cpp $(SRC_FILES) $(CV_LIB)
 
-demoharris_hdr:
-	$(CC) -o $(BIN_DIR)/$(DEMO_HARRIS_HDR) $(TEST_DIR)/$(DEMO_HARRIS_HDR).cpp $(SRC_FILES) $(CV_LIB)
+example_harrisForHDR:
+	$(CC) -o $(BIN_DIR)/$(EXAMPLE_HARRIS_HDR) $(TEST_DIR)/$(EXAMPLE_HARRIS_HDR).cpp $(SRC_FILES) $(CV_LIB)
 
 example_dog:
 	$(CC) -o $(BIN_DIR)/$(EXAMPLE_DOG) $(TEST_DIR)/$(EXAMPLE_DOG).cpp $(SRC_FILES) $(CV_LIB)
@@ -179,11 +179,13 @@ run_plot_keypoints: plot_keypoints
 run_demohomography: demohomography
 	./$(BIN_DIR)/$(DEMO_HOMOGRAPHY) $(DEMO_LDR_IMG1_MATCH) $(DEMO_LDR_IMG2_MATCH) $(DEMO_HOMOGRAPHIC_MATRIX) $(OUT_DIR)/
 
-run_demoharris: demoharris
-	./$(BIN_DIR)/$(DEMO_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
+run_example_harris: example_harris
+	./$(BIN_DIR)/$(EXAMPLE_HARRIS) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(EXAMPLE_HARRIS) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
-run_demoharris_hdr: demoharris_hdr
-	./$(BIN_DIR)/$(DEMO_HARRIS_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
+run_example_harrisForHDR: example_harrisForHDR
+	./$(BIN_DIR)/$(EXAMPLE_HARRIS_HDR) $(DEMO_LDR_IMG) $(OUT_DIR)/
+	./$(BIN_DIR)/$(EXAMPLE_HARRIS_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
 
 run_example_dog: example_dog
 	./$(BIN_DIR)/$(EXAMPLE_DOG) $(DEMO_LDR_IMG) $(OUT_DIR)/
