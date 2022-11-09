@@ -57,6 +57,9 @@ EXAMPLE_DOG_HDR = example_dogForHDR
 EXAMPLE_HARRIS = example_harris
 EXAMPLE_HARRIS_HDR = example_harrisForHDR
 
+EXAMPLE_SIFT = example_sift
+EXAMPLE_SIFT_HDR = example_siftForHDR
+
 DEMO_SURF = demosurf
 DEMO_SURF_HDR = demosurf_hdr
 
@@ -124,6 +127,12 @@ example_dog:
 
 example_dogForHDR:
 	$(CC) -o $(BIN_DIR)/$(EXAMPLE_DOG_HDR) $(TEST_DIR)/$(EXAMPLE_DOG_HDR).cpp $(SRC_FILES) $(CV_LIB)
+
+example_sift:
+	$(CC) -o $(BIN_DIR)/$(EXAMPLE_SIFT) $(TEST_DIR)/$(EXAMPLE_SIFT).cpp $(SRC_FILES) $(CV_LIB)
+
+example_siftForHDR:
+	$(CC) -o $(BIN_DIR)/$(EXAMPLE_SIFT_HDR) $(TEST_DIR)/$(EXAMPLE_SIFT_HDR).cpp $(SRC_FILES) $(CV_LIB)
 
 demosurf:
 	$(CC) -o $(BIN_DIR)/$(DEMO_SURF) $(TEST_DIR)/$(DEMO_SURF).cpp $(SRC_FILES) $(CV_LIB)
@@ -194,6 +203,14 @@ run_example_dog: example_dog
 run_example_dogForHDR: example_dogForHDR
 	./$(BIN_DIR)/$(EXAMPLE_DOG_HDR) $(DEMO_LDR_IMG) $(OUT_DIR)/
 	./$(BIN_DIR)/$(EXAMPLE_DOG_HDR) $(DEMO_HDR_IMG) $(OUT_DIR)/
+
+run_example_sift: example_sift
+	./$(BIN_DIR)/$(EXAMPLE_SIFT) $(DEMO_LDR_IMG1_MATCH) $(IMG_DIR)/ROIs.00.png $(IMG_DIR)/ROIm.00.png $(IMG_DIR)/ROIh.00.png $(OUT_DIR)/
+	./$(BIN_DIR)/$(EXAMPLE_SIFT) $(DEMO_HDR_IMG1_MATCH) $(IMG_DIR)/ROIs.00.png $(IMG_DIR)/ROIm.00.png $(IMG_DIR)/ROIh.00.png $(OUT_DIR)/
+
+run_example_siftForHDR: example_siftForHDR
+	./$(BIN_DIR)/$(EXAMPLE_SIFT_HDR) $(DEMO_LDR_IMG1_MATCH) $(IMG_DIR)/ROIs.00.png $(IMG_DIR)/ROIm.00.png $(IMG_DIR)/ROIh.00.png $(OUT_DIR)/
+	./$(BIN_DIR)/$(EXAMPLE_SIFT_HDR) $(DEMO_HDR_IMG1_MATCH) $(IMG_DIR)/ROIs.00.png $(IMG_DIR)/ROIm.00.png $(IMG_DIR)/ROIh.00.png $(OUT_DIR)/
 
 run_demosurf: demosurf
 	./$(BIN_DIR)/$(DEMO_SURF) $(DEMO_LDR_IMG) $(OUT_DIR)/

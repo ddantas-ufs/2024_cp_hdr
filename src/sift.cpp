@@ -653,7 +653,7 @@ void runSift( cv::Mat img, std::vector<KeyPoints> &kpList, int kpMax, bool isHDR
 {
   std::cout << " ## SIFT > Run without ROI." << std::endl;
   cv::Mat roi;
-  runSift( img, kpList, kpMax, roi );
+  runSift( img, kpList, kpMax, roi, isHDR );
 }
 
 /**
@@ -676,7 +676,7 @@ void runSift( cv::Mat img, std::vector< std::vector<KeyPoints> > &kpList, int kp
   sumListOfMats( lRoi, sumROI );
 
   // Running SIFT with all ROIs
-  runSift( img, sumKps, kpMax, sumROI );
+  runSift( img, sumKps, kpMax, sumROI, isHDR );
 
   std::cout << " ## SIFT > Computing Keypoints inside ROI." << std::endl;
   // Separing Keypoints found in each ROI

@@ -28,11 +28,9 @@ int main(int argv, char** args)
   std::string img1Path, img1ROIsPath, img1ROImPath, img1ROIhPath; // image 1 input path strings
   std::string img2Path, img2ROIsPath, img2ROImPath, img2ROIhPath; // input 2 input path strings
   std::string img1OutPath, img2OutPath, imgMatchingOutPath, outDir; // output path strings
-//  std::string finalOut = "Image 1;Image 2;Keypoints Matched;Repeatability;Uniformity\n";
 
   std:: string hdrSuf = ".hdr", pathH;
   bool isHDR = false;
-//  bool considerROI = false;
 
   // Showing inputs
   std::cout << "----------------------------------" << std::endl;
