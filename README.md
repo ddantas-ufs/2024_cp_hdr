@@ -49,6 +49,3 @@ For now, no installation needed.
 
 ## Usage <a name = "usage"></a>
 
-For earch feature, we provide a example code.
-
-[ AVAILABRE SOON ]
